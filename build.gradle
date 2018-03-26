@@ -1,0 +1,62 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
+    }
+}
+
+allprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+
+	repositories {
+		jcenter()
+		mavenCentral()
+	}
+
+	dependencies {
+		compile 'org.eclipse.jetty:jetty-server:9.4.8.v20171121'
+		compile 'org.eclipse.jetty:jetty-servlet:9.4.8.v20171121'
+		compile 'org.slf4j:slf4j-api:1.7.25'
+		compile 'ch.qos.logback:logback-core:1.2.3'
+		compile 'ch.qos.logback:logback-classic:1.2.3'
+		compile 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20180219.1'
+		compile 'com.fasterxml.jackson.jr:jackson-jr-objects:2.9.0'
+		testCompile 'junit:junit:4.12'
+		testCompile 'org.mockito:mockito-core:2.16.0'
+	}
+	
+	task deleteLogs(type: Delete) {
+		description 'Deletes all .log files from project directory'
+		
+		delete fileTree(projectDir) {
+			include '**/*.log'
+		}
+	}
+}
+
+project(':common') {
+	eclipse.project {
+		name = 'snail-scuffle-common'
+	}
+}
+
+project(':game') {
+	apply plugin: 'com.github.johnrengelman.shadow'
+	apply plugin: 'application'
+
+	dependencies {
+		compile project(':common')
+	}
+
+	eclipse.project {
+		name = 'snail-scuffle-game'
+	}
+
+	mainClassName = 'com.snailscuffle.game.Main'
+}
+
+
