@@ -1,6 +1,7 @@
 package com.snailscuffle.common.battle;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class BattlePlan implements Serializable {
 	
@@ -10,6 +11,9 @@ public class BattlePlan implements Serializable {
 	public Accessory accessory;
 	public Item item1;
 	public Item item2;
+	public ItemRule item1Rule;
+	public ItemRule item2Rule;
+	public List<Instruction> instructions;
 	
 	public void validate() {
 		if (snail == null || weapon == null || shell == null || accessory == null || item1 == null || item2 == null) {
@@ -25,6 +29,18 @@ public class BattlePlan implements Serializable {
 		
 		if (snail == Snail.DOUG) {
 			shell = Shell.NONE;
+		}
+		
+		if (item1Rule != null) {
+			item1Rule.validate();
+		}
+		
+		if (item2Rule != null) {
+			item2Rule.validate();
+		}
+		
+		if (instructions != null) {
+			instructions.forEach(i -> i.validate());
 		}
 	}
 
