@@ -6,7 +6,7 @@ import java.util.List;
 
 public class BattleConfig implements Serializable {
 	
-	private List<BattlePlan> battlePlans;
+	public List<BattlePlan> battlePlans;
 	
 	@SuppressWarnings("unused")
 	private BattleConfig() {}		// needed for serialization via jackson-jr
@@ -23,14 +23,6 @@ public class BattleConfig implements Serializable {
 		battlePlans.add(p2firstHalf);
 		battlePlans.add(p1secondHalf);
 		battlePlans.add(p2secondHalf);
-	}
-	
-	public List<BattlePlan> getBattlePlans() {
-		return battlePlans;
-	}
-	
-	public void setBattlePlans(List<BattlePlan> battlePlans) {
-		this.battlePlans = battlePlans;
 	}
 	
 	public void validate() throws InvalidBattleException {

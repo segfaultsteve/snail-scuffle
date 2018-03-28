@@ -9,13 +9,15 @@ import com.fasterxml.jackson.jr.ob.JSON;
 
 public class ErrorResponse implements Serializable {
 	
-	private int errorCode;
-	private String errorDescription;
-	private String errorDetails;
+	public int errorCode;
+	public String errorDescription;
+	public String errorDetails;
 	
 	public static ErrorResponse battleConfigSerializationError() { return new ErrorResponse(101, "Error serializing battle config"); }
 	public static ErrorResponse battleConfigDeserializationError() { return new ErrorResponse(102, "Error deserializing battle config"); }
 	public static ErrorResponse invalidBattleConfig() { return new ErrorResponse(103, "Battle config is invalid"); }
+	
+	private ErrorResponse() {}
 	
 	private ErrorResponse(int code, String description) {
 		errorCode = code;
@@ -25,18 +27,6 @@ public class ErrorResponse implements Serializable {
 	public ErrorResponse because(String details) {
 		this.errorDetails = details;
 		return this;
-	}
-	
-	public int getErrorCode() {
-		return errorCode;
-	}
-	
-	public String getErrorDescription() {
-		return errorDescription;
-	}
-	
-	public String getErrorDetails() {
-		return errorDetails;
 	}
 	
 	@Override
