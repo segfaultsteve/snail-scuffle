@@ -2,6 +2,13 @@ package com.snailscuffle.common.battle;
 
 import java.io.Serializable;
 
+// example usage:
+// BattlePlan bp = new BattlePlan();
+// [...]
+// bp.item1 = Item.ATTACK;
+// bp.item1Rule = ItemRule.useWhenIHave(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 30);
+// bp.item2 = Item.DEFENSE;
+// bp.item2Rule = ItemRule.useWhenEnemyUses(Item.ATTACK);
 public class ItemRule implements Serializable {
 	
 	public HasCondition hasCondition;
