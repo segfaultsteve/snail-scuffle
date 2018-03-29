@@ -59,4 +59,19 @@ project(':game') {
 	mainClassName = 'com.snailscuffle.game.Main'
 }
 
+project(':simulator') {
+	apply plugin: 'com.github.johnrengelman.shadow'
+	apply plugin: 'application'
+	
+	dependencies {
+		compile project(':common')
+	}
+
+	eclipse.project {
+		name = 'snail-scuffle-simulator'
+	}
+
+	mainClassName = 'com.snailscuffle.simulator.Main'
+}		
+
 
