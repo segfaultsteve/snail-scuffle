@@ -11,6 +11,16 @@ public class HasCondition implements Serializable {
 	public Inequality inequality;
 	public int threshold;
 	
+	@SuppressWarnings("unused")
+	private HasCondition() {}		// needed for serialization via jackson-jr
+	
+	public HasCondition(Player player, Stat stat, Inequality inequality, int threshold) {
+		this.player = player;
+		this.stat = stat;
+		this.inequality = inequality;
+		this.threshold = threshold;
+	}
+
 	public void validate() {
 		if (player == null || stat == null || inequality == null) {
 			String missingField = "inequality";

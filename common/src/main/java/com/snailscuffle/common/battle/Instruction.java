@@ -22,8 +22,8 @@ public class Instruction {
 	// if type is USE, itemToUse must be non-null; waitUntilCondition is ignored
 	// if type is WAIT, waitUntilCondition must be non-null; itemToUse is ignored
 	// note: for a WAIT instruction, the "player" field of waitUntilConditoin is
-	// ignored, since only Player.ENEMY is allowed; in other words, this condition
-	// has the form: "wait until enemy has [stat] [inequaltiy] [threshold]"
+	// ignored, since only Player.ME is allowed; in other words, this condition
+	// always has the form: "wait until I have [stat] [inequaltiy] [threshold]"
 	public Type type;
 	public Item itemToUse;
 	public HasCondition waitUntilCondition;
@@ -45,7 +45,7 @@ public class Instruction {
 			if (waitUntilCondition == null) {
 				throw new InvalidBattleException("WAIT instruction is missing waitUntilCondition");
 			}
-			waitUntilCondition.player = Player.ENEMY;
+			waitUntilCondition.player = Player.ME;
 			waitUntilCondition.validate();
 		}
 	}
