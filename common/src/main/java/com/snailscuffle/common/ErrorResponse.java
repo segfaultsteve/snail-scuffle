@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.jr.ob.JSON;
+import com.snailscuffle.common.util.JsonUtil;
 
 public class ErrorResponse implements Serializable {
 	
@@ -33,7 +33,7 @@ public class ErrorResponse implements Serializable {
 	public String toString() {
 		String json = "{}";
 		try {
-			json = JSON.std.asString(this);
+			json = JsonUtil.serialize(this);
 		} catch (IOException e) {
 			assert(false);
 			LoggerFactory.getLogger(ErrorResponse.class).error("Failed to serialize error message", e);
