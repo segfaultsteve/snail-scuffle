@@ -1,9 +1,10 @@
 package com.snailscuffle.common.battle;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class BattleResult implements Serializable {
 	
-	// TODO: list of objects representing the sequence of events from the battle
+	public List<BattleEvent> sequenceOfEvents;
 	
 }
