@@ -34,11 +34,11 @@ public class ItemRule implements Serializable {
 	
 	public void validate() {
 		if (hasCondition == null && enemyUsesCondition == null) {
-			throw new InvalidBattleException("item rule is missing condition");
+			throw new InvalidBattleException("Item rule is missing condition");
 		}
 		
 		if (hasCondition != null && enemyUsesCondition != null) {
-			throw new InvalidBattleException("item rule is overspecified");
+			throw new InvalidBattleException("Item rule is overspecified");
 		}
 		
 		if (hasCondition != null) {

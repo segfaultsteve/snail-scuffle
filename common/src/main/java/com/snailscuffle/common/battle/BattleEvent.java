@@ -9,19 +9,19 @@ public class BattleEvent {
 	
 	public void validate() {
 		if (time < 0) {
-			throw new InvalidBattleException("timestamp must be non-negative");
+			throw new InvalidBattleException("Timestamp must be non-negative");
 		}
 		
 		if (playerIndex < 0 || playerIndex > 1) {
-			throw new InvalidBattleException("invalid player index; must be 0 (player 1) or 1 (player 2)");
+			throw new InvalidBattleException("Invalid player index; must be 0 (player 1) or 1 (player 2)");
 		}
 		
 		if (action == null) {
-			throw new InvalidBattleException("action not found");
+			throw new InvalidBattleException("Action not found");
 		}
 		
 		if (action == Action.USE_ITEM && itemUsed == null) {
-			throw new InvalidBattleException("event of type USE_ITEM must include a non-null item to use");
+			throw new InvalidBattleException("Event of type USE_ITEM must include a non-null item to use");
 		}
 	}
 	

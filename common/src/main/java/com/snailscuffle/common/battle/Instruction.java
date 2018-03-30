@@ -30,7 +30,7 @@ public class Instruction {
 	
 	public void validate() {
 		if (type == null) {
-			throw new InvalidBattleException("instruction has unknown type");
+			throw new InvalidBattleException("Instruction has unknown type");
 		}
 		
 		if (type == Type.USE) {

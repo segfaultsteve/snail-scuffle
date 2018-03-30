@@ -27,7 +27,7 @@ public class HasCondition implements Serializable {
 			if (player == null) missingField = "player";
 			else if (stat == null) missingField = "stat";
 			
-			throw new InvalidBattleException("condition is missing " + missingField);
+			throw new InvalidBattleException("Condition is missing " + missingField);
 		}
 	}
 
