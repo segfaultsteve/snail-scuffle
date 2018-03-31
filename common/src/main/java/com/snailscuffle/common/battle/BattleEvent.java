@@ -1,11 +1,15 @@
 package com.snailscuffle.common.battle;
 
-public class BattleEvent {
+import java.io.Serializable;
+import java.util.List;
+
+public class BattleEvent implements Serializable {
 
 	public int time;
 	public int playerIndex;		// 0 refers to the player who submitted the first battle plan in BattleConfig.battlePlans; 1 refers to the other player
 	public Action action;
 	public Item itemUsed;		// null unless action is Action.USE_ITEM
+	public List<BattleEventEffect> effects;
 	
 	public void validate() {
 		if (time < 0) {
@@ -23,6 +27,12 @@ public class BattleEvent {
 		if (action == Action.USE_ITEM && itemUsed == null) {
 			throw new InvalidBattleException("Event of type USE_ITEM must include a non-null item to use");
 		}
+		
+		if (effects == null || effects.size() == 0) {
+			throw new InvalidBattleException("Event has no effects");
+		}
+		
+		effects.forEach(e -> e.validate());
 	}
 	
 }
