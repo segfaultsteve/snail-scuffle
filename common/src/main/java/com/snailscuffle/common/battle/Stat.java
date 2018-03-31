@@ -2,7 +2,10 @@ package com.snailscuffle.common.battle;
 
 public enum Stat {
 	HP,
-	AP;
+	AP,
+	ATTACK,
+	DEFENSE,
+	SPEED;
 	
 	@Override
 	public String toString() {
