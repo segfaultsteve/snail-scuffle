@@ -1,11 +1,13 @@
 package com.snailscuffle.common.battle;
 
+import java.io.Serializable;
+
 // represents an instruction in the sequence of instructions that the player
 // configures for his or her snail; valid forms are:
 //     attack
 //     use [item]
 //     wait until [stat] [inequality] [threshold]
-public class Instruction {
+public class Instruction implements Serializable {
 	
 	public enum Type {
 		ATTACK,
