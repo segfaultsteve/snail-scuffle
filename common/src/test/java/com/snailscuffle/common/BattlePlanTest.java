@@ -37,34 +37,6 @@ public class BattlePlanTest {
 		assertValidateThrowsInvalidBattleException(bp);
 	}
 	
-	@Test
-	public void failValidationOnNullShell() {
-		BattlePlan bp = defaultBattlePlan();
-		bp.shell = null;
-		assertValidateThrowsInvalidBattleException(bp);
-	}
-	
-	@Test
-	public void failValidationOnNullAccessory() {
-		BattlePlan bp = defaultBattlePlan();
-		bp.accessory = null;
-		assertValidateThrowsInvalidBattleException(bp);
-	}
-	
-	@Test
-	public void failValidationOnNullItem1() {
-		BattlePlan bp = defaultBattlePlan();
-		bp.item1 = null;
-		assertValidateThrowsInvalidBattleException(bp);
-	}
-	
-	@Test
-	public void failValidationOnNullItem2() {
-		BattlePlan bp = defaultBattlePlan();
-		bp.item2 = null;
-		assertValidateThrowsInvalidBattleException(bp);
-	}
-	
 	private static BattlePlan defaultBattlePlan() {
 		BattlePlan bp = new BattlePlan();
 		bp.snail = Snail.DALE;
