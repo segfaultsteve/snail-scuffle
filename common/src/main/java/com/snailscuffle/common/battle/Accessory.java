@@ -6,8 +6,8 @@ public enum Accessory {
 	CAFFEINE,			// speed boost
 	CHARGED_ATTACK,		// attack increases as AP increases
 	ADRENALINE,			// attack increases as HP decreases
-	THORNS,				// enemy takes damage every time he attacks
 	SALTED_SHELL,		// reduces defense in first half; large attack boost in second half
+	THORNS,				// enemy takes light damage every time he attacks
 	DEFIBRILLATOR;		// mortal blow leaves 1 HP remaining
 	
 	@Override
