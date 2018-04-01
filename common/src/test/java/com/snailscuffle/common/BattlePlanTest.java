@@ -20,7 +20,7 @@ public class BattlePlanTest {
 		bp.snail = Snail.DOUG;
 		bp.shell = Shell.ALUMINUM;
 		bp.validate();
-		assertEquals(Shell.NONE, bp.shell);
+		assertEquals(null, bp.shell);
 	}
 	
 	@Test
@@ -70,7 +70,7 @@ public class BattlePlanTest {
 		bp.snail = Snail.DALE;
 		bp.weapon = Weapon.RIFLE;
 		bp.shell = Shell.ALUMINUM;
-		bp.accessory = Accessory.NONE;
+		bp.accessory = Accessory.STEROIDS;
 		bp.item1 = Item.ATTACK;
 		bp.item2 = Item.DEFENSE;
 		return bp;

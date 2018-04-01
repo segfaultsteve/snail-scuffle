@@ -22,10 +22,11 @@ public class HasCondition implements Serializable {
 	}
 
 	public void validate() {
-		if (player == null || stat == null || inequality == null) {
-			String missingField = "inequality";
-			if (player == null) missingField = "player";
-			else if (stat == null) missingField = "stat";
+		if (stat == null || inequality == null) {	// note: player can be null when this condition is used in a wait instruction
+			String missingField = "stat";
+			if (inequality == null) {
+				missingField = "inequality";
+			}
 			
 			throw new InvalidBattleException("Condition is missing " + missingField);
 		}

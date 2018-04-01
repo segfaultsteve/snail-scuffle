@@ -2,8 +2,7 @@ package com.snailscuffle.common.battle;
 
 public enum Shell {
 	ALUMINUM,
-	STEEL,
-	NONE;
+	STEEL;
 	
 	@Override
 	public String toString() {
