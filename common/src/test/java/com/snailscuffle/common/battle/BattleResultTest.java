@@ -50,6 +50,12 @@ public class BattleResultTest {
 		assertValidateThrowsInvalidBattleException(result);
 	}
 	
+	@Test
+	public void failValidationOnInvalidBattleEvent() {
+		result.sequenceOfEvents.get(0).action = null;
+		assertValidateThrowsInvalidBattleException(result);
+	}
+	
 	private static void assertValidateThrowsInvalidBattleException(BattleResult battleResult) {
 		try {
 			battleResult.validate();
