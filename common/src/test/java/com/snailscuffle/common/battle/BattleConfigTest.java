@@ -1,15 +1,9 @@
-package com.snailscuffle.common;
+package com.snailscuffle.common.battle;
 
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import com.snailscuffle.common.battle.BattleConfig;
-import com.snailscuffle.common.battle.BattlePlan;
-import com.snailscuffle.common.battle.InvalidBattleException;
-import com.snailscuffle.common.battle.Snail;
-import com.snailscuffle.common.battle.Weapon;
 
 public class BattleConfigTest {
 
