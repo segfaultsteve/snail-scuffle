@@ -14,6 +14,8 @@ public class ItemRule implements Serializable {
 	public HasCondition hasCondition;
 	public Item enemyUsesCondition;
 	
+	private ItemRule() {}		// needed for serialization via jackson-jr
+	
 	public static ItemRule useWhenIHave(Stat stat, Inequality inequality, int threshold) {
 		ItemRule rule = new ItemRule();
 		rule.hasCondition = new HasCondition(Player.ME, stat, inequality, threshold);
