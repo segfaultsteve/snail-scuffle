@@ -22,7 +22,7 @@ class Main {
 		BattlePlan battlePlan2 = battle.parseBattlePlan();
 		String response;
 		try {
-			String jsonToSend = JsonUtil.serialize(new BattleConfig(battlePlan1, battlePlan2, 12345));
+			String jsonToSend = JsonUtil.serialize(new BattleConfig(battlePlan1, battlePlan2));
 			response = battle.postMessage(urlToConnectTo, jsonToSend);
 			logger.debug(response);
 		} catch (Exception e) {
