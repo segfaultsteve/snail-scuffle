@@ -13,20 +13,8 @@ public class BattleResultTest {
 	
 	@Before
 	public void setUp() {
-		BattleEventEffect effect = new BattleEventEffect();
-		effect.playerIndex = 0;
-		effect.stat = Stat.HP;
-		effect.change = -20;
-		
-		BattleEvent event = new BattleEvent();
-		event.time = 1;
-		event.playerIndex = 1;
-		event.action = Action.ATTACK;
-		event.effects = new ArrayList<>();
-		event.effects.add(effect);
-		
-		result = new BattleResult();
-		result.sequenceOfEvents = new ArrayList<>();
+		BattleEvent event = BattleEvent.newAttackEvent(1, 0, 20);
+		result = new BattleResult(new ArrayList<>(), 0);
 		result.sequenceOfEvents.add(event);
 	}
 	

@@ -2,8 +2,6 @@ package com.snailscuffle.common.battle;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,17 +11,7 @@ public class BattleEventTest {
 	
 	@Before
 	public void setUp() {
-		BattleEventEffect effect = new BattleEventEffect();
-		effect.playerIndex = 0;
-		effect.stat = Stat.HP;
-		effect.change = -20;
-		
-		event = new BattleEvent();
-		event.time = 1;
-		event.playerIndex = 1;
-		event.action = Action.ATTACK;
-		event.effects = new ArrayList<>();
-		event.effects.add(effect);
+		event = BattleEvent.newAttackEvent(1, 0, 20);
 	}
 	
 	@Test

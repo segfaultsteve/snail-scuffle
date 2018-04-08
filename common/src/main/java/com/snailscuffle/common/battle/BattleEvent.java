@@ -1,6 +1,7 @@
 package com.snailscuffle.common.battle;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 public class BattleEvent implements Serializable {
@@ -10,6 +11,20 @@ public class BattleEvent implements Serializable {
 	public Action action;
 	public Item itemUsed;		// null unless action is Action.USE_ITEM
 	public List<BattleEventEffect> effects;
+	
+	private BattleEvent() {}
+	
+	public static BattleEvent newAttackEvent(int timestamp, int attackerIndex, double damage) {
+		BattleEvent event = new BattleEvent();
+		event.time = timestamp;
+		event.playerIndex = attackerIndex;
+		event.action = Action.ATTACK;
+		
+		int targetIndex = (attackerIndex == 0) ? 1 : 0;
+		event.effects = Arrays.asList(new BattleEventEffect(targetIndex, Stat.HP, -1.0 * damage));
+		
+		return event;
+	}
 	
 	public void validate() {
 		if (time < 0) {

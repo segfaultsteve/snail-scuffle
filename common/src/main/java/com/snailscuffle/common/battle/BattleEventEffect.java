@@ -8,6 +8,15 @@ public class BattleEventEffect implements Serializable {
 	public Stat stat;
 	public double change;
 	
+	@SuppressWarnings("unused")
+	private BattleEventEffect() {}	// needed for serialization via jackson-jr
+	
+	public BattleEventEffect(int playerIndex, Stat stat, double change) {
+		this.playerIndex = playerIndex;
+		this.stat = stat;
+		this.change = change;
+	}
+	
 	public void validate() {
 		if (playerIndex < 0 || playerIndex > 1) {
 			throw new InvalidBattleException("Invalid player index; must be 0 (player 1) or 1 (player 2)");
