@@ -16,6 +16,7 @@ public class ErrorResponse implements Serializable {
 	public static ErrorResponse battleConfigSerializationError() { return new ErrorResponse(101, "Error serializing battle config"); }
 	public static ErrorResponse battleConfigDeserializationError() { return new ErrorResponse(102, "Error deserializing battle config"); }
 	public static ErrorResponse invalidBattleConfig() { return new ErrorResponse(103, "Battle config is invalid"); }
+	public static ErrorResponse unexpectedError() { return new ErrorResponse(199, "Unexpected error"); }
 	
 	private ErrorResponse() {}
 	
