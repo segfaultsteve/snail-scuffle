@@ -30,6 +30,18 @@ public class Instruction implements Serializable {
 	public Item itemToUse;
 	public HasCondition waitUntilCondition;
 	
+	@SuppressWarnings("unused")
+	private Instruction() {}	// needed for serialization via jackson-jr
+	
+	public Instruction(Instruction other) {
+		type = other.type;
+		itemToUse = other.itemToUse;
+		
+		if (other.waitUntilCondition != null) {
+			waitUntilCondition = new HasCondition(other.waitUntilCondition);
+		}
+	}
+	
 	public void validate() {
 		if (type == null) {
 			throw new InvalidBattleException("Instruction has unknown type");

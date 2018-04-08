@@ -14,6 +14,13 @@ public class HasCondition implements Serializable {
 	@SuppressWarnings("unused")
 	private HasCondition() {}		// needed for serialization via jackson-jr
 	
+	public HasCondition(HasCondition other) {
+		player = other.player;
+		stat = other.stat;
+		inequality = other.inequality;
+		threshold = other.threshold;
+	}
+	
 	public HasCondition(Player player, Stat stat, Inequality inequality, int threshold) {
 		this.player = player;
 		this.stat = stat;
