@@ -30,8 +30,7 @@ public class Instruction implements Serializable {
 	public Item itemToUse;
 	public HasCondition waitUntilCondition;
 	
-	@SuppressWarnings("unused")
-	private Instruction() {}	// needed for serialization via jackson-jr
+	public Instruction() {}
 	
 	public Instruction(Instruction other) {
 		type = other.type;

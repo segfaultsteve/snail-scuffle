@@ -14,7 +14,7 @@ public class ItemRule implements Serializable {
 	public HasCondition hasCondition;
 	public Item enemyUsesCondition;
 	
-	private ItemRule() {}		// needed for serialization via jackson-jr
+	public ItemRule() {}
 	
 	public ItemRule(ItemRule other) {
 		if (other.hasCondition != null) {
