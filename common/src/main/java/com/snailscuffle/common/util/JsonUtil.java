@@ -3,6 +3,7 @@ package com.snailscuffle.common.util;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+
 import com.fasterxml.jackson.jr.ob.JSON;
 import com.fasterxml.jackson.jr.ob.JSON.Feature;
 
