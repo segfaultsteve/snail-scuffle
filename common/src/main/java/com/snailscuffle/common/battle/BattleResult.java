@@ -8,6 +8,14 @@ public class BattleResult implements Serializable {
 	public List<BattleEvent> sequenceOfEvents;
 	public int winnerIndex;		// 0 or 1; see BattleEvent for convention
 	
+	@SuppressWarnings("unused")
+	private BattleResult() {}	// needed for serialization via jackson-jr
+	
+	public BattleResult(List<BattleEvent> sequenceOfEvents, int winnerIndex) {
+		this.sequenceOfEvents = sequenceOfEvents;
+		this.winnerIndex = winnerIndex;
+	}
+	
 	public void validate() {
 		if (sequenceOfEvents == null || sequenceOfEvents.size() == 0) {
 			throw new InvalidBattleException("Battle result not found");
