@@ -28,6 +28,14 @@ public class BattlePlan implements Serializable {
 			shell = null;
 		}
 		
+		if (shell == null) {
+			shell = Shell.NONE;
+		}
+		
+		if (accessory == null) {
+			accessory = Accessory.NONE;
+		}
+		
 		if (item1Rule != null) {
 			item1Rule.validate();
 		}
