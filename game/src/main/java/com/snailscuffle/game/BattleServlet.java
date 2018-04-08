@@ -1,6 +1,7 @@
 package com.snailscuffle.game;
 
 import java.io.IOException;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +41,10 @@ public class BattleServlet extends HttpServlet {
 			logger.error("Invalid battle config", e);
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().print(ErrorResponse.invalidBattleConfig().because(e.getMessage()));
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().print(ErrorResponse.unexpectedError().because(e.getMessage()));
 		}
 		markHandled(request);
 	}
