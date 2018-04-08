@@ -1,5 +1,8 @@
 package com.snailscuffle.simulator;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,20 +20,37 @@ class Main {
 	private static final String urlToConnectTo = "http://localhost:8080/battle";
 
 	public static void main(String[] args) {
-		SimulatedBattle battle = new SimulatedBattle();
-		BattlePlan battlePlan1 = battle.parseBattlePlan();
-		BattlePlan battlePlan2 = battle.parseBattlePlan();
-		String response;
+		
+		RandomBattlePlanGen battlePlanGenerator = new RandomBattlePlanGen();	
+		List<BattlePlan> generatedBattlePlans = battlePlanGenerator.getGeneratedBattlePlans();
+				
+		PostAndResponseStructure httpClient = new PostAndResponseStructure();	
+		submitBattlePlansToGameServer(generatedBattlePlans, httpClient);
+	}
+	
+	public static void submitBattlePlansToGameServer(List<BattlePlan> generatedBattlePlans, PostAndResponseStructure httpClient) {
+		
+		Collections.shuffle(generatedBattlePlans); // Shuffle to get more diverse match-ups
+		
 		try {
-			String jsonToSend = JsonUtil.serialize(new BattleConfig(battlePlan1, battlePlan2));
-			response = battle.postMessage(urlToConnectTo, jsonToSend);
-			logger.debug(response);
-		} catch (Exception e) {
-			logger.error("Error when trying to POST battle plans. Error message: " + e.getMessage());
+			for(int i = 0; i < generatedBattlePlans.size(); i+=2)
+			{
+				String response;
+				try {
+					String jsonToSend = JsonUtil.serialize(new BattleConfig(generatedBattlePlans.get(i), generatedBattlePlans.get(i+1),
+																			generatedBattlePlans.get(i), generatedBattlePlans.get(i+1) ));
+					response = httpClient.postMessage(urlToConnectTo, jsonToSend);
+					logger.debug(response);
+				} catch (Exception e) {
+					logger.error("Error when trying to POST battle plans. Error message: " + e.getMessage());
+				}
+			}
+		} catch (ArrayIndexOutOfBoundsException e){
+			//log some kind of message
 		}
 	}
 	
-	public static class SimulatedBattle {
+	public static class PostAndResponseStructure {
 		final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 		
 		OkHttpClient client = new OkHttpClient();
@@ -44,28 +64,6 @@ class Main {
 			    try (Response response = client.newCall(request).execute()) {
 			      return response.body().string();
 			}
-		}		
-		
-		public static BattlePlan parseBattlePlan() {
-			BattlePlan battlePlan = new BattlePlan();
-			
-			battlePlan.snail = Snail.DALE;
-			battlePlan.weapon = Weapon.ROCKET;
-			battlePlan.shell = Shell.ALUMINUM;
-			battlePlan.accessory = Accessory.ADRENALINE;
-			battlePlan.item1 = Item.ATTACK;
-			battlePlan.item2 = Item.DEFENSE;
-			battlePlan.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 40);
-			battlePlan.item2Rule = ItemRule.useWhenIHave(Stat.AP, Inequality.LESS_THAN_OR_EQUALS, 20);
-			
-			Instruction instruction1 = new Instruction();
-			instruction1.type = Instruction.Type.ATTACK;
-
-			Instruction instruction2 = new Instruction();
-			instruction2.type = Instruction.Type.WAIT;
-			instruction2.waitUntilCondition = new HasCondition(Player.ME, Stat.ATTACK, Inequality.LESS_THAN_OR_EQUALS, 30);
-			
-			return battlePlan;
-		}			
+		}					
 	}
 }
