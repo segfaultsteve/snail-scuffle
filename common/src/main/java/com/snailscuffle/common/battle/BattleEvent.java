@@ -26,6 +26,15 @@ public class BattleEvent implements Serializable {
 		return event;
 	}
 	
+	public static BattleEvent useItemEvent(int timestamp, int playerIndex, Item item, Stat stat, double change) {
+		BattleEvent event = new BattleEvent();
+		event.time = timestamp;
+		event.playerIndex = playerIndex;
+		event.action = Action.USE_ITEM;
+		event.effects = Arrays.asList(new BattleEventEffect(playerIndex, stat, change));
+		return event;
+	}
+	
 	public void validate() {
 		if (time < 0) {
 			throw new InvalidBattleException("Timestamp must be non-negative");
