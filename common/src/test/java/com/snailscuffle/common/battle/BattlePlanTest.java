@@ -25,7 +25,7 @@ public class BattlePlanTest {
 		bp.snail = Snail.DOUG;
 		bp.shell = Shell.ALUMINUM;
 		bp.validate();
-		assertEquals(null, bp.shell);
+		assertEquals(Shell.NONE, bp.shell);
 	}
 	
 	@Test
