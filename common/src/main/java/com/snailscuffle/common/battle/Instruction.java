@@ -30,6 +30,26 @@ public class Instruction implements Serializable {
 	public Item itemToUse;
 	public HasCondition waitUntilCondition;
 	
+	public static Instruction attack() {
+		Instruction i = new Instruction();
+		i.type = Type.ATTACK;
+		return i;
+	}
+	
+	public static Instruction useItem(Item toUse) {
+		Instruction i = new Instruction();
+		i.type = Type.USE;
+		i.itemToUse = toUse;
+		return i;
+	}
+	
+	public static Instruction wait(Stat stat, Inequality inequality, int threshold) {
+		Instruction i = new Instruction();
+		i.type = Type.WAIT;
+		i.waitUntilCondition = new HasCondition(Player.ME, stat, inequality, threshold);
+		return i;
+	}
+	
 	public Instruction() {}
 	
 	public Instruction(Instruction other) {
