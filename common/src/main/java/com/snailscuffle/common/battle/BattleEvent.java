@@ -1,7 +1,7 @@
 package com.snailscuffle.common.battle;
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BattleEvent implements Serializable {
@@ -19,9 +19,10 @@ public class BattleEvent implements Serializable {
 		event.time = timestamp;
 		event.playerIndex = attackerIndex;
 		event.action = Action.ATTACK;
+		event.effects = new ArrayList<>();
 		
 		int targetIndex = (attackerIndex == 0) ? 1 : 0;
-		event.effects = Arrays.asList(new BattleEventEffect(targetIndex, Stat.HP, -1.0 * damage));
+		event.effects.add(new BattleEventEffect(targetIndex, Stat.HP, -1.0 * damage));
 		
 		return event;
 	}
@@ -31,7 +32,8 @@ public class BattleEvent implements Serializable {
 		event.time = timestamp;
 		event.playerIndex = playerIndex;
 		event.action = Action.USE_ITEM;
-		event.effects = Arrays.asList(new BattleEventEffect(playerIndex, stat, change));
+		event.effects = new ArrayList<>();
+		event.effects.add(new BattleEventEffect(playerIndex, stat, change));
 		return event;
 	}
 	
