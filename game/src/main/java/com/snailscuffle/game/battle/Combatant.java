@@ -1,18 +1,28 @@
 package com.snailscuffle.game.battle;
 
-import static com.snailscuffle.common.battle.Constants.ADRENALINE_CROSSOVER;
-import static com.snailscuffle.common.battle.Constants.ADRENALINE_DIVISOR;
-import static com.snailscuffle.common.battle.Constants.CHARGED_ATTACK_AP_DIVISOR;
-import static com.snailscuffle.common.battle.Constants.INITIAL_AP;
-import static com.snailscuffle.common.battle.Constants.INITIAL_HP;
-import static com.snailscuffle.common.battle.Constants.SALTED_SHELL_ATTACK_MULTIPLIER;
-import static com.snailscuffle.common.battle.Constants.SALTED_SHELL_DEFENSE_MULTIPLIER;
-import static com.snailscuffle.common.battle.Constants.THORNS_DAMAGE_MULTIPLIER;
+import static com.snailscuffle.common.battle.Constants.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntSupplier;
 
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.BattlePlan;
+import com.snailscuffle.common.battle.Instruction;
+import com.snailscuffle.common.battle.Item;
+import com.snailscuffle.common.battle.Stat;
 
 public class Combatant {
+	
+	private static class ActiveBoost {
+		private Item type;
+		private int ticksRemaining;
+		
+		private ActiveBoost(Item type, int duration) {
+			this.type = type;
+			ticksRemaining = duration;
+		}
+	}
 	
 	// Attack, Defense, Speed, HP, and AP are all integer quantities. Their representations
 	// in this class are multiplied by SCALE. For example, if SCALE=1000, then hp=52500
@@ -27,10 +37,12 @@ public class Combatant {
 	private static final int DAMAGE_MULTIPLIER = 10;
 	
 	private BattlePlan battlePlan;
-	private BattleRecorder recorder;
+	private final BattleRecorder recorder;
 	private Combatant opponent;
 	private int hp;		// = HP * SCALE
 	private int ap;		// = AP * SCALE
+	private int currentInstruction;
+	private final List<ActiveBoost> activeBoosts;
 	private boolean secondHalf;
 
 	public Combatant(BattlePlan firstHalfBattlePlan, int playerIndex, BattleRecorder recorder) {
@@ -38,6 +50,7 @@ public class Combatant {
 		this.recorder = recorder;
 		hp = INITIAL_HP * SCALE;
 		ap = INITIAL_AP * SCALE;
+		activeBoosts = new ArrayList<>();
 	}
 	
 	public void setOpponent(Combatant opponent) {
@@ -55,11 +68,44 @@ public class Combatant {
 	
 	public void update(int deltaTicks) {
 		ap += deltaTicks * speedStat() / SCALE;
+		decrementBoostTimers(activeBoosts, deltaTicks);
+		
+		boolean continueTurn = true;
+		while (continueTurn) {
+			Instruction nextAction = Instruction.attack();
+			if (battlePlan.instructions != null && currentInstruction < battlePlan.instructions.size()) {
+				nextAction = battlePlan.instructions.get(currentInstruction);
+			}
+
+			switch (nextAction.type) {
+			case ATTACK:
+				continueTurn = tryAttack();
+				break;
+			case USE:
+				continueTurn = tryUseItem(nextAction.itemToUse);
+				break;
+			case WAIT:
+				break;
+			default:
+				throw new RuntimeException("Unexpected instruction");
+			}
+		}
+	}
+	
+	private static void decrementBoostTimers(List<ActiveBoost> boosts, int ticks) {
+		boosts.forEach(b -> b.ticksRemaining -= ticks);
+		boosts.removeIf(b -> b.ticksRemaining <= 0);
+	}
+	
+	private boolean tryAttack() {
 		int attackCost = battlePlan.weapon.apCost * SCALE;
 		if (ap >= attackCost) {
 			attackOpponent();
 			ap -= attackCost;
+			currentInstruction++;
+			return true;
 		}
+		return false;
 	}
 	
 	private void attackOpponent() {
@@ -81,6 +127,51 @@ public class Combatant {
 		}
 	}
 	
+	private boolean tryUseItem(Item item) {
+		if (battlePlan.item1 == item) {
+			applyItem(battlePlan.item1);
+			battlePlan.item1 = null;
+		} else if (battlePlan.item2 == item) {
+			applyItem(battlePlan.item2);
+			battlePlan.item2 = null;
+		}
+		currentInstruction++;
+		return true;	// using an item has zero "cost"; always continue to next instruction
+	}
+	
+	private void applyItem(Item item) {
+		switch (item) {
+		case ATTACK:
+			applyBoost(Item.ATTACK, ATTACK_BOOST_DURATION, () -> attackStat());
+			break;
+		case DEFENSE:
+			applyBoost(Item.DEFENSE, DEFENSE_BOOST_DURATION, () -> defenseStat());
+			break;
+		case SPEED:
+			ap += SCALE * SPEED_BOOST_AP_INCREASE;
+			recorder.recordUseItem(this, Item.SPEED, Stat.SPEED, SPEED_BOOST_AP_INCREASE);
+			break;
+		default:
+			throw new RuntimeException("Unexpected item");
+		}
+	}
+	
+	private void applyBoost(Item type, int duration, IntSupplier statFunc) {
+		Stat stat = null;
+		if (type == Item.ATTACK) {
+			stat = Stat.ATTACK;
+		} else if (type == Item.DEFENSE) {
+			stat = Stat.DEFENSE;
+		} else {
+			throw new RuntimeException("Unexpected boost");
+		}
+		
+		int statBefore = statFunc.getAsInt();
+		activeBoosts.add(new ActiveBoost(type, duration));
+		double statChange = statFunc.getAsInt() - statBefore;
+		recorder.recordUseItem(this, type, stat, statChange/SCALE);
+	}
+	
 	private int attackStat() {
 		int attack = SCALE * (battlePlan.snail.attack
 				+ battlePlan.weapon.attack
@@ -94,6 +185,7 @@ public class Combatant {
 		} else if (secondHalf && battlePlan.accessory == Accessory.SALTED_SHELL) {
 			attack *= SALTED_SHELL_ATTACK_MULTIPLIER;
 		}
+		attack *= boostFactor(Item.ATTACK);
 		
 		return attack;
 	}
@@ -107,6 +199,7 @@ public class Combatant {
 		if (!secondHalf && battlePlan.accessory == Accessory.SALTED_SHELL) {
 			defense *= SALTED_SHELL_DEFENSE_MULTIPLIER;
 		}
+		defense *= boostFactor(Item.DEFENSE);
 		
 		return defense;
 	}
@@ -116,6 +209,23 @@ public class Combatant {
 				+ battlePlan.weapon.speed
 				+ battlePlan.shell.speed
 				+ battlePlan.accessory.speed);
+	}
+	
+	private double boostFactor(Item type) {
+		double boost = 1.0;
+		double multiplier = 1.0;
+		if (type == Item.ATTACK) {
+			multiplier = ATTACK_BOOST_MULTIPLIER;
+		} else if (type == Item.DEFENSE) {
+			multiplier = DEFENSE_BOOST_MULTIPLIER;
+		}
+		
+		int activeCount = (int) activeBoosts.stream().filter(b -> b.type == type).count();
+		for (int i = 0; i < activeCount; i++) {
+			boost *= multiplier;
+		}
+		
+		return boost;
 	}
 	
 	public boolean isAlive() {

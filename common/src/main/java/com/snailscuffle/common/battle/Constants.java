@@ -38,6 +38,13 @@ public class Constants {
 	public static final int STEEL_DEFENSE = 5;
 	public static final int STEEL_SPEED = -3;
 	
+	// items
+	public static final double ATTACK_BOOST_MULTIPLIER = 1.3;
+	public static final int ATTACK_BOOST_DURATION = 3000;
+	public static final double DEFENSE_BOOST_MULTIPLIER = 1.4;
+	public static final int DEFENSE_BOOST_DURATION = 5000;
+	public static final int SPEED_BOOST_AP_INCREASE = 10;
+	
 	// accessories
 	public static final int STEROIDS_ATTACK = 4;
 	public static final int SNAIL_MAIL_DEFENSE = 4;

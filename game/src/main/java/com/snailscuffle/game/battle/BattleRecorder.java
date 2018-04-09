@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.snailscuffle.common.battle.BattleEvent;
+import com.snailscuffle.common.battle.Item;
+import com.snailscuffle.common.battle.Stat;
 
 public class BattleRecorder {
 	
@@ -19,6 +21,12 @@ public class BattleRecorder {
 		int time = battle.currentTime();
 		int attackerIndex = battle.playerIndexOf(attacker);
 		events.add(BattleEvent.newAttackEvent(time, attackerIndex, damage));
+	}
+	
+	public void recordUseItem(Combatant player, Item type, Stat stat, double change) {
+		int time = battle.currentTime();
+		int playerIndex = battle.playerIndexOf(player);
+		events.add(BattleEvent.useItemEvent(time, playerIndex, type, stat, change));
 	}
 	
 	public List<BattleEvent> battleEvents() {
