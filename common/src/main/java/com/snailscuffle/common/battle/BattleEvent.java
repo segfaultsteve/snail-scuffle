@@ -12,9 +12,7 @@ public class BattleEvent implements Serializable {
 	public Item itemUsed;		// null unless action is Action.USE_ITEM
 	public List<BattleEventEffect> effects;
 	
-	private BattleEvent() {}
-	
-	public static BattleEvent newAttackEvent(int timestamp, int attackerIndex, double damage) {
+	public static BattleEvent attack(int timestamp, int attackerIndex, double damage) {
 		BattleEvent event = new BattleEvent();
 		event.time = timestamp;
 		event.playerIndex = attackerIndex;
@@ -27,7 +25,7 @@ public class BattleEvent implements Serializable {
 		return event;
 	}
 	
-	public static BattleEvent newUseItemEvent(int timestamp, int playerIndex, Item item, Stat stat, double change) {
+	public static BattleEvent useItem(int timestamp, int playerIndex, Item item, Stat stat, double change) {
 		BattleEvent event = new BattleEvent();
 		event.time = timestamp;
 		event.playerIndex = playerIndex;
@@ -36,6 +34,8 @@ public class BattleEvent implements Serializable {
 		event.effects.add(new BattleEventEffect(playerIndex, stat, change));
 		return event;
 	}
+	
+	private BattleEvent() {}
 	
 	public void validate() {
 		if (time < 0) {

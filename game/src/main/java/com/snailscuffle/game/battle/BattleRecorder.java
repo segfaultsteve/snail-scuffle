@@ -20,13 +20,13 @@ public class BattleRecorder {
 	public void recordAttack(Combatant attacker, double damage) {
 		int time = battle.currentTime();
 		int attackerIndex = battle.playerIndexOf(attacker);
-		events.add(BattleEvent.newAttackEvent(time, attackerIndex, damage));
+		events.add(BattleEvent.attack(time, attackerIndex, damage));
 	}
 	
 	public void recordUseItem(Combatant player, Item type, Stat stat, double change) {
 		int time = battle.currentTime();
 		int playerIndex = battle.playerIndexOf(player);
-		events.add(BattleEvent.newUseItemEvent(time, playerIndex, type, stat, change));
+		events.add(BattleEvent.useItem(time, playerIndex, type, stat, change));
 	}
 	
 	public List<BattleEvent> battleEvents() {

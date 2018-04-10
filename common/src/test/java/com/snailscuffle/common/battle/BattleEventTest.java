@@ -11,7 +11,7 @@ public class BattleEventTest {
 	
 	@Before
 	public void setUp() {
-		event = BattleEvent.newAttackEvent(1, 0, 20);
+		event = BattleEvent.attack(1, 0, 20);
 	}
 	
 	@Test

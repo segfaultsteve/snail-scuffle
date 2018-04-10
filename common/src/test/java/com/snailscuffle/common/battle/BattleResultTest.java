@@ -13,7 +13,7 @@ public class BattleResultTest {
 	
 	@Before
 	public void setUp() {
-		BattleEvent event = BattleEvent.newAttackEvent(1, 0, 20);
+		BattleEvent event = BattleEvent.attack(1, 0, 20);
 		result = new BattleResult(new ArrayList<>(), 0);
 		result.sequenceOfEvents.add(event);
 	}
