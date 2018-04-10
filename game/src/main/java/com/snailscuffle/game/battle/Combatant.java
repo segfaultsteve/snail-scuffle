@@ -72,24 +72,29 @@ public class Combatant {
 		
 		boolean continueTurn = true;
 		while (continueTurn) {
-			Instruction nextAction = Instruction.attack();
-			if (battlePlan.instructions != null && currentInstruction < battlePlan.instructions.size()) {
-				nextAction = battlePlan.instructions.get(currentInstruction);
-			}
-
-			switch (nextAction.type) {
+			Instruction instruction = getCurrentInstruction();
+			switch (instruction.type) {
 			case ATTACK:
 				continueTurn = tryAttack();
 				break;
 			case USE:
-				continueTurn = tryUseItem(nextAction.itemToUse);
+				continueTurn = tryUseItem(instruction.itemToUse);
 				break;
 			case WAIT:
+				continueTurn = tryWait(instruction.apThreshold * SCALE);
 				break;
 			default:
 				throw new RuntimeException("Unexpected instruction");
 			}
 		}
+	}
+	
+	private Instruction getCurrentInstruction() {
+		Instruction instruction = Instruction.attack();
+		if (battlePlan.instructions != null && currentInstruction < battlePlan.instructions.size()) {
+			instruction = battlePlan.instructions.get(currentInstruction);
+		}
+		return instruction;
 	}
 	
 	private static void decrementBoostTimers(List<ActiveBoost> boosts, int ticks) {
@@ -170,6 +175,14 @@ public class Combatant {
 		activeBoosts.add(new ActiveBoost(type, duration));
 		double statChange = statFunc.getAsInt() - statBefore;
 		recorder.recordUseItem(this, type, stat, statChange/SCALE);
+	}
+	
+	private boolean tryWait(int threshold) {
+		if (ap >= threshold) {
+			currentInstruction++;
+			return true;
+		}
+		return false;
 	}
 	
 	private int attackStat() {
