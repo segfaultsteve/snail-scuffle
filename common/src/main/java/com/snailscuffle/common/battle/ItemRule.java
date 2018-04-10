@@ -14,15 +14,6 @@ public class ItemRule implements Serializable {
 	public HasCondition hasCondition;
 	public Item enemyUsesCondition;
 	
-	public ItemRule() {}
-	
-	public ItemRule(ItemRule other) {
-		if (other.hasCondition != null) {
-			hasCondition = new HasCondition(other.hasCondition);
-		}
-		enemyUsesCondition = other.enemyUsesCondition;
-	}
-	
 	public static ItemRule useWhenIHave(Stat stat, Inequality inequality, int threshold) {
 		ItemRule rule = new ItemRule();
 		rule.hasCondition = new HasCondition(Player.ME, stat, inequality, threshold);
@@ -40,6 +31,15 @@ public class ItemRule implements Serializable {
 		rule.enemyUsesCondition = item;
 		return rule;
     }
+	
+	private ItemRule() {}
+	
+	public ItemRule(ItemRule other) {
+		if (other.hasCondition != null) {
+			hasCondition = new HasCondition(other.hasCondition);
+		}
+		enemyUsesCondition = other.enemyUsesCondition;
+	}
 	
 	public void validate() {
 		if (hasCondition == null && enemyUsesCondition == null) {

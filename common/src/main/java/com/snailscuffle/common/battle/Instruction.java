@@ -50,7 +50,7 @@ public class Instruction implements Serializable {
 		return i;
 	}
 	
-	public Instruction() {}
+	private Instruction() {}
 	
 	public Instruction(Instruction other) {
 		type = other.type;

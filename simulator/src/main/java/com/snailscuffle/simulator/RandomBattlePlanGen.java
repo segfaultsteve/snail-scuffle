@@ -151,8 +151,7 @@ public class RandomBattlePlanGen {
 			bp.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 40);
 			bp.item2Rule = ItemRule.useWhenIHave(Stat.AP, Inequality.LESS_THAN_OR_EQUALS, 20);
 			
-			Instruction instruction1 = new Instruction();
-			instruction1.type = Instruction.Type.ATTACK;		
+			Instruction instruction1 = Instruction.attack();		
 			bp.instructions = new ArrayList<Instruction>();
 			bp.instructions.add(instruction1);
 						
