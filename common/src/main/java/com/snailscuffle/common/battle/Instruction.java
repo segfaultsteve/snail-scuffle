@@ -6,7 +6,7 @@ import java.io.Serializable;
 // configures for his or her snail; valid forms are:
 //     attack
 //     use [item]
-//     wait until [stat] [inequality] [threshold]
+//     wait until AP >= [threshold]
 public class Instruction implements Serializable {
 	
 	public enum Type {
@@ -20,15 +20,15 @@ public class Instruction implements Serializable {
 		}
 	}
 	
-	// if type is ATTACK, itemToUse and waitUntilCondition are ignored
-	// if type is USE, itemToUse must be non-null; waitUntilCondition is ignored
-	// if type is WAIT, waitUntilCondition must be non-null; itemToUse is ignored
-	// note: for a WAIT instruction, the "player" field of waitUntilConditoin is
-	// ignored, since only Player.ME is allowed; in other words, this condition
-	// always has the form: "wait until I have [stat] [inequaltiy] [threshold]"
+	// if type is ATTACK, itemToUse and apThreshold are ignored
+	// if type is USE, itemToUse must be non-null; apThreshold is ignored
+	// if type is WAIT, itemToUse is ignored
+	// note: the only allowed WAIT condition is of the form, "wait until I
+	// have AP >= [threshold]"; this is why this condition is represented
+	// simply as a single integer, apThreshold
 	public Type type;
 	public Item itemToUse;
-	public HasCondition waitUntilCondition;
+	public int apThreshold;
 	
 	public static Instruction attack() {
 		Instruction i = new Instruction();
@@ -43,10 +43,10 @@ public class Instruction implements Serializable {
 		return i;
 	}
 	
-	public static Instruction wait(Stat stat, Inequality inequality, int threshold) {
+	public static Instruction waitUntilApIs(int threshold) {
 		Instruction i = new Instruction();
 		i.type = Type.WAIT;
-		i.waitUntilCondition = new HasCondition(Player.ME, stat, inequality, threshold);
+		i.apThreshold = threshold;
 		return i;
 	}
 	
@@ -55,10 +55,7 @@ public class Instruction implements Serializable {
 	public Instruction(Instruction other) {
 		type = other.type;
 		itemToUse = other.itemToUse;
-		
-		if (other.waitUntilCondition != null) {
-			waitUntilCondition = new HasCondition(other.waitUntilCondition);
-		}
+		apThreshold = other.apThreshold;
 	}
 	
 	public void validate() {
@@ -67,7 +64,7 @@ public class Instruction implements Serializable {
 		}
 		
 		if (type == Type.USE) {
-			waitUntilCondition = null;
+			apThreshold = 0;
 			if (itemToUse == null) {
 				throw new InvalidBattleException("USE instruction is missing itemToUse");
 			}
@@ -75,11 +72,9 @@ public class Instruction implements Serializable {
 		
 		if (type == Type.WAIT) {
 			itemToUse = null;
-			if (waitUntilCondition == null) {
-				throw new InvalidBattleException("WAIT instruction is missing waitUntilCondition");
+			if (apThreshold < 0) {
+				apThreshold = 0;
 			}
-			waitUntilCondition.player = Player.ME;
-			waitUntilCondition.validate();
 		}
 	}
 	
