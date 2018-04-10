@@ -27,7 +27,7 @@ public class BattleEvent implements Serializable {
 		return event;
 	}
 	
-	public static BattleEvent useItemEvent(int timestamp, int playerIndex, Item item, Stat stat, double change) {
+	public static BattleEvent newUseItemEvent(int timestamp, int playerIndex, Item item, Stat stat, double change) {
 		BattleEvent event = new BattleEvent();
 		event.time = timestamp;
 		event.playerIndex = playerIndex;

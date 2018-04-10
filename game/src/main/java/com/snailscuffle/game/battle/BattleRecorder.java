@@ -26,7 +26,7 @@ public class BattleRecorder {
 	public void recordUseItem(Combatant player, Item type, Stat stat, double change) {
 		int time = battle.currentTime();
 		int playerIndex = battle.playerIndexOf(player);
-		events.add(BattleEvent.useItemEvent(time, playerIndex, type, stat, change));
+		events.add(BattleEvent.newUseItemEvent(time, playerIndex, type, stat, change));
 	}
 	
 	public List<BattleEvent> battleEvents() {
