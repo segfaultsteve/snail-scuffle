@@ -19,18 +19,18 @@ import org.mockito.MockitoAnnotations;
 public class BattleServletTest {
 
 	@Mock private Request request;
-    @Mock private Response response;
-    private StringWriter responseBuffer;
+	@Mock private Response response;
+	private StringWriter responseBuffer;
 
-    @Before
-    public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        
-        responseBuffer = new StringWriter();
-        PrintWriter printWriter = new PrintWriter(responseBuffer);
-        when(response.getWriter()).thenReturn(printWriter);
-    }
-	
+	@Before
+	public void setUp() throws Exception {
+		MockitoAnnotations.initMocks(this);
+
+		responseBuffer = new StringWriter();
+		PrintWriter printWriter = new PrintWriter(responseBuffer);
+		when(response.getWriter()).thenReturn(printWriter);
+	}
+
 	@Test
 	public void doPost() throws Exception {
 		// TODO
