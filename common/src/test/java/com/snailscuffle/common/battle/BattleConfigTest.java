@@ -18,26 +18,26 @@ public class BattleConfigTest {
 	}
 	
 	@Test
-	public void failValidationOnNullBattlePlans() {
+	public void failValidationOnMissingBattlePlans() {
 		config.battlePlans = null;
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	
 	@Test
 	public void failValidationOnEmptyBattlePlans() {
-		config.battlePlans.clear();
+		config.battlePlans = new BattlePlan[2];
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	
 	@Test
 	public void failValidationOnSingleBattlePlan() {
-		config.battlePlans.remove(1);
+		config.battlePlans[1] = null;
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	
 	@Test
 	public void failValidationOnInvalidBattlePlan() {
-		config.battlePlans.get(0).snail = null;
+		config.battlePlans[0].snail = null;
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	

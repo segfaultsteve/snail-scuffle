@@ -8,7 +8,7 @@ public enum Accessory {
 	CAFFEINE (0, 0, CAFFEINE_SPEED),		// speed boost
 	CHARGED_ATTACK (0, 0, 0),				// attack increases as AP increases
 	ADRENALINE (0, 0, 0),					// attack increases as HP decreases
-	SALTED_SHELL (0, 0, 0),					// reduces defense in first half; large attack boost in second half
+	SALTED_SHELL (0, 0, 0),					// reduces defense in first period; large attack boost in subsequent period(s)
 	THORNS (0, 0, 0),						// enemy takes light damage every time he attacks
 	DEFIBRILLATOR (0, 0, 0),				// mortal blow leaves 1 HP remaining
 	NONE (0, 0, 0);

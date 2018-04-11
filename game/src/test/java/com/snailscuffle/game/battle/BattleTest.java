@@ -32,7 +32,7 @@ public class BattleTest {
 	
 	@Test
 	public void player1WinsWhenBattlePlansAreIdentical() {
-		BattleConfig config = new BattleConfig(bp, bp, bp, bp);
+		BattleConfig config = new BattleConfig(bp, bp, bp, bp, bp, bp);
 		BattleResult result = (new Battle(config)).getResult();
 		assertEquals(0, result.winnerIndex);
 	}
@@ -41,7 +41,7 @@ public class BattleTest {
 	public void steroidsSwingBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.accessory = Accessory.STEROIDS;
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -52,7 +52,7 @@ public class BattleTest {
 	public void snailMailSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.accessory = Accessory.SNAIL_MAIL;
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -74,7 +74,7 @@ public class BattleTest {
 	public void chargedAttackSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.accessory = Accessory.CHARGED_ATTACK;
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -85,7 +85,7 @@ public class BattleTest {
 	public void adrenalineSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.accessory = Accessory.ADRENALINE;
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -96,7 +96,7 @@ public class BattleTest {
 	public void thornsSwingBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.accessory = Accessory.THORNS;
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -107,7 +107,7 @@ public class BattleTest {
 	public void defibrillatorSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.accessory = Accessory.DEFIBRILLATOR;
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -118,8 +118,8 @@ public class BattleTest {
 	public void attackBoostSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.item1 = Item.ATTACK;
-		bp2.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK));
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		bp2.instructions = Arrays.asList(Instruction.waitUntilApIs(45), Instruction.useItem(Item.ATTACK));
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -130,8 +130,8 @@ public class BattleTest {
 	public void defenseBoostSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
 		bp2.item1 = Item.DEFENSE;
-		bp2.instructions = Arrays.asList(Instruction.useItem(Item.DEFENSE));
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		bp2.instructions = Arrays.asList(Instruction.waitUntilApIs(15), Instruction.useItem(Item.DEFENSE));
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		
@@ -143,7 +143,7 @@ public class BattleTest {
 		BattlePlan bp2 = clone(bp);
 		bp2.item1 = Item.SPEED;
 		bp2.instructions = Arrays.asList(Instruction.useItem(Item.SPEED));
-		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2);
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
 		BattleResult result = (new Battle(config)).getResult();
 		

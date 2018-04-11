@@ -43,10 +43,9 @@ public class Combatant {
 	private int ap;		// = AP * SCALE
 	private int currentInstruction;
 	private final List<ActiveBoost> activeBoosts;
-	private boolean secondHalf;
+	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 
-	public Combatant(BattlePlan firstHalfBattlePlan, int playerIndex, BattleRecorder recorder) {
-		battlePlan = firstHalfBattlePlan;
+	public Combatant(int playerIndex, BattleRecorder recorder) {
 		this.recorder = recorder;
 		hp = INITIAL_HP * SCALE;
 		ap = INITIAL_AP * SCALE;
@@ -124,7 +123,7 @@ public class Combatant {
 		
 		if (battlePlan.accessory == Accessory.THORNS) {
 			int damageToAttacker = (int) (THORNS_DAMAGE_MULTIPLIER * damage);
-			recorder.recordAttack(this, damageToAttacker);
+			recorder.recordAttack(this, 1.0 * damageToAttacker / SCALE);
 			opponent.takeDamage(damageToAttacker);
 		} else if (hp <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR) {
 			hp = SCALE;		// 1 HP
@@ -154,7 +153,7 @@ public class Combatant {
 			break;
 		case SPEED:
 			ap += SCALE * SPEED_BOOST_AP_INCREASE;
-			recorder.recordUseItem(this, Item.SPEED, Stat.SPEED, SPEED_BOOST_AP_INCREASE);
+			recorder.recordUseItem(this, Item.SPEED, Stat.AP, SPEED_BOOST_AP_INCREASE);
 			break;
 		default:
 			throw new RuntimeException("Unexpected item");
@@ -195,7 +194,7 @@ public class Combatant {
 			attack += attack * ap / CHARGED_ATTACK_AP_DIVISOR;
 		} else if (battlePlan.accessory == Accessory.ADRENALINE) {
 			attack += (ADRENALINE_CROSSOVER - hp) / ADRENALINE_DIVISOR;
-		} else if (secondHalf && battlePlan.accessory == Accessory.SALTED_SHELL) {
+		} else if (saltedShellCounter > 1 && battlePlan.accessory == Accessory.SALTED_SHELL) {
 			attack *= SALTED_SHELL_ATTACK_MULTIPLIER;
 		}
 		attack *= boostFactor(Item.ATTACK);
@@ -209,7 +208,7 @@ public class Combatant {
 				+ battlePlan.shell.defense
 				+ battlePlan.accessory.defense);
 		
-		if (!secondHalf && battlePlan.accessory == Accessory.SALTED_SHELL) {
+		if (saltedShellCounter <= 1 && battlePlan.accessory == Accessory.SALTED_SHELL) {
 			defense *= SALTED_SHELL_DEFENSE_MULTIPLIER;
 		}
 		defense *= boostFactor(Item.DEFENSE);
@@ -245,9 +244,15 @@ public class Combatant {
 		return hp > 0;
 	}
 	
-	public void setSecondHalfBattlePlan(BattlePlan battlePlan) {
+	public void setBattlePlan(BattlePlan battlePlan) {
 		this.battlePlan = battlePlan;
-		secondHalf = true;
+		currentInstruction = 0;
+		
+		if (battlePlan.accessory == Accessory.SALTED_SHELL) {
+			saltedShellCounter++;
+		} else {
+			saltedShellCounter = 0;
+		}
 	}
 
 }
