@@ -5,7 +5,7 @@ import com.snailscuffle.common.battle.BattleResult;
 
 public class Battle {
 	
-	private static final int PERIOD = 4 * Combatant.SCALE;
+	private static final int PERIOD = 6 * Combatant.SCALE;
 	
 	private int time = 0;
 	private Combatant player1;
@@ -26,7 +26,8 @@ public class Battle {
 			player2.setBattlePlan(config.battlePlans[bpIndex + 1]);
 			
 			int increment = 0;
-			for (time = 0; time < periodEnd && player1.isAlive() && player2.isAlive(); time += increment) {
+			while (time + increment < periodEnd && player1.isAlive() && player2.isAlive()) {
+				time += increment;
 				player1.update(increment);
 				player2.update(increment);
 				increment = nextIncrement(player1, player2);
