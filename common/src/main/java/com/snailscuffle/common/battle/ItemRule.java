@@ -54,5 +54,26 @@ public class ItemRule implements Serializable {
 			hasCondition.validate();
 		}
 	}
-
+	
+	public boolean triggersWhenPlayerHas(Player subject, double hp, double ap) {
+		if (hasCondition == null || hasCondition.player != subject) {
+			return false;
+		}
+		
+		double statValue;
+		if (hasCondition.stat == Stat.HP) {
+			statValue = hp;
+		} else if (hasCondition.stat == Stat.AP) {
+			statValue = ap;
+		} else {
+			throw new RuntimeException("Unexpected stat");
+		}
+		
+		return hasCondition.inequality.evaluate(statValue, hasCondition.threshold);
+	}
+	
+	public boolean triggersWhenEnemyUses(Item item) {
+		return (enemyUsesCondition != null && item == enemyUsesCondition);
+	}
+	
 }

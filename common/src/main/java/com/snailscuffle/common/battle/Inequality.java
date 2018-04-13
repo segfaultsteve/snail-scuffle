@@ -10,7 +10,7 @@ public enum Inequality {
 		this.serialization = serializeAs;
 	}
 	
-	public boolean evaluate(int lhs, int rhs) {
+	public boolean evaluate(double lhs, double rhs) {
 		if (this == LESS_THAN_OR_EQUALS) {
 			return lhs <= rhs;
 		}

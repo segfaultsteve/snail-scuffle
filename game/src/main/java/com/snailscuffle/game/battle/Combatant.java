@@ -10,6 +10,7 @@ import com.snailscuffle.common.battle.HasCondition;
 import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.ItemRule;
+import com.snailscuffle.common.battle.Player;
 import com.snailscuffle.common.battle.Stat;
 
 public class Combatant {
@@ -248,47 +249,38 @@ public class Combatant {
 	}
 	
 	private static boolean usesConditionIsSatisfied(ItemRule itemRule, Item itemUsed) {
-		return (itemRule != null && itemRule.enemyUsesCondition != null && itemRule.enemyUsesCondition == itemUsed);
+		return (itemRule != null && itemRule.triggersWhenEnemyUses(itemUsed));
 	}
 
 	public void onStatChanged() {
-		checkItemRuleHasConditions(this);
+		double myHp = 1.0 * hp.get() / SCALE;
+		double myAp = 1.0 * ap.get() / SCALE;
+		checkItemRuleHasConditions(Player.ME, myHp, myAp);
 	}
 	
 	public void onEnemyStatChanged() {
-		checkItemRuleHasConditions(opponent);
+		double enemyHp = 1.0 * opponent.hp.get() / SCALE;
+		double enemyAp = 1.0 * opponent.ap.get() / SCALE;
+		checkItemRuleHasConditions(Player.ENEMY, enemyHp, enemyAp);
 	}
 	
-	private void checkItemRuleHasConditions(Combatant subject) {
-		if (battlePlan.item1 != null && hasConditionIsSatisfied(battlePlan.item1Rule, subject)) {
+	private void checkItemRuleHasConditions(Player subject, double subjectHp, double subjectAp) {
+		if (battlePlan.item1 != null && hasConditionIsSatisfied(battlePlan.item1Rule, subject, subjectHp, subjectAp)) {
 			applyItem(battlePlan.item1);
 			battlePlan.item1 = null;
 		}
 		
-		if (battlePlan.item2 != null && hasConditionIsSatisfied(battlePlan.item2Rule, subject)) {
+		if (battlePlan.item2 != null && hasConditionIsSatisfied(battlePlan.item2Rule, subject, subjectHp, subjectAp)) {
 			applyItem(battlePlan.item2);
 			battlePlan.item2 = null;
 		}
 	}
 	
-	private static boolean hasConditionIsSatisfied(ItemRule itemRule, Combatant subject) {
+	private static boolean hasConditionIsSatisfied(ItemRule itemRule, Player subject, double subjectHp, double subjectAp) {
 		if (itemRule == null || itemRule.hasCondition == null) {
 			return false;
 		}
-		
-		HasCondition condition = itemRule.hasCondition;
-		int statValue = subject.getValue(itemRule.hasCondition.stat);
-		return condition.inequality.evaluate(statValue, condition.threshold);
-	}
-	
-	private int getValue(Stat stat) {
-		if (stat == Stat.HP) {
-			return hp.get();
-		} else if (stat == Stat.AP) {
-			return ap.get();
-		} else {
-			throw new RuntimeException("Unexpected stat");
-		}
+		return itemRule.triggersWhenPlayerHas(subject, subjectHp, subjectAp);
 	}
 	
 	public boolean isAlive() {
