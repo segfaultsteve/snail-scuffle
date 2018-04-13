@@ -10,6 +10,13 @@ public enum Inequality {
 		this.serialization = serializeAs;
 	}
 	
+	public boolean evaluate(int lhs, int rhs) {
+		if (this == LESS_THAN_OR_EQUALS) {
+			return lhs <= rhs;
+		}
+		return lhs >= rhs;
+	}
+	
 	@Override
 	public String toString() {
 		return serialization;

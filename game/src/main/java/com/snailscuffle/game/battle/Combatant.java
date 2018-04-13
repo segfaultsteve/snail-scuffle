@@ -4,12 +4,12 @@ import static com.snailscuffle.common.battle.Constants.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.IntSupplier;
-
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.BattlePlan;
+import com.snailscuffle.common.battle.HasCondition;
 import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.battle.Item;
+import com.snailscuffle.common.battle.ItemRule;
 import com.snailscuffle.common.battle.Stat;
 
 public class Combatant {
@@ -39,21 +39,23 @@ public class Combatant {
 	private BattlePlan battlePlan;
 	private final BattleRecorder recorder;
 	private Combatant opponent;
-	private int hp;		// = HP * SCALE
-	private int ap;		// = AP * SCALE
+	private MeteredStat hp;		// = HP * SCALE
+	private MeteredStat ap;		// = AP * SCALE
 	private int currentInstruction;
 	private final List<ActiveBoost> activeBoosts;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 
 	public Combatant(int playerIndex, BattleRecorder recorder) {
 		this.recorder = recorder;
-		hp = INITIAL_HP * SCALE;
-		ap = INITIAL_AP * SCALE;
+		hp = new MeteredStat(this, INITIAL_HP * SCALE);
+		ap = new MeteredStat(this, INITIAL_AP * SCALE);
 		activeBoosts = new ArrayList<>();
 	}
 	
 	public void setOpponent(Combatant opponent) {
 		this.opponent = opponent;
+		hp.registerOpponentForCallbacks(opponent);
+		ap.registerOpponentForCallbacks(opponent);
 	}
 	
 	// Each tick, the player gains Speed/SCALE action points. The number of ticks
@@ -61,12 +63,12 @@ public class Combatant {
 	//   ticks = ((next whole AP) - (current AP)) / (Speed/SCALE)    <-- normal division
 	//         = ((ap/SCALE + 1)*SCALE - ap) * SCALE / speedStat()   <-- integer division
 	public int ticksToNextAp() {
-		int nextAp = (ap/SCALE + 1) * SCALE;
-		return (nextAp - ap) * SCALE / speedStat() + 1;		// +1 to round up after integer division
+		int nextAp = (ap.get()/SCALE + 1) * SCALE;
+		return (nextAp - ap.get()) * SCALE / speedStat() + 1;		// +1 to round up after integer division
 	}
 	
 	public void update(int deltaTicks) {
-		ap += deltaTicks * speedStat() / SCALE;
+		ap.add(deltaTicks * speedStat() / SCALE);
 		decrementBoostTimers(activeBoosts, deltaTicks);
 		
 		boolean continueTurn = true;
@@ -103,9 +105,9 @@ public class Combatant {
 	
 	private boolean tryAttack() {
 		int attackCost = battlePlan.weapon.apCost * SCALE;
-		if (ap >= attackCost) {
+		if (ap.get() >= attackCost) {
 			attackOpponent();
-			ap -= attackCost;
+			ap.subtract(attackCost);
 			currentInstruction++;
 			return true;
 		}
@@ -119,14 +121,14 @@ public class Combatant {
 	}
 	
 	private void takeDamage(int damage) {
-		hp -= damage;
+		hp.subtract(damage);
 		
 		if (battlePlan.accessory == Accessory.THORNS) {
 			int damageToAttacker = (int) (THORNS_DAMAGE_MULTIPLIER * damage);
 			recorder.recordAttack(this, 1.0 * damageToAttacker / SCALE);
 			opponent.takeDamage(damageToAttacker);
-		} else if (hp <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR) {
-			hp = SCALE;		// 1 HP
+		} else if (hp.get() <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR) {
+			hp.set(SCALE);		// 1 HP
 			battlePlan.accessory = Accessory.NONE;	// only use defibrillator once
 		}
 	}
@@ -146,38 +148,31 @@ public class Combatant {
 	private void applyItem(Item item) {
 		switch (item) {
 		case ATTACK:
-			applyBoost(Item.ATTACK, ATTACK_BOOST_DURATION, () -> attackStat());
+			int initialAttack = attackStat();
+			activeBoosts.add(new ActiveBoost(Item.ATTACK, ATTACK_BOOST_DURATION));
+			recorder.recordUseItem(this, Item.ATTACK, Stat.ATTACK, 1.0 * (attackStat() - initialAttack) / SCALE);
 			break;
+			
 		case DEFENSE:
-			applyBoost(Item.DEFENSE, DEFENSE_BOOST_DURATION, () -> defenseStat());
+			int initialDefense = defenseStat();
+			activeBoosts.add(new ActiveBoost(Item.DEFENSE, DEFENSE_BOOST_DURATION));
+			recorder.recordUseItem(this, Item.DEFENSE, Stat.DEFENSE, 1.0 * (defenseStat() - initialDefense) / SCALE);
 			break;
+			
 		case SPEED:
-			ap += SCALE * SPEED_BOOST_AP_INCREASE;
+			ap.add(SCALE * SPEED_BOOST_AP_INCREASE);
 			recorder.recordUseItem(this, Item.SPEED, Stat.AP, SPEED_BOOST_AP_INCREASE);
 			break;
+			
 		default:
 			throw new RuntimeException("Unexpected item");
 		}
-	}
-	
-	private void applyBoost(Item type, int duration, IntSupplier statFunc) {
-		Stat stat = null;
-		if (type == Item.ATTACK) {
-			stat = Stat.ATTACK;
-		} else if (type == Item.DEFENSE) {
-			stat = Stat.DEFENSE;
-		} else {
-			throw new RuntimeException("Unexpected boost");
-		}
 		
-		int statBefore = statFunc.getAsInt();
-		activeBoosts.add(new ActiveBoost(type, duration));
-		double statChange = statFunc.getAsInt() - statBefore;
-		recorder.recordUseItem(this, type, stat, statChange/SCALE);
+		opponent.onOpponentUsedItem(item);
 	}
 	
 	private boolean tryWait(int threshold) {
-		if (ap >= threshold) {
+		if (ap.get() >= threshold) {
 			currentInstruction++;
 			return true;
 		}
@@ -191,9 +186,9 @@ public class Combatant {
 				+ battlePlan.accessory.attack);
 		
 		if (battlePlan.accessory == Accessory.CHARGED_ATTACK) {
-			attack += attack * ap / CHARGED_ATTACK_AP_DIVISOR;
+			attack += attack * ap.get() / CHARGED_ATTACK_AP_DIVISOR;
 		} else if (battlePlan.accessory == Accessory.ADRENALINE) {
-			attack += (ADRENALINE_CROSSOVER - hp) / ADRENALINE_DIVISOR;
+			attack += (ADRENALINE_CROSSOVER - hp.get()) / ADRENALINE_DIVISOR;
 		} else if (saltedShellCounter > 1 && battlePlan.accessory == Accessory.SALTED_SHELL) {
 			attack *= SALTED_SHELL_ATTACK_MULTIPLIER;
 		}
@@ -240,8 +235,64 @@ public class Combatant {
 		return boost;
 	}
 	
+	private void onOpponentUsedItem(Item item) {
+		if (battlePlan.item1 != null && usesConditionIsSatisfied(battlePlan.item1Rule, item)) {
+			applyItem(battlePlan.item1);
+			battlePlan.item1 = null;
+		}
+		
+		if (battlePlan.item2 != null && usesConditionIsSatisfied(battlePlan.item2Rule, item)) {
+			applyItem(battlePlan.item2);
+			battlePlan.item2 = null;
+		}
+	}
+	
+	private static boolean usesConditionIsSatisfied(ItemRule itemRule, Item itemUsed) {
+		return (itemRule != null && itemRule.enemyUsesCondition != null && itemRule.enemyUsesCondition == itemUsed);
+	}
+
+	public void onStatChanged() {
+		checkItemRuleHasConditions(this);
+	}
+	
+	public void onEnemyStatChanged() {
+		checkItemRuleHasConditions(opponent);
+	}
+	
+	private void checkItemRuleHasConditions(Combatant subject) {
+		if (battlePlan.item1 != null && hasConditionIsSatisfied(battlePlan.item1Rule, subject)) {
+			applyItem(battlePlan.item1);
+			battlePlan.item1 = null;
+		}
+		
+		if (battlePlan.item2 != null && hasConditionIsSatisfied(battlePlan.item2Rule, subject)) {
+			applyItem(battlePlan.item2);
+			battlePlan.item2 = null;
+		}
+	}
+	
+	private static boolean hasConditionIsSatisfied(ItemRule itemRule, Combatant subject) {
+		if (itemRule == null || itemRule.hasCondition == null) {
+			return false;
+		}
+		
+		HasCondition condition = itemRule.hasCondition;
+		int statValue = subject.getValue(itemRule.hasCondition.stat);
+		return condition.inequality.evaluate(statValue, condition.threshold);
+	}
+	
+	private int getValue(Stat stat) {
+		if (stat == Stat.HP) {
+			return hp.get();
+		} else if (stat == Stat.AP) {
+			return ap.get();
+		} else {
+			throw new RuntimeException("Unexpected stat");
+		}
+	}
+	
 	public boolean isAlive() {
-		return hp > 0;
+		return hp.get() > 0;
 	}
 	
 	public void setBattlePlan(BattlePlan battlePlan) {
