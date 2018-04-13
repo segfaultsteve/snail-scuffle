@@ -37,6 +37,10 @@ public class HasCondition implements Serializable {
 			
 			throw new InvalidBattleException("Condition is missing " + missingField);
 		}
+		
+		if (stat != Stat.HP && stat != Stat.AP) {
+			throw new InvalidBattleException("Invalid trigger condition; must trigger on HP or AP");
+		}
 	}
 
 }
