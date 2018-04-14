@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.BattlePlan;
-import com.snailscuffle.common.battle.HasCondition;
 import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.ItemRule;
@@ -37,6 +36,9 @@ public class Combatant {
 	// Damage p1 does to p2 = SCALE * DAMAGE_MULTIPLIER * Attack_p1 / Defense_p2
 	private static final int DAMAGE_MULTIPLIER = 10;
 	
+	// This is the maximum number of items that a player can use across all periods.
+	private static final int MAX_ITEMS_PER_BATTLE = 2;
+	
 	private BattlePlan battlePlan;
 	private final BattleRecorder recorder;
 	private Combatant opponent;
@@ -44,6 +46,7 @@ public class Combatant {
 	private MeteredStat ap;		// = AP * SCALE
 	private int currentInstruction;
 	private final List<ActiveBoost> activeBoosts;
+	private int itemsUsed;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 
 	public Combatant(int playerIndex, BattleRecorder recorder) {
@@ -135,12 +138,14 @@ public class Combatant {
 	}
 	
 	private boolean tryUseItem(Item item) {
-		if (battlePlan.item1 == item) {
-			applyItem(battlePlan.item1);
-			battlePlan.item1 = null;
-		} else if (battlePlan.item2 == item) {
-			applyItem(battlePlan.item2);
-			battlePlan.item2 = null;
+		if (itemsUsed < MAX_ITEMS_PER_BATTLE) {
+			if (battlePlan.item1 == item) {
+				applyItem(battlePlan.item1);
+				battlePlan.item1 = null;
+			} else if (battlePlan.item2 == item) {
+				applyItem(battlePlan.item2);
+				battlePlan.item2 = null;
+			}
 		}
 		currentInstruction++;
 		return true;	// using an item has zero "cost"; always continue to next instruction
@@ -168,7 +173,7 @@ public class Combatant {
 		default:
 			throw new RuntimeException("Unexpected item");
 		}
-		
+		itemsUsed++;
 		opponent.onOpponentUsedItem(item);
 	}
 	
@@ -237,14 +242,16 @@ public class Combatant {
 	}
 	
 	private void onOpponentUsedItem(Item item) {
-		if (battlePlan.item1 != null && usesConditionIsSatisfied(battlePlan.item1Rule, item)) {
-			applyItem(battlePlan.item1);
-			battlePlan.item1 = null;
-		}
-		
-		if (battlePlan.item2 != null && usesConditionIsSatisfied(battlePlan.item2Rule, item)) {
-			applyItem(battlePlan.item2);
-			battlePlan.item2 = null;
+		if (itemsUsed < MAX_ITEMS_PER_BATTLE) {
+			if (battlePlan.item1 != null && usesConditionIsSatisfied(battlePlan.item1Rule, item)) {
+				applyItem(battlePlan.item1);
+				battlePlan.item1 = null;
+			}
+
+			if (battlePlan.item2 != null && usesConditionIsSatisfied(battlePlan.item2Rule, item)) {
+				applyItem(battlePlan.item2);
+				battlePlan.item2 = null;
+			}
 		}
 	}
 	
