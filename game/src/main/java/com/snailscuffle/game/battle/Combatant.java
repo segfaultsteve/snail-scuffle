@@ -36,7 +36,7 @@ public class Combatant {
 	// Damage p1 does to p2 = SCALE * DAMAGE_MULTIPLIER * Attack_p1 / Defense_p2
 	private static final int DAMAGE_MULTIPLIER = 10;
 	
-	// This is the maximum number of items that a player can use across all periods.
+	// maximum number of items that a player can use across all periods
 	private static final int MAX_ITEMS_PER_BATTLE = 2;
 	
 	private BattlePlan battlePlan;
@@ -294,8 +294,8 @@ public class Combatant {
 		return hp.get() > 0;
 	}
 	
-	public void setBattlePlan(BattlePlan battlePlan) {
-		this.battlePlan = battlePlan;
+	public void setBattlePlan(BattlePlan newPlan) {
+		battlePlan = updateBattlePlan(newPlan, battlePlan, MAX_ITEMS_PER_BATTLE - itemsUsed);
 		currentInstruction = 0;
 		
 		if (battlePlan.accessory == Accessory.SALTED_SHELL) {
@@ -303,6 +303,38 @@ public class Combatant {
 		} else {
 			saltedShellCounter = 0;
 		}
+	}
+
+	private static BattlePlan updateBattlePlan(BattlePlan newPlan, BattlePlan currentPlan, int itemsToAllow) {
+		if (currentPlan == null) {
+			return newPlan;
+		}
+		
+		BattlePlan validatedPlan = new BattlePlan(newPlan);		// deep copy (item rules, instructions)
+		
+		// force snail to be the same and allow at most one of {weapon, shell, accessory} to change
+		validatedPlan.snail = currentPlan.snail;
+		validatedPlan.weapon = currentPlan.weapon;
+		validatedPlan.shell = currentPlan.shell;
+		validatedPlan.accessory = currentPlan.accessory;
+		
+		if (newPlan.weapon != currentPlan.weapon) {
+			validatedPlan.weapon = newPlan.weapon;
+		} else if (newPlan.shell != currentPlan.shell) {
+			validatedPlan.shell = newPlan.shell;
+		} else if (newPlan.accessory != currentPlan.accessory) {
+			validatedPlan.accessory = newPlan.accessory;
+		}
+		
+		// forbid equipping more items than player can use this period
+		if (itemsToAllow < 2) {
+			validatedPlan.item2 = null;
+		}
+		if (itemsToAllow < 1) {
+			validatedPlan.item1 = null;
+		}
+		
+		return validatedPlan;
 	}
 
 }
