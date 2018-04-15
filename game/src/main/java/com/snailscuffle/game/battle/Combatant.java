@@ -37,7 +37,7 @@ public class Combatant {
 	private static final int DAMAGE_MULTIPLIER = 10;
 	
 	// maximum number of items that a player can use across all periods
-	private static final int MAX_ITEMS_PER_BATTLE = 2;
+	public static final int MAX_ITEMS_PER_BATTLE = 2;
 	
 	private BattlePlan battlePlan;
 	private final BattleRecorder recorder;
@@ -307,10 +307,10 @@ public class Combatant {
 
 	private static BattlePlan updateBattlePlan(BattlePlan newPlan, BattlePlan currentPlan, int itemsToAllow) {
 		if (currentPlan == null) {
-			return newPlan;
+			return new BattlePlan(newPlan);		// deep copy (item rules, instructions) so we don't modify original
 		}
 		
-		BattlePlan validatedPlan = new BattlePlan(newPlan);		// deep copy (item rules, instructions)
+		BattlePlan validatedPlan = new BattlePlan(newPlan);		// deep copy
 		
 		// force snail to be the same and allow at most one of {weapon, shell, accessory} to change
 		validatedPlan.snail = currentPlan.snail;
