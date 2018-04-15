@@ -7,29 +7,28 @@ import com.snailscuffle.common.battle.BattleEvent;
 import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.Stat;
 
-public class BattleRecorder {
+class BattleRecorder {
 	
 	private Battle battle;
-	private List<BattleEvent> events;
+	private List<BattleEvent> events = new ArrayList<>();
 	
-	public BattleRecorder(Battle toRecord) {
+	BattleRecorder(Battle toRecord) {
 		battle = toRecord;
-		events = new ArrayList<>();
 	}
 	
-	public void recordAttack(Combatant attacker, double damage) {
+	void recordAttack(Combatant attacker, double damage) {
 		int time = battle.currentTime();
 		int attackerIndex = battle.playerIndexOf(attacker);
 		events.add(BattleEvent.attack(time, attackerIndex, damage));
 	}
 	
-	public void recordUseItem(Combatant player, Item type, Stat stat, double change) {
+	void recordUseItem(Combatant player, Item type, Stat stat, double change) {
 		int time = battle.currentTime();
 		int playerIndex = battle.playerIndexOf(player);
 		events.add(BattleEvent.useItem(time, playerIndex, type, stat, change));
 	}
 	
-	public List<BattleEvent> battleEvents() {
+	List<BattleEvent> battleEvents() {
 		return events;
 	}
 

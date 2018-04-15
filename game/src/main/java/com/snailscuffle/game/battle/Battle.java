@@ -7,7 +7,7 @@ public class Battle {
 	
 	private static final int PERIOD = 6 * Combatant.SCALE;
 	
-	private int time = 0;
+	private int time;
 	private Combatant player1;
 	private Combatant player2;
 	private BattleRecorder recorder;
@@ -40,11 +40,11 @@ public class Battle {
 		return Math.min(p1.ticksToNextAp(), p2.ticksToNextAp());
 	}
 	
-	public int currentTime() {
+	int currentTime() {
 		return time;
 	}
 	
-	public int playerIndexOf(Combatant combatant) {
+	int playerIndexOf(Combatant combatant) {
 		if (combatant == player1) {
 			return 0;
 		} else if (combatant == player2) {

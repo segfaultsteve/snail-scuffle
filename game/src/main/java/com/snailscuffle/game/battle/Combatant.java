@@ -12,7 +12,7 @@ import com.snailscuffle.common.battle.ItemRule;
 import com.snailscuffle.common.battle.Player;
 import com.snailscuffle.common.battle.Stat;
 
-public class Combatant {
+class Combatant {
 	
 	private static class ActiveBoost {
 		private Item type;
@@ -31,13 +31,13 @@ public class Combatant {
 	// 
 	// SCALE also defines the size of one time tick. Every tick, the player gains Speed/SCALE
 	// action points. Equivalently, after SCALE ticks, the player gains AP equal to Speed.
-	public static final int SCALE = 1000;
+	static final int SCALE = 1000;
 	
 	// Damage p1 does to p2 = SCALE * DAMAGE_MULTIPLIER * Attack_p1 / Defense_p2
 	private static final int DAMAGE_MULTIPLIER = 10;
 	
 	// maximum number of items that a player can use across all periods
-	public static final int MAX_ITEMS_PER_BATTLE = 2;
+	static final int MAX_ITEMS_PER_BATTLE = 2;
 	
 	private BattlePlan battlePlan;
 	private final BattleRecorder recorder;
@@ -45,18 +45,17 @@ public class Combatant {
 	private MeteredStat hp;		// = HP * SCALE
 	private MeteredStat ap;		// = AP * SCALE
 	private int currentInstruction;
-	private final List<ActiveBoost> activeBoosts;
+	private final List<ActiveBoost> activeBoosts = new ArrayList<>();
 	private int itemsUsed;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 
-	public Combatant(BattleRecorder recorder) {
+	Combatant(BattleRecorder recorder) {
 		this.recorder = recorder;
 		hp = new MeteredStat(this, INITIAL_HP * SCALE);
 		ap = new MeteredStat(this, INITIAL_AP * SCALE);
-		activeBoosts = new ArrayList<>();
 	}
 	
-	public void setOpponent(Combatant opponent) {
+	void setOpponent(Combatant opponent) {
 		this.opponent = opponent;
 		hp.registerOpponentForCallbacks(opponent);
 		ap.registerOpponentForCallbacks(opponent);
@@ -66,12 +65,12 @@ public class Combatant {
 	// until the next whole-number AP is therefore:
 	//   ticks = ((next whole AP) - (current AP)) / (Speed/SCALE)    <-- normal division
 	//         = ((ap/SCALE + 1)*SCALE - ap) * SCALE / speedStat()   <-- integer division
-	public int ticksToNextAp() {
+	int ticksToNextAp() {
 		int nextAp = (ap.get()/SCALE + 1) * SCALE;
 		return (nextAp - ap.get()) * SCALE / speedStat() + 1;		// +1 to round up after integer division
 	}
 	
-	public void update(int deltaTicks) {
+	void update(int deltaTicks) {
 		ap.add(deltaTicks * speedStat() / SCALE);
 		decrementBoostTimers(activeBoosts, deltaTicks);
 		
@@ -259,13 +258,13 @@ public class Combatant {
 		return (itemRule != null && itemRule.triggersWhenEnemyUses(itemUsed));
 	}
 
-	public void onStatChanged() {
+	void onStatChanged() {
 		double myHp = 1.0 * hp.get() / SCALE;
 		double myAp = 1.0 * ap.get() / SCALE;
 		checkItemRuleHasConditions(Player.ME, myHp, myAp);
 	}
 	
-	public void onEnemyStatChanged() {
+	void onEnemyStatChanged() {
 		double enemyHp = 1.0 * opponent.hp.get() / SCALE;
 		double enemyAp = 1.0 * opponent.ap.get() / SCALE;
 		checkItemRuleHasConditions(Player.ENEMY, enemyHp, enemyAp);
@@ -290,11 +289,11 @@ public class Combatant {
 		return itemRule.triggersWhenPlayerHas(subject, subjectHp, subjectAp);
 	}
 	
-	public boolean isAlive() {
+	boolean isAlive() {
 		return hp.get() > 0;
 	}
 	
-	public void setBattlePlan(BattlePlan newPlan) {
+	void setBattlePlan(BattlePlan newPlan) {
 		battlePlan = updateBattlePlan(newPlan, battlePlan, MAX_ITEMS_PER_BATTLE - itemsUsed);
 		currentInstruction = 0;
 		
