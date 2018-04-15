@@ -14,8 +14,8 @@ public class Battle {
 	
 	public Battle(BattleConfig config) {
 		recorder = new BattleRecorder(this);
-		player1 = new Combatant(0, recorder);
-		player2 = new Combatant(1, recorder);
+		player1 = new Combatant(recorder);
+		player2 = new Combatant(recorder);
 		
 		player1.setOpponent(player2);
 		player2.setOpponent(player1);

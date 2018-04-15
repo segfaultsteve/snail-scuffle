@@ -49,7 +49,7 @@ public class Combatant {
 	private int itemsUsed;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 
-	public Combatant(int playerIndex, BattleRecorder recorder) {
+	public Combatant(BattleRecorder recorder) {
 		this.recorder = recorder;
 		hp = new MeteredStat(this, INITIAL_HP * SCALE);
 		ap = new MeteredStat(this, INITIAL_AP * SCALE);
