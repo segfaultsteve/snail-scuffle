@@ -9,12 +9,15 @@ import org.junit.Test;
 
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.BattleConfig;
+import com.snailscuffle.common.battle.BattleEvent;
+import com.snailscuffle.common.battle.BattleEventEffect;
 import com.snailscuffle.common.battle.BattlePlan;
 import com.snailscuffle.common.battle.BattleResult;
 import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.Shell;
 import com.snailscuffle.common.battle.Snail;
+import com.snailscuffle.common.battle.Stat;
 import com.snailscuffle.common.battle.Weapon;
 
 public class BattleTest {
@@ -148,6 +151,52 @@ public class BattleTest {
 		BattleResult result = (new Battle(config)).getResult();
 		
 		assertEquals(1, result.winnerIndex);
+	}
+	
+	@Test
+	public void playerCanOnlyChangeOnePieceOfEquipmentPerPeriod() {
+		bp.weapon = Weapon.ROCKET;
+		bp.shell = Shell.ALUMINUM;
+		
+		// change weapon *and* shell
+		BattlePlan bp2 = clone(bp);
+		bp2.weapon = Weapon.LASER;
+		bp2.shell = Shell.STEEL;
+		
+		BattleConfig config = new BattleConfig(bp, bp, bp2, bp, bp, bp);	// player 1 makes two changes at second period
+		BattleResult result = (new Battle(config)).getResult();
+		
+		// shell should not have changed, so damage should be the same across all periods
+		double player1InitialDamage = 0;
+		for (BattleEvent event : result.sequenceOfEvents) {
+			BattleEventEffect effect = event.effects.get(0);
+			if (effect.playerIndex == 0 && effect.stat == Stat.HP) {
+				if (player1InitialDamage == 0) {
+					player1InitialDamage = effect.change;
+				} else {
+					assertEquals(player1InitialDamage, effect.change, 0.001);
+				}
+			}
+		}
+	}
+	
+	@Test
+	public void playerCanUseAtMostTwoItemsPerBattle() {
+		BattlePlan bp2 = clone(bp);
+		bp2.item1 = Item.ATTACK;
+		bp2.item2 = Item.ATTACK;
+		bp2.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK), Instruction.useItem(Item.ATTACK));
+		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
+		
+		BattleResult result = (new Battle(config)).getResult();
+		
+		int itemsUsed = 0;
+		for (BattleEvent event : result.sequenceOfEvents) {
+			if (event.playerIndex == 1 && event.itemUsed == Item.ATTACK) {
+				itemsUsed++;
+			}
+		}
+		assertEquals(Combatant.MAX_ITEMS_PER_BATTLE, itemsUsed);
 	}
 	
 	private static BattlePlan clone(BattlePlan bp) {
