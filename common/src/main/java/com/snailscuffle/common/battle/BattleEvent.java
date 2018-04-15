@@ -30,6 +30,7 @@ public class BattleEvent implements Serializable {
 		event.time = timestamp;
 		event.playerIndex = playerIndex;
 		event.action = Action.USE_ITEM;
+		event.itemUsed = item;
 		event.effects = new ArrayList<>();
 		event.effects.add(new BattleEventEffect(playerIndex, stat, change));
 		return event;
