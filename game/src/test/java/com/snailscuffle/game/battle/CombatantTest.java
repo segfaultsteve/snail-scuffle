@@ -1,5 +1,6 @@
 package com.snailscuffle.game.battle;
 
+import static com.snailscuffle.common.battle.Constants.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -11,7 +12,6 @@ import org.junit.Test;
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.BattleEvent;
 import com.snailscuffle.common.battle.BattlePlan;
-import com.snailscuffle.common.battle.Constants;
 import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.battle.Shell;
 import com.snailscuffle.common.battle.Snail;
@@ -60,7 +60,7 @@ public class CombatantTest {
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		
-		double expectedDamage = Combatant.DAMAGE_MULTIPLIER * attackOf(bp) / defenseOf(bp);
+		double expectedDamage = Combatant.DAMAGE_MULTIPLIER * baseAttackOf(bp) / baseDefenseOf(bp);
 		double actualDamage = -firstEvent.effects.get(0).change;
 		assertEquals(expectedDamage, actualDamage, REAL_TOLERANCE);
 	}
@@ -72,7 +72,7 @@ public class CombatantTest {
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		
-		int expectedTicks = Combatant.SCALE * bp.weapon.apCost / speedOf(bp) + 1;	// +1 to round up after integer division
+		int expectedTicks = Combatant.SCALE * bp.weapon.apCost / baseSpeedOf(bp) + 1;	// +1 to round up after integer division
 		int actualTicks = firstEvent.time;
 		assertTrue(Math.abs(expectedTicks - actualTicks) <= TIMING_TOLERANCE);
 	}
@@ -86,7 +86,7 @@ public class CombatantTest {
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		
-		int expectedTicks = Combatant.SCALE * WAIT_AP / speedOf(bp) + 1;	// +1 to round up after integer division
+		int expectedTicks = Combatant.SCALE * WAIT_AP / baseSpeedOf(bp) + 1;	// +1 to round up after integer division
 		int actualTicks = firstEvent.time;
 		assertTrue(Math.abs(expectedTicks - actualTicks) <= TIMING_TOLERANCE);
 	}
@@ -95,14 +95,14 @@ public class CombatantTest {
 	public void steroidsIncreaseAttack() {
 		player1.setBattlePlan(bp);
 		player2.setBattlePlan(bp);
-		double initialAttack = attackOf(bp);
+		double initialAttack = baseAttackOf(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		bp.accessory = Accessory.STEROIDS;
 		player1.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
-		double expectedIncrease = (initialAttack + Constants.STEROIDS_ATTACK) / initialAttack;
+		double expectedIncrease = (initialAttack + STEROIDS_ATTACK) / initialAttack;
 		double measuredIncrease = damageWith / damageWithout;
 		assertEquals(expectedIncrease, measuredIncrease, REAL_TOLERANCE);
 	}
@@ -111,14 +111,14 @@ public class CombatantTest {
 	public void snailMailIncreasesDefense() {
 		player1.setBattlePlan(bp);
 		player2.setBattlePlan(bp);
-		double initialDefense = defenseOf(bp);
+		double initialDefense = baseDefenseOf(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		bp.accessory = Accessory.SNAIL_MAIL;
 		player2.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
-		double expectedIncrease = (initialDefense + Constants.SNAIL_MAIL_DEFENSE) / initialDefense;
+		double expectedIncrease = (initialDefense + SNAIL_MAIL_DEFENSE) / initialDefense;
 		double measuredIncrease = damageWithout / damageWith;
 		assertEquals(expectedIncrease, measuredIncrease, REAL_TOLERANCE);
 	}
@@ -126,16 +126,178 @@ public class CombatantTest {
 	@Test
 	public void caffeineIncreasesSpeed() {
 		player1.setBattlePlan(bp);
-		double initialSpeed = speedOf(bp);
+		double initialSpeed = baseSpeedOf(bp);
 		double ticksBefore = player1.ticksToNextAp();
 		
 		bp.accessory = Accessory.CAFFEINE;
 		player1.setBattlePlan(bp);
 		double ticksAfter = player1.ticksToNextAp();
 		
-		double expectedIncrease = (initialSpeed + Constants.CAFFEINE_SPEED ) / initialSpeed;
+		double expectedIncrease = (initialSpeed + CAFFEINE_SPEED ) / initialSpeed;
 		double measuredIncrease = ticksBefore / ticksAfter;
 		assertEquals(expectedIncrease, measuredIncrease, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void chargedAttackIncreasesAttack() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		
+		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
+		bp.accessory = Accessory.CHARGED_ATTACK;
+		player1.setBattlePlan(bp);
+		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		double expectedIncrease = 1 + 1.0 * bp.weapon.apCost / CHARGED_ATTACK_AP_DIVISOR;
+		double measuredIncrease = damageWith / damageWithout;
+		assertEquals(expectedIncrease, measuredIncrease, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void adrenalineDecreasesAttackAtHighHp() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		double initialAttack = baseAttackOf(bp);
+		
+		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
+		double hpAfterFirstHit = 100 - damageWithout;
+		bp.accessory = Accessory.ADRENALINE;
+		player1.setBattlePlan(bp);
+		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		double expectedChange = (initialAttack + (ADRENALINE_CROSSOVER - hpAfterFirstHit) / ADRENALINE_DIVISOR) / initialAttack;
+		double measuredChange = damageWith / damageWithout;
+		assertEquals(expectedChange, measuredChange, REAL_TOLERANCE);
+		assertTrue(measuredChange < 1);
+	}
+	
+	@Test
+	public void adrenalineIncreasesAttackAtLowHp() {
+		final int HIT_COUNT = 5;
+		
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		double initialAttack = baseAttackOf(bp);
+		
+		for (int i = 0; i < HIT_COUNT; i++) {
+			runBattleUntilNextEvent();
+		}
+		double damageWithout = -recorder.battleEvents().get(0).effects.get(0).change;
+		double hpRemaining = 100 - HIT_COUNT * damageWithout;
+		
+		bp.accessory = Accessory.ADRENALINE;
+		player1.setBattlePlan(bp);
+		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		double expectedChange = (initialAttack + (ADRENALINE_CROSSOVER - hpRemaining) / ADRENALINE_DIVISOR) / initialAttack;
+		double measuredChange = damageWith / damageWithout;
+		assertEquals(expectedChange, measuredChange, REAL_TOLERANCE);
+		assertTrue(measuredChange > 1);
+	}
+	
+	// NOTE: To understand the tests related to the salted shell, it is important to count
+	// how many times Combatant.setBattlePlan() is called. The first call to this method
+	// sets the player's battle plan for the first period, the second call sets it for the
+	// second period, and so on. In the first period, the salted shell should reduce the
+	// player's defense by SALTED_SHELL_DEFENSE_MULTIPLIER, while in later periods it should
+	// increase the player's attack by SALTED_SHELL_ATTACK_MULTIPLIER (as long as the player
+	// plays it in consecutive periods).
+	@Test
+	public void saltedShellReducesDefenseInFirstPeriod() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		
+		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
+		bp.accessory = Accessory.SALTED_SHELL;
+		player2.setBattlePlan(bp);
+		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		double expectedChange = 1 / SALTED_SHELL_DEFENSE_MULTIPLIER;
+		double measuredChange = damageWith / damageWithout;
+		assertEquals(expectedChange, measuredChange, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void saltedShellIncreasesAttackInLaterPeriods() {
+		final int BATTLE_DURATION_IN_PERIODS = 4;
+		
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		bp.accessory = Accessory.SALTED_SHELL;
+		player1.setBattlePlan(bp);		// first period
+		
+		// subsequent periods
+		for (int i = 1; i < BATTLE_DURATION_IN_PERIODS; i++) {
+			player1.setBattlePlan(bp); 		// next period; keep salted shell equipped
+			double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
+			double measuredChange = damageWith / damageWithout;
+			assertEquals(SALTED_SHELL_ATTACK_MULTIPLIER, measuredChange, REAL_TOLERANCE);
+		}
+	}
+	
+	@Test
+	public void unequippingSaltedShellResetsTheEffect() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		double initialDamage = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		// first period - equip it
+		bp.accessory = Accessory.SALTED_SHELL;
+		player2.setBattlePlan(bp);
+		
+		// second period - unequip it
+		bp.accessory = Accessory.NONE;
+		player2.setBattlePlan(bp);
+		double damageAfterUnequipping = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		// third period - re-equip it
+		bp.accessory = Accessory.SALTED_SHELL;
+		player2.setBattlePlan(bp);
+		double damageAfterReEquipping = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		// expect defense decrease instead of attack increase, since player did not hold
+		// the salted shell for consecutive periods
+		double expectedChange = 1 / SALTED_SHELL_DEFENSE_MULTIPLIER;
+		double measuredChange = damageAfterReEquipping / initialDamage;
+		assertEquals(expectedChange, measuredChange, REAL_TOLERANCE);
+		
+		// make sure it was actually unequipped
+		assertEquals(initialDamage, damageAfterUnequipping, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void thornsDamageAttacker() {
+		player1.setBattlePlan(bp);
+		bp.accessory = Accessory.THORNS;
+		player2.setBattlePlan(bp);
+		
+		runBattleUntilNextEvent();
+		double damageDone = -recorder.battleEvents().get(0).effects.get(0).change;
+		double damageTaken = -recorder.battleEvents().get(1).effects.get(0).change;
+		int playerTakingDamage = recorder.battleEvents().get(1).effects.get(0).playerIndex;
+		
+		double expectedDamageTaken = damageDone * THORNS_DAMAGE_MULTIPLIER;
+		assertEquals(expectedDamageTaken, damageTaken, REAL_TOLERANCE);
+		assertEquals(0, playerTakingDamage);
+	}
+	
+	@Test
+	public void defibrillatorAllowsPlayerToTakeOneExtraHit() {
+		player1.setBattlePlan(bp);
+		bp.accessory = Accessory.DEFIBRILLATOR;
+		player2.setBattlePlan(bp);
+		
+		int hits = 0;
+		while (player2.isAlive()) {
+			runBattleUntilNextEvent();
+			hits++;
+		}
+		double damageEachHit = -recorder.battleEvents().get(0).effects.get(0).change;
+		
+		int hitsToKillPlayer2WithoutDefibrillator = (int) Math.ceil(100 / damageEachHit);
+		assertEquals(hitsToKillPlayer2WithoutDefibrillator + 1, hits);	// +1 for defibrillator
 	}
 	
 	// NOTE: If multiple events fall on the same tick (e.g., players with identical battle
@@ -158,27 +320,22 @@ public class CombatantTest {
 		return recorder.battleEvents().get(initialEventCount);
 	}
 	
-	private static double attackOf(BattlePlan battlePlan) {
-		double attack = (battlePlan.snail.attack
+	private static double baseAttackOf(BattlePlan battlePlan) {
+		return (battlePlan.snail.attack
 				+ battlePlan.weapon.attack
-				+ battlePlan.shell.attack
-				+ battlePlan.accessory.attack);
-		return attack;
+				+ battlePlan.shell.attack);
 	}
 	
-	private static double defenseOf(BattlePlan battlePlan) {
-		double defense = (battlePlan.snail.defense
+	private static double baseDefenseOf(BattlePlan battlePlan) {
+		return (battlePlan.snail.defense
 				+ battlePlan.weapon.defense
-				+ battlePlan.shell.defense
-				+ battlePlan.accessory.defense);
-		return defense;
+				+ battlePlan.shell.defense);
 	}
 	
-	private static int speedOf(BattlePlan battlePlan) {
+	private static int baseSpeedOf(BattlePlan battlePlan) {
 		return (battlePlan.snail.speed
 				+ battlePlan.weapon.speed
-				+ battlePlan.shell.speed
-				+ battlePlan.accessory.speed);
+				+ battlePlan.shell.speed);
 	}
-
+	
 }
