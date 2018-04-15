@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.snailscuffle.common.battle.Accessory;
+import com.snailscuffle.common.battle.Action;
 import com.snailscuffle.common.battle.BattleConfig;
 import com.snailscuffle.common.battle.BattleEvent;
 import com.snailscuffle.common.battle.BattleEventEffect;
@@ -31,6 +32,21 @@ public class BattleTest {
 		bp.weapon = Weapon.ROCKET;
 		bp.shell = Shell.ALUMINUM;
 		bp.validate();
+	}
+	
+	@Test
+	public void attackBoostWorks() {
+		assertBoostWorks(Item.ATTACK, Stat.ATTACK);
+	}
+	
+	@Test
+	public void defenseBoostWorks() {
+		assertBoostWorks(Item.DEFENSE, Stat.DEFENSE);
+	}
+	
+	@Test
+	public void speedBoostWorks() {
+		assertBoostWorks(Item.SPEED, Stat.AP);
 	}
 	
 	@Test
@@ -197,6 +213,21 @@ public class BattleTest {
 			}
 		}
 		assertEquals(Combatant.MAX_ITEMS_PER_BATTLE, itemsUsed);
+	}
+	
+	private void assertBoostWorks(Item boostToUse, Stat statWhichShouldIncrease) {
+		BattlePlan bp2 = clone(bp);
+		bp2.item1 = boostToUse;
+		bp2.instructions = Arrays.asList(Instruction.useItem(boostToUse));
+		BattleConfig config = new BattleConfig(bp2, bp, bp, bp, bp, bp);
+		
+		BattleEvent firstEvent = (new Battle(config)).getResult().sequenceOfEvents.get(0);
+		BattleEventEffect firstEventEffect = firstEvent.effects.get(0);
+		
+		assertEquals(firstEvent.action, Action.USE_ITEM);
+		assertEquals(firstEvent.itemUsed, boostToUse);
+		assertEquals(firstEventEffect.stat, statWhichShouldIncrease);
+		assertTrue(firstEventEffect.change > 0);
 	}
 	
 	private static BattlePlan clone(BattlePlan bp) {
