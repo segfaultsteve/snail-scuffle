@@ -191,9 +191,9 @@ class Combatant {
 				+ battlePlan.accessory.attack);
 		
 		if (battlePlan.accessory == Accessory.CHARGED_ATTACK) {
-			attack += attack * ap.get() / CHARGED_ATTACK_AP_DIVISOR;
+			attack += attack * ap.get() / (CHARGED_ATTACK_AP_DIVISOR * SCALE);
 		} else if (battlePlan.accessory == Accessory.ADRENALINE) {
-			attack += (ADRENALINE_CROSSOVER - hp.get()) / ADRENALINE_DIVISOR;
+			attack += (ADRENALINE_CROSSOVER * SCALE - hp.get()) / ADRENALINE_DIVISOR;
 		} else if (saltedShellCounter > 1 && battlePlan.accessory == Accessory.SALTED_SHELL) {
 			attack *= SALTED_SHELL_ATTACK_MULTIPLIER;
 		}

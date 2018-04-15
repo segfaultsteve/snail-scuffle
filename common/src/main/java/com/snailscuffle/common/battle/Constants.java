@@ -49,8 +49,8 @@ public class Constants {
 	public static final int STEROIDS_ATTACK = 5;
 	public static final int SNAIL_MAIL_DEFENSE = 3;
 	public static final int CAFFEINE_SPEED = 4;
-	public static final int CHARGED_ATTACK_AP_DIVISOR = 50000;			// Attack += Attack * AP / CHARGED_ATTACK_AP_DIVISOR
-	public static final int ADRENALINE_CROSSOVER = 70000;				// Attack += (ADRENALINE_CROSSOVER - HP) / ADRENALINE_DIVISOR
+	public static final int CHARGED_ATTACK_AP_DIVISOR = 50;				// Attack += Attack * AP / CHARGED_ATTACK_AP_DIVISOR
+	public static final int ADRENALINE_CROSSOVER = 70;					// Attack += (ADRENALINE_CROSSOVER - HP) / ADRENALINE_DIVISOR
 	public static final int ADRENALINE_DIVISOR = 10;
 	public static final int SALTED_SHELL_ATTACK_MULTIPLIER = 2;			// Attack *= SALTED_SHELL_ATTACK_MULTIPLIER
 	public static final double SALTED_SHELL_DEFENSE_MULTIPLIER = 0.5;	// Defense *= SALTED_SHELL_DEFENSE_MULTIPLIER
