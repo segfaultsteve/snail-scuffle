@@ -1,5 +1,6 @@
 package com.snailscuffle.game;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.io.BufferedReader;
@@ -15,6 +16,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import com.snailscuffle.common.battle.BattleConfig;
+import com.snailscuffle.common.battle.BattlePlan;
+import com.snailscuffle.common.battle.BattleResult;
+import com.snailscuffle.common.battle.Snail;
+import com.snailscuffle.common.battle.Weapon;
+import com.snailscuffle.common.util.JsonUtil;
 
 public class BattleServletTest {
 
@@ -33,43 +41,40 @@ public class BattleServletTest {
 
 	@Test
 	public void doPost() throws Exception {
-		// TODO
+		BattlePlan bp = new BattlePlan();
+		bp.snail = Snail.DALE;
+		bp.weapon = Weapon.ROCKET;
+		bp.validate();
+		BattleConfig config = new BattleConfig(bp, bp, bp, bp, bp, bp);		// three periods
+		
+		postRequest(JsonUtil.serialize(config));
+		BattleResult result = JsonUtil.deserialize(BattleResult.class, responseBuffer.toString());
+		
+		assertEquals(0, result.winnerIndex);	// player 1 (index 0) wins when battle plans are identical
 	}
 	
 	@Test
 	public void doPostWithEmptyBody() throws Exception {
-		String postBody = "";
-		try (BufferedReader reader = new BufferedReader(new StringReader(postBody))) {
-			when(request.getReader()).thenReturn(reader);
-			
-			(new BattleServlet()).doPost(request, response);
-
-			verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-		}
+		postRequest("");
+		verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	}
 	
 	@Test
 	public void doPostWithPlainTextBody() throws Exception {
-		String postBody = "not json";
-		try (BufferedReader reader = new BufferedReader(new StringReader(postBody))) {
-			when(request.getReader()).thenReturn(reader);
-
-			(new BattleServlet()).doPost(request, response);
-
-			verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-		}
+		postRequest("not json");
+		verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	}
 	
 	@Test
 	public void doPostWithNullBattlePlans() throws Exception {
-		String postBody = "{}";
-		
-		try (BufferedReader reader = new BufferedReader(new StringReader(postBody))) {
+		postRequest("{}");
+		verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
+	}
+	
+	private void postRequest(String body) throws Exception {
+		try (BufferedReader reader = new BufferedReader(new StringReader(body))) {
 			when(request.getReader()).thenReturn(reader);
-
 			(new BattleServlet()).doPost(request, response);
-
-			verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		}
 	}
 
