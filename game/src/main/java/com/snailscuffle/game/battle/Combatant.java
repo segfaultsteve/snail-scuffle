@@ -34,7 +34,7 @@ class Combatant {
 	static final int SCALE = 1000;
 	
 	// Damage p1 does to p2 = SCALE * DAMAGE_MULTIPLIER * Attack_p1 / Defense_p2
-	private static final int DAMAGE_MULTIPLIER = 10;
+	static final int DAMAGE_MULTIPLIER = 10;
 	
 	// maximum number of items that a player can use across all periods
 	static final int MAX_ITEMS_PER_BATTLE = 2;
