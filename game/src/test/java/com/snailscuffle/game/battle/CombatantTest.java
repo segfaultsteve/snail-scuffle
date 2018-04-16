@@ -10,11 +10,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.snailscuffle.common.battle.Accessory;
+import com.snailscuffle.common.battle.Action;
 import com.snailscuffle.common.battle.BattleEvent;
 import com.snailscuffle.common.battle.BattlePlan;
 import com.snailscuffle.common.battle.Instruction;
+import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.Shell;
 import com.snailscuffle.common.battle.Snail;
+import com.snailscuffle.common.battle.Stat;
 import com.snailscuffle.common.battle.Weapon;
 
 public class CombatantTest {
@@ -298,6 +301,76 @@ public class CombatantTest {
 		
 		int hitsToKillPlayer2WithoutDefibrillator = (int) Math.ceil(100 / damageEachHit);
 		assertEquals(hitsToKillPlayer2WithoutDefibrillator + 1, hits);	// +1 for defibrillator
+	}
+	
+	@Test
+	public void attackBoostIncreasesAttack() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		double initialAttack = baseAttackOf(bp);
+		double damageBefore = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		bp.item1 = Item.ATTACK;
+		bp.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK));
+		player1.setBattlePlan(bp);
+		double reportedAttackBoost = runBattleUntilNextEvent().effects.get(0).change;
+		double damageAfter = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		double measuredIncrease = damageAfter / damageBefore;
+		double reportedIncrease = (initialAttack + reportedAttackBoost) / initialAttack;
+		assertEquals(ATTACK_BOOST_MULTIPLIER, measuredIncrease, REAL_TOLERANCE);
+		assertEquals(reportedIncrease, measuredIncrease, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void defenseBoostIncreasesDefense() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		double initialDefense = baseDefenseOf(bp);
+		double damageBefore = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		bp.item1 = Item.DEFENSE;
+		bp.instructions = Arrays.asList(Instruction.useItem(Item.DEFENSE));
+		player2.setBattlePlan(bp);
+		double reportedDefenseBoost = runBattleUntilNextEvent().effects.get(0).change;
+		double damageAfter = -runBattleUntilNextEvent().effects.get(0).change;
+		
+		double measuredIncrease = damageBefore / damageAfter;
+		double reportedIncrease = (initialDefense + reportedDefenseBoost) / initialDefense;
+		assertEquals(DEFENSE_BOOST_MULTIPLIER, measuredIncrease, REAL_TOLERANCE);
+		assertEquals(reportedIncrease, measuredIncrease, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void speedBoostIncreasesAp() {
+		bp.item1 = Item.SPEED;
+		bp.item2 = Item.ATTACK;
+		bp.instructions = Arrays.asList(
+				Instruction.useItem(Item.SPEED),
+				Instruction.waitUntilApIs(SPEED_BOOST_AP_INCREASE),		// speed boost should hit this threshold immediately...
+				Instruction.useItem(Item.ATTACK));						// ...so attack boost should happen in same tick
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		
+		player1.update(0);		// should fire both boosts
+		
+		// use speed boost
+		BattleEvent firstEvent = recorder.battleEvents().get(0);
+		assertEquals(Action.USE_ITEM, firstEvent.action);
+		assertEquals(Item.SPEED, firstEvent.itemUsed);
+		assertEquals(0, firstEvent.effects.get(0).playerIndex);
+		assertEquals(Stat.AP, firstEvent.effects.get(0).stat);
+		assertEquals(SPEED_BOOST_AP_INCREASE, firstEvent.effects.get(0).change, REAL_TOLERANCE);
+		
+		// use attack boost
+		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		assertEquals(Action.USE_ITEM, secondEvent.action);
+		assertEquals(Item.ATTACK, secondEvent.itemUsed);
+		assertEquals(0, secondEvent.effects.get(0).playerIndex);
+		assertEquals(Stat.ATTACK, secondEvent.effects.get(0).stat);
+		
+		// assert that player didn't have to wait
+		assertEquals(firstEvent.time, secondEvent.time);
 	}
 	
 	// NOTE: If multiple events fall on the same tick (e.g., players with identical battle
