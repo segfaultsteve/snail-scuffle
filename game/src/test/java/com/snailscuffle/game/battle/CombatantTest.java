@@ -278,8 +278,8 @@ public class CombatantTest {
 		
 		runBattleUntilNextEvent();
 		double damageDone = -recorder.battleEvents().get(0).effects.get(0).change;
-		double damageTaken = -recorder.battleEvents().get(1).effects.get(0).change;
-		int playerTakingDamage = recorder.battleEvents().get(1).effects.get(0).playerIndex;
+		double damageTaken = -recorder.battleEvents().get(0).effects.get(1).change;
+		int playerTakingDamage = recorder.battleEvents().get(0).effects.get(1).playerIndex;
 		
 		double expectedDamageTaken = damageDone * THORNS_DAMAGE_MULTIPLIER;
 		assertEquals(expectedDamageTaken, damageTaken, REAL_TOLERANCE);

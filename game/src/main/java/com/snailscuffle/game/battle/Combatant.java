@@ -128,7 +128,7 @@ class Combatant {
 		
 		if (battlePlan.accessory == Accessory.THORNS) {
 			int damageToAttacker = (int) (THORNS_DAMAGE_MULTIPLIER * damage);
-			recorder.recordAttack(this, 1.0 * damageToAttacker / SCALE);
+			recorder.addEffectToLastEvent(opponent, Stat.HP, -1.0 * damageToAttacker / SCALE);
 			opponent.takeDamage(damageToAttacker);
 		} else if (hp.get() <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR) {
 			hp.set(SCALE);		// 1 HP
