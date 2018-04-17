@@ -4,7 +4,9 @@ import static com.snailscuffle.common.battle.Constants.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -12,9 +14,12 @@ import org.junit.Test;
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.Action;
 import com.snailscuffle.common.battle.BattleEvent;
+import com.snailscuffle.common.battle.BattleEventEffect;
 import com.snailscuffle.common.battle.BattlePlan;
+import com.snailscuffle.common.battle.Inequality;
 import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.battle.Item;
+import com.snailscuffle.common.battle.ItemRule;
 import com.snailscuffle.common.battle.Shell;
 import com.snailscuffle.common.battle.Snail;
 import com.snailscuffle.common.battle.Stat;
@@ -54,6 +59,29 @@ public class CombatantTest {
 		battlePlan.shell = Shell.ALUMINUM;
 		battlePlan.validate();
 		return battlePlan;
+	}
+	
+	@Test
+	public void attackEventsAreFilledOutCorrectly() {
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		
+		BattleEvent firstEvent = runBattleUntilNextEvent();
+		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		
+		// player 1 attacks player 2
+		assertEquals(0, firstEvent.playerIndex);
+		assertEquals(Action.ATTACK, firstEvent.action);
+		assertEquals(1, firstEvent.effects.get(0).playerIndex);
+		assertEquals(Stat.HP, firstEvent.effects.get(0).stat);
+		assertTrue(firstEvent.effects.get(0).change < 0);
+		
+		// player 2 attacks player 1
+		assertEquals(1, secondEvent.playerIndex);
+		assertEquals(Action.ATTACK, secondEvent.action);
+		assertEquals(0, secondEvent.effects.get(0).playerIndex);
+		assertEquals(Stat.HP, secondEvent.effects.get(0).stat);
+		assertTrue(secondEvent.effects.get(0).change < 0);
 	}
 	
 	@Test
@@ -304,6 +332,11 @@ public class CombatantTest {
 	}
 	
 	@Test
+	public void attackBoostEventIsFilledOutCorrectly() {
+		assertBoostEventIsFilledOutCorrectly(Item.ATTACK, Stat.ATTACK);
+	}
+	
+	@Test
 	public void attackBoostIncreasesAttack() {
 		player1.setBattlePlan(bp);
 		player2.setBattlePlan(bp);
@@ -323,6 +356,11 @@ public class CombatantTest {
 	}
 	
 	@Test
+	public void defenseBoostEventIsFilledOutCorrectly() {
+		assertBoostEventIsFilledOutCorrectly(Item.DEFENSE, Stat.DEFENSE);
+	}
+	
+	@Test
 	public void defenseBoostIncreasesDefense() {
 		player1.setBattlePlan(bp);
 		player2.setBattlePlan(bp);
@@ -339,6 +377,11 @@ public class CombatantTest {
 		double reportedIncrease = (initialDefense + reportedDefenseBoost) / initialDefense;
 		assertEquals(DEFENSE_BOOST_MULTIPLIER, measuredIncrease, REAL_TOLERANCE);
 		assertEquals(reportedIncrease, measuredIncrease, REAL_TOLERANCE);
+	}
+	
+	@Test
+	public void speedBoostEventIsFilledOutCorrectly() {
+		assertBoostEventIsFilledOutCorrectly(Item.SPEED, Stat.AP);
 	}
 	
 	@Test
@@ -371,6 +414,90 @@ public class CombatantTest {
 		
 		// assert that player didn't have to wait
 		assertEquals(firstEvent.time, secondEvent.time);
+	}
+	
+	@Test
+	public void playerHasConditionTriggersCorrectly() {
+		final int HP_THRESHOLD = 50;
+		
+		player1.setBattlePlan(bp);
+		bp.item1 = Item.DEFENSE;
+		bp.item1Rule = ItemRule.useWhenIHave(Stat.HP, Inequality.LESS_THAN_OR_EQUALS, HP_THRESHOLD);
+		player2.setBattlePlan(bp);
+		
+		while (player2.isAlive()) {
+			int increment = player1.ticksToNextAp();
+			player1.update(increment);
+		}
+		
+		List<Double> player2HpChanges = new ArrayList<>();
+		for (BattleEvent event : recorder.battleEvents()) {
+			if (event.action == Action.ATTACK) {
+				assert(event.playerIndex == 0);
+				player2HpChanges.add(event.effects.get(0).change);
+			} else if (event.action == Action.USE_ITEM) {
+				assert(event.playerIndex == 1);
+				break;
+			}
+		}
+		
+		double hpThatTriggeredItem = player2HpChanges.stream().reduce(100.0, (x, y) -> x + y);
+		double hpBeforeTrigger = player2HpChanges.stream().limit(player2HpChanges.size() - 1).reduce(100.0, (x, y) -> x + y);
+		
+		assertTrue(hpThatTriggeredItem < HP_THRESHOLD);
+		assertTrue(hpBeforeTrigger > HP_THRESHOLD);
+	}
+	
+	@Test
+	public void enemyHasConditionTriggersCorrectly() {
+		final int AP_THRESHOLD = 20;
+		
+		bp.item1 = Item.DEFENSE;
+		bp.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, AP_THRESHOLD);
+		bp.instructions = Arrays.asList(Instruction.waitUntilApIs(2 * AP_THRESHOLD));	// don't attack
+		player1.setBattlePlan(bp);
+		
+		bp.item1 = null;
+		bp.item1Rule = null;
+		bp.instructions = Arrays.asList(Instruction.waitUntilApIs(AP_THRESHOLD + 1));
+		player2.setBattlePlan(bp);
+		
+		BattleEvent boostEvent = runBattleUntilNextEvent();
+		int ticksToPlayer2sNextAp = player2.ticksToNextAp();
+		BattleEvent nextEvent = runBattleUntilNextEvent();
+		
+		assertEquals(0, boostEvent.playerIndex);
+		assertEquals(Action.USE_ITEM, boostEvent.action);
+		assertEquals(Item.DEFENSE, boostEvent.itemUsed);
+		
+		assertEquals(1, nextEvent.playerIndex);
+		assertEquals(Action.ATTACK, nextEvent.action);
+		assertEquals(boostEvent.time + ticksToPlayer2sNextAp, nextEvent.time);		// player 2 was exactly 1 AP away from attacking
+	}
+	
+	@Test
+	public void enemyUsesItemConditionTriggersCorrectly() {
+		bp.item1 = Item.ATTACK;
+		bp.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK));
+		player1.setBattlePlan(bp);
+		
+		bp.item1 = Item.DEFENSE;
+		bp.item1Rule = ItemRule.useWhenEnemyUses(Item.ATTACK);
+		bp.instructions = null;
+		player2.setBattlePlan(bp);
+		
+		BattleEvent firstEvent = runBattleUntilNextEvent();
+		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		
+		// player 1 uses attack boost
+		assertEquals(0, firstEvent.playerIndex);
+		assertEquals(Action.USE_ITEM, firstEvent.action);
+		assertEquals(Item.ATTACK, firstEvent.itemUsed);
+		
+		// player 2 uses defense boost
+		assertEquals(1, secondEvent.playerIndex);
+		assertEquals(Action.USE_ITEM, secondEvent.action);
+		assertEquals(Item.DEFENSE, secondEvent.itemUsed);
 	}
 	
 	// NOTE: If multiple events fall on the same tick (e.g., players with identical battle
@@ -409,6 +536,23 @@ public class CombatantTest {
 		return (battlePlan.snail.speed
 				+ battlePlan.weapon.speed
 				+ battlePlan.shell.speed);
+	}
+	
+	private void assertBoostEventIsFilledOutCorrectly(Item itemToTest, Stat statExpectedToIncrease) {
+		player1.setBattlePlan(bp);
+		bp.item1 = itemToTest;
+		bp.instructions = Arrays.asList(Instruction.useItem(itemToTest));
+		player2.setBattlePlan(bp);
+		
+		BattleEvent boostEvent = runBattleUntilNextEvent();
+		BattleEventEffect boostEffect = boostEvent.effects.get(0);
+		
+		assertEquals(1, boostEvent.playerIndex);
+		assertEquals(Action.USE_ITEM, boostEvent.action);
+		assertEquals(itemToTest, boostEvent.itemUsed);
+		assertEquals(1, boostEffect.playerIndex);
+		assertEquals(statExpectedToIncrease, boostEffect.stat);
+		assertTrue(boostEffect.change > 0);
 	}
 	
 }
