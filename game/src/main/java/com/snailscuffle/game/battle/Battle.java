@@ -29,7 +29,9 @@ public class Battle {
 			while (time + increment < periodEnd && player1.isAlive() && player2.isAlive()) {
 				time += increment;
 				player1.update(increment);
-				player2.update(increment);
+				if (player2.isAlive()) {
+					player2.update(increment);
+				}
 				increment = nextIncrement(player1, player2);
 			}
 			periodEnd += PERIOD;
