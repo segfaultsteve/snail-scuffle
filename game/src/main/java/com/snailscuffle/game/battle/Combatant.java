@@ -120,16 +120,16 @@ class Combatant {
 	private void attackOpponent() {
 		int damage = SCALE * DAMAGE_MULTIPLIER * attackStat() / opponent.defenseStat();
 		recorder.recordAttack(this, 1.0 * damage / SCALE);
-		opponent.takeDamage(damage);
+		opponent.takeDamage(damage, true);
 	}
 	
-	private void takeDamage(int damage) {
+	private void takeDamage(int damage, boolean applyThorns) {
 		hp.subtract(damage);
 		
-		if (battlePlan.accessory == Accessory.THORNS) {
+		if (battlePlan.accessory == Accessory.THORNS && applyThorns) {
 			int damageToAttacker = (int) (THORNS_DAMAGE_MULTIPLIER * damage);
 			recorder.addEffectToLastEvent(opponent, Stat.HP, -1.0 * damageToAttacker / SCALE);
-			opponent.takeDamage(damageToAttacker);
+			opponent.takeDamage(damageToAttacker, false);
 		} else if (hp.get() <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR) {
 			hp.set(SCALE);		// 1 HP
 			battlePlan.accessory = Accessory.NONE;	// only use defibrillator once

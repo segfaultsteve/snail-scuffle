@@ -500,6 +500,21 @@ public class CombatantTest {
 		assertEquals(Item.DEFENSE, secondEvent.itemUsed);
 	}
 	
+	// This test verifies a fix for a bug that had caused infinite recursion in the
+	// Combatant class when both players equipped thorns. One player would attack the
+	// other, which would do damage to the first, which would do damage to the other,
+	// and so on until a stack overflow resulted.
+	@Test
+	public void bothPlayersUseThorns() {
+		bp.accessory = Accessory.THORNS;
+		player1.setBattlePlan(bp);
+		player2.setBattlePlan(bp);
+		
+		while (player1.isAlive() && player2.isAlive()) {
+			runBattleUntilNextEvent();		// crashed before bug fix
+		}
+	}
+	
 	// NOTE: If multiple events fall on the same tick (e.g., players with identical battle
 	// plans attack, or a player uses an item and attacks), then calling this method will
 	// trigger *all* of those events. The next call to this function will return the event(s)
