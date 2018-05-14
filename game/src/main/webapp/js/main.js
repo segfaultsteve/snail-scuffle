@@ -1,4 +1,5 @@
+/* global snail */
+
 jQuery(document).ready(function () {
-	jQuery(".equip").dropdownButton();
-	jQuery(".item").dropdownButton();
+	snail.init();
 });

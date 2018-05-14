@@ -1,24 +1,6 @@
-/* GLOBAL */
-body {
-	font-family: 'lucida sans unicode',sans-serif;
-}
-button {
-	font-family: inherit;
-	font-size: inherit;
-	background: white;
-	color: black;
-	border: solid 1px black;
-	cursor: pointer;
-}
-button:hover {
-	background: #ddd;
-}
-button::-moz-focus-inner {
-	border: 0;
-}
-
 /* TOP-LEVEL GRID */
-#battle-plan {
+
+#battleplan {
 	height: 98vh;
 	display: grid;
 	grid-template-rows: 2% 60px 1fr 150px 50px 2%;
@@ -26,54 +8,68 @@ button::-moz-focus-inner {
 	grid-template-areas:
 		". . . . . ."
 		". snail snail snail snail ."
-		". equipment . . stats ."
+		". equip . . stats ."
 		". instructions instructions . submit ."
 		". presets presets . submit ."
 		". . . . . .";
 	grid-gap: 20px 0;
 }
-#snail-buttons {
+
+#battleplan .snails {
 	grid-area: snail;
 }
-#equipment {
-	grid-area: equipment
+
+#battleplan .equip {
+	grid-area: equip
 }
-#instructions {
+
+#battleplan .instructions {
 	grid-area: instructions;
 }
-#presets {
+
+#battleplan .presets {
 	grid-area: presets;
 }
-#stats {
+
+#battleplan .stats {
 	grid-area: stats;
 }
-#submit {
+
+#battleplan .submit {
 	grid-area:submit;
 }
 
+
 /* SNAIL BUTTON GRID */
-#snail-buttons {
+
+#battleplan .snails {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "dale gail todd doug";
 	grid-gap: 0 20px;
 	
 }
-#snail-buttons .dale {
+
+#battleplan .snails-button.dale {
 	grid-area: dale;
 }
-#snail-buttons gail {
+
+#battleplan .snails-button.gail {
 	grid-area: gail;
 }
-#snail-buttons .todd {
+
+#battleplan .snails-button.todd {
 	grid-area: todd;
 }
-#snail-buttons .doug {
+
+#battleplan .snails-button.doug {
 	grid-area: doug;
 }
 
+
 /* EQUIPMENT GRID */
-#equipment {
+
+#battleplan .equip {
 	display: grid;
 	grid-template-rows: 5% repeat(5, 1fr) 5%;
 	grid-template-columns: 30px 1fr 30px;
@@ -85,74 +81,99 @@ button::-moz-focus-inner {
 		". item1 ."
 		". item2 ."
 		". . .";
-	grid-gap: 20px 0;
+	grid-gap: 5px 0;
 }
-#equipment .weapon {
+
+#battleplan .equip-weapon {
 	grid-area: weapon;
 }
-#equipment .shell {
+
+#battleplan .equip-shell {
 	grid-area: shell;
 }
-#equipment .accessory {
+
+#battleplan .equip-accessory {
 	grid-area: accessory;
 }
-#equipment .item1 {
+
+#battleplan .equip-item1 {
 	grid-area: item1;
 }
-#equipment .item2 {
+
+#battleplan .equip-item2 {
 	grid-area: item2;
 }
 
+
 /* PRESETS GRID */
-#presets {
+
+#battleplan .presets {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "preset1 preset2 preset3 preset4";
 	grid-gap: 0 20px;
 }
-#presets .preset1 {
+
+#battleplan .preset-button.preset1 {
 	grid-area: preset1;
 }
-#presets .preset2 {
+
+#battleplan .preset-button.preset2 {
 	grid-area: preset2;
 }
-#presets .preset3 {
+
+#battleplan .preset-button.preset3 {
 	grid-area: preset3;
 }
-#presets .preset4 {
+
+#battleplan .preset-button.preset4 {
 	grid-area: preset4;
 }
 
+
 /* SNAIL BUTTONS */
-#snail-buttons .snail {
+
+#battleplan .snails-button {
 	border-radius: 15px;
 }
 
+
 /* EQUIPMENT DROPDOWN BUTTONS */
-.equip, .item {
+
+#battleplan .equip .menubutton {
 	position: relative;
 }
-.equip-button {
+
+#battleplan .equip .menubutton-button {
 	height: 50px;
 	padding: 10px 10px 10px 30px;
 	text-align: left;
 }
-.equip .equip-button {
+
+#battleplan .equip-weapon .menubutton-button,
+#battleplan .equip-shell .menubutton-button,
+#battleplan .equip-accessory .menubutton-button {
 	width: 250px;
 }
-.item .equip-button {
-	width: 150px;
+
+#battleplan .equip-item1 .menubutton-button,
+#battleplan .equip-item2 .menubutton-button {
+	width: 175px;
 }
-.equip-button:hover, .equip-button:focus {
+
+#battleplan .equip .menubutton-button:hover,
+#battleplan .equip .menubutton-button:focus {
 	background: #ddd;
 }
-.equip-button::-moz-focus-inner {
+
+#battleplan .equip .menubutton-button::-moz-focus-inner {
 	border: 0;
 }
-.equip-list {
+
+#battleplan .equip .menubutton-list {
 	display: none;
 	position: absolute;
-	left: 150px;
+	left: 140px;
 	top: 24px;
 	z-index: 999;
 	width: 200px;
@@ -163,18 +184,28 @@ button::-moz-focus-inner {
 	border: 1px solid black;
 	list-style: none;
 }
-.equip-list li {
+
+#battleplan .equip-item1 .menubutton-list,
+#battleplan .equip-item2 .menubutton-list {
+	left: 100px;
+}
+
+#battleplan .equip .menubutton-list li {
 	padding: 15px;
 	border-bottom: solid 1px #ccc;
 }
-.equip-list li:hover {
+
+#battleplan .equip .menubutton-list li:hover {
 	background: #ddd;
 }
-.equip-list li:last-child {
+
+#battleplan .equip .menubutton-list li:last-child {
 	border: none;
 }
 
+
 /* PRESET BUTTONS */
-#presets .preset {
+
+#battleplan .presets-button {
 	border-radius: 10px;
 }
