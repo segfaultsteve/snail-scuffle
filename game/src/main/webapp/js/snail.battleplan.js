@@ -11,8 +11,14 @@ snail.battleplan = (function () {
 	
 	// private methods
 	const createMenuButton = function ($container, items, defaultSelection) {
-		const button = snail.ui.menubutton.create($container);
+		const button = snail.battleplan.menubutton.create($container);
 		button.setOptionsList(items, defaultSelection);
+		return button;
+	}
+	
+	const createItemButton = function ($container, items) {
+		const button = snail.battleplan.itembutton.create($container);
+		button.setOptionsList(items, 'None');
 		return button;
 	}
 	
@@ -21,8 +27,8 @@ snail.battleplan = (function () {
 		weaponButton = createMenuButton($container.find('.equip-weapon'), weapons, weapons[0]);
 		shellButton = createMenuButton($container.find('.equip-shell'), shells, 'No Shell');
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), accessories, 'No Accessory');
-		item1Button = createMenuButton($container.find('.equip-item1'), items, 'None');
-		item2Button = createMenuButton($container.find('.equip-item2'), items, 'None');
+		item1Button = createItemButton($container.find('.equip-item1'), items);
+		item2Button = createItemButton($container.find('.equip-item2'), items);
 	};
 	
 	const get = function () {

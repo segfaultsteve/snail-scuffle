@@ -1,9 +1,7 @@
 /* global snail */
 
-(function(ui, $) {
-	snail.ui = ui;
-	
-	const create = function ($container) {
+(function($) {
+	const create = function ($container, onSelectionChanged) {
 		// private variables
 		const controlHtml = ''
 			+ '<button type="button" class="menubutton-button"></button>'
@@ -61,6 +59,9 @@
 			if (index >= 0) {
 				selected = index;
 				updateButtonText();
+				if (onSelectionChanged) {
+					onSelectionChanged(selectedOption, index);
+				}
 			}
 		};
 		
@@ -79,9 +80,9 @@
 			setSelectedOption: setSelectedOption,
 			getSelectedOption: getSelectedOption
 		};
-	}
+	};
 	
-	snail.ui.menubutton = {
+	snail.battleplan.menubutton = {
 		create: create
-	}
-}(snail.ui || {}, jQuery));
+	};
+}(jQuery));

@@ -8,7 +8,7 @@
 	grid-template-areas:
 		". . . . . ."
 		". snail snail snail snail ."
-		". equip . . stats ."
+		". equip equip . stats ."
 		". instructions instructions . submit ."
 		". presets presets . submit ."
 		". . . . . .";
@@ -72,15 +72,15 @@
 #battleplan .equip {
 	display: grid;
 	grid-template-rows: 5% repeat(5, 1fr) 5%;
-	grid-template-columns: 30px 1fr 30px;
+	grid-template-columns: 30px 200px 1fr 30px;
 	grid-template-areas:
-		". . ."
-		". weapon ."
-		". shell ."
-		". accessory ."
-		". item1 ."
-		". item2 ."
-		". . .";
+		". . . ."
+		". weapon . ."
+		". shell . ."
+		". accessory . ."
+		". item1 item1 ."
+		". item2 item2 ."
+		". . . .";
 	grid-gap: 5px 0;
 }
 
@@ -138,42 +138,30 @@
 }
 
 
-/* EQUIPMENT DROPDOWN BUTTONS */
+/* ALL DROPDOWN BUTTONS */
 
-#battleplan .equip .menubutton {
+#battleplan .menubutton {
 	position: relative;
 }
 
-#battleplan .equip .menubutton-button {
+#battleplan .menubutton-button {
 	height: 50px;
 	padding: 10px 10px 10px 30px;
 	text-align: left;
 }
 
-#battleplan .equip-weapon .menubutton-button,
-#battleplan .equip-shell .menubutton-button,
-#battleplan .equip-accessory .menubutton-button {
-	width: 250px;
-}
-
-#battleplan .equip-item1 .menubutton-button,
-#battleplan .equip-item2 .menubutton-button {
-	width: 175px;
-}
-
-#battleplan .equip .menubutton-button:hover,
-#battleplan .equip .menubutton-button:focus {
+#battleplan .menubutton-button:hover,
+#battleplan .menubutton-button:focus {
 	background: #ddd;
 }
 
-#battleplan .equip .menubutton-button::-moz-focus-inner {
+#battleplan .menubutton-button::-moz-focus-inner {
 	border: 0;
 }
 
-#battleplan .equip .menubutton-list {
+#battleplan .menubutton-list {
 	display: none;
 	position: absolute;
-	left: 140px;
 	top: 24px;
 	z-index: 999;
 	width: 200px;
@@ -185,22 +173,67 @@
 	list-style: none;
 }
 
-#battleplan .equip-item1 .menubutton-list,
-#battleplan .equip-item2 .menubutton-list {
-	left: 100px;
-}
-
-#battleplan .equip .menubutton-list li {
+#battleplan .menubutton-list li {
 	padding: 15px;
 	border-bottom: solid 1px #ccc;
 }
 
-#battleplan .equip .menubutton-list li:hover {
+#battleplan .menubutton-list li:hover {
 	background: #ddd;
 }
 
-#battleplan .equip .menubutton-list li:last-child {
+#battleplan .menubutton-list li:last-child {
 	border: none;
+}
+
+
+/* EQUIPMENT DROPDOWN BUTTONS */
+
+#battleplan .equip .menubutton-button {
+	width: 250px;
+}
+
+#battleplan .equip .menubutton-list {
+	left: 140px;
+}
+
+
+/* ITEM DROPDOWN BUTTONS */
+
+#battleplan .itembutton .menubutton-button {
+	width: 175px;
+}
+
+#battleplan .itembutton .menubutton-list {
+	top: 8px;
+	left: 100px;
+}
+
+#battleplan .itembutton-condition-addicon,
+#battleplan .itembutton-condition-removeicon {
+	vertical-align: middle;
+	margin-left: 20px;
+	cursor: pointer;
+}
+
+#battleplan .itembutton-condition-addtext,
+#battleplan .itembutton-condition-usetext {
+	margin-left: 10px;
+	margin-right: 5px;
+}
+
+#battleplan .itembutton-condition-addtext {
+	cursor: pointer;
+}
+
+#battleplan .itembutton-condition select {
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+#battleplan .itembutton-condition-hascondition-threshold {
+	width: 25px;
+	margin-left: 5px;
 }
 
 
