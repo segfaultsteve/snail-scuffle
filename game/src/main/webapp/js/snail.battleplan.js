@@ -1,6 +1,6 @@
 /* global snail */
 
-snail.battleplan = (function () {
+snail.battleplan = (function ($) {
 	// private variables
 	const weapons = ['A Salt Rifle', 'Rocket Launcher', 'Laser'];
 	const shells = ['Aluminum', 'Steel', 'No Shell'];
@@ -24,11 +24,15 @@ snail.battleplan = (function () {
 	
 	// public methods
 	const init = function ($container) {
-		weaponButton = createMenuButton($container.find('.equip-weapon'), weapons, weapons[0]);
-		shellButton = createMenuButton($container.find('.equip-shell'), shells, 'No Shell');
-		accessoryButton = createMenuButton($container.find('.equip-accessory'), accessories, 'No Accessory');
-		item1Button = createItemButton($container.find('.equip-item1'), items);
-		item2Button = createItemButton($container.find('.equip-item2'), items);
+		$.get('/html/battleplan.html')
+		.done(function (result) {
+			$container.append(result);
+			weaponButton = createMenuButton($container.find('.equip-weapon'), weapons, weapons[0]);
+			shellButton = createMenuButton($container.find('.equip-shell'), shells, 'No Shell');
+			accessoryButton = createMenuButton($container.find('.equip-accessory'), accessories, 'No Accessory');
+			item1Button = createItemButton($container.find('.equip-item1'), items);
+			item2Button = createItemButton($container.find('.equip-item2'), items);
+		});
 	};
 	
 	const get = function () {
@@ -45,4 +49,4 @@ snail.battleplan = (function () {
 		init: init,
 		get: get
 	};
-}());
+}(jQuery));

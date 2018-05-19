@@ -1,40 +1,8 @@
 /* global snail */
 
-(function () {
+(function ($) {
 	const create = function ($container) {
 		// private variables
-		const controlHtml = ''
-			+ '<span class="itembutton-button"></span>'
-			+ '<span class="itembutton-condition">'
-			+ 	'<img class="itembutton-condition-addicon" src="assets/plus.png" height="20 width="20>'
-			+ 	'<img class="itembutton-condition-removeicon" src="assets/x.png" height="20 width="20>'
-			+ 	'<span class="itembutton-condition-addtext"><i>Add Condtion</i></span>'
-			+ 	'<span class="itembutton-condition-usetext">Use when</span>'
-			+ 	'<select class="itembutton-condition-type">'
-			+ 		'<option value="ihave">I have</option>'
-			+ 		'<option value="enemyhas">Enemy has</option>'
-			+ 		'<option value="enemyuses">Enemy uses</option>'
-			+ 	'</select>'
-			+ 	'<span class="itembutton-condition-hascondition">'
-			+ 		'<select class="itembutton-condition-hascondition-stat">'
-			+ 			'<option value="ap">AP</option>'
-			+ 			'<option value="hp">HP</option>'
-			+ 		'</select>'
-			+ 		'<select class="itembutton-condition-hascondition-inequality">'
-			+ 			'<option value="gte">&gt;=</option>'
-			+ 			'<option value="lte">&lt;=</option>'
-			+ 		'</select>'
-			+ 		'<input type=text class="itembutton-condition-hascondition-threshold">'
-			+ 	'</span>'
-			+ 	'<span class="itembutton-condition-usescondition">'
-			+ 		'<select class="itembutton-condition-usescondition-item">'
-			+ 			'<option value="attack">Attack Boost</option>'
-			+ 			'<option value="defense">Defense Boost</option>'
-			+ 			'<option value="speed">Speed Boost</option>'
-			+ 		'</select>'
-			+ 	'</span>'
-			+ '</span>';
-		
 		const states = {
 			noCondition: 'noCondition',
 			addCondition: 'addCondition',
@@ -43,6 +11,7 @@
 		};
 		
 		let menubutton;
+		let items;
 		let selectedItem;
 		
 		// private methods
@@ -113,7 +82,11 @@
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedOption) {
-			menubutton.setOptionsList(optionsList, selectedOption);
+			items = optionsList;
+			selectedItem = selectedOption;
+			if (menubutton) {
+				menubutton.setOptionsList(optionsList, selectedOption);
+			}
 		};
 		
 		const setSelectedOption = function (selectedOption) {
@@ -126,13 +99,16 @@
 		
 		// init code
 		$container.addClass('itembutton');
-		$container.html(controlHtml);
-		menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'), onMenubuttonSelectionChanged);
-		$container.find('.itembutton-condition-addicon, .itembutton-condition-addtext').click(onAddConditionClicked);
-		$container.find('.itembutton-condition-removeicon').click(onRemoveConditionClicked);
-		$container.find('.itembutton-condition-type').change(onTypeSelectionChange);
-		
-		setState(states.noCondition);
+		$.get('/html/battleplan.itembutton.html')
+		.done(function (result) {
+			$container.html(result);
+			menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'), onMenubuttonSelectionChanged);
+			$container.find('.itembutton-condition-addicon, .itembutton-condition-addtext').click(onAddConditionClicked);
+			$container.find('.itembutton-condition-removeicon').click(onRemoveConditionClicked);
+			$container.find('.itembutton-condition-type').change(onTypeSelectionChange);
+			menubutton.setOptionsList(items, selectedItem);
+			setState(states.noCondition);
+		});
 		
 		return {
 			setOptionsList: setOptionsList,
@@ -144,4 +120,4 @@
 	snail.battleplan.itembutton = {
 		create: create
 	};
-}());
+}(jQuery));
