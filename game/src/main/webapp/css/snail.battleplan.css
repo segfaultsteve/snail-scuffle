@@ -3,8 +3,8 @@
 #battleplan {
 	height: 98vh;
 	display: grid;
-	grid-template-rows: 2% 60px 1fr 150px 50px 2%;
-	grid-template-columns: 2% 200px 600px 1fr 300px 2%;
+	grid-template-rows: 2% 8% 1fr 20% 7% 2%;
+	grid-template-columns: 2% 15% 45% 1fr 20% 2%;
 	grid-template-areas:
 		". . . . . ."
 		". snail snail snail snail ."
@@ -12,7 +12,7 @@
 		". instructions instructions . submit ."
 		". presets presets . submit ."
 		". . . . . .";
-	grid-gap: 20px 0;
+	grid-gap: 1em 0;
 }
 
 #battleplan .snails {
@@ -46,7 +46,7 @@
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "dale gail todd doug";
-	grid-gap: 0 20px;
+	grid-gap: 0 1em;
 	
 }
 
@@ -72,7 +72,7 @@
 #battleplan .equip {
 	display: grid;
 	grid-template-rows: 5% repeat(5, 1fr) 5%;
-	grid-template-columns: 30px 200px 1fr 30px;
+	grid-template-columns: 2em 30% 1fr 2em;
 	grid-template-areas:
 		". . . ."
 		". weapon . ."
@@ -81,7 +81,7 @@
 		". item1 item1 ."
 		". item2 item2 ."
 		". . . .";
-	grid-gap: 5px 0;
+	grid-gap: 1em 0;
 }
 
 #battleplan .equip-weapon {
@@ -111,7 +111,7 @@
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "preset1 preset2 preset3 preset4";
-	grid-gap: 0 20px;
+	grid-gap: 0 1em;
 }
 
 #battleplan .preset-button.preset1 {
@@ -145,8 +145,7 @@
 }
 
 #battleplan .menubutton-button {
-	height: 50px;
-	padding: 10px 10px 10px 30px;
+	padding: 1em 1em 1em 2em;
 	text-align: left;
 }
 
@@ -162,11 +161,12 @@
 #battleplan .menubutton-list {
 	display: none;
 	position: absolute;
-	top: 24px;
+	top: 1.5em;
+	left: 60%;
 	z-index: 999;
-	width: 200px;
+	width: 12em;
 	margin: 0;
-	padding: 8px;
+	padding: 0.5em;
 	background: white;
 	color: black;
 	border: 1px solid black;
@@ -174,7 +174,7 @@
 }
 
 #battleplan .menubutton-list li {
-	padding: 15px;
+	padding: 0.9em;
 	border-bottom: solid 1px #ccc;
 }
 
@@ -190,36 +190,37 @@
 /* EQUIPMENT DROPDOWN BUTTONS */
 
 #battleplan .equip .menubutton-button {
-	width: 250px;
-}
-
-#battleplan .equip .menubutton-list {
-	left: 140px;
+	width: 100%;
+	max-width: 18em;
+	min-width: 12em;
 }
 
 
 /* ITEM DROPDOWN BUTTONS */
 
+#battleplan .itembutton {
+	min-width: 45em;
+}
+
 #battleplan .itembutton .menubutton-button {
-	width: 175px;
+	width: 12em;
 }
 
 #battleplan .itembutton .menubutton-list {
-	top: 8px;
-	left: 100px;
+	top: 0.5em;
 }
 
 #battleplan .itembutton-condition-addicon,
 #battleplan .itembutton-condition-removeicon {
 	vertical-align: middle;
-	margin-left: 20px;
+	margin-left: 1em;
 	cursor: pointer;
 }
 
 #battleplan .itembutton-condition-addtext,
 #battleplan .itembutton-condition-usetext {
-	margin-left: 10px;
-	margin-right: 5px;
+	margin-left: 0.5em;
+	margin-right: 0.25em;
 }
 
 #battleplan .itembutton-condition-addtext {
@@ -227,18 +228,18 @@
 }
 
 #battleplan .itembutton-condition select {
-	margin-left: 5px;
-	margin-right: 5px;
+	margin-left: 0.25em;
+	margin-right: 0.25em;
 }
 
 #battleplan .itembutton-condition-hascondition-threshold {
-	width: 25px;
-	margin-left: 5px;
+	width: 2em;
+	margin-left: 0.25em;
 }
 
 
 /* PRESET BUTTONS */
 
 #battleplan .presets-button {
-	border-radius: 10px;
+	border-radius: 0.7em;
 }
