@@ -111,6 +111,12 @@ project(':game') {
 		expand(htmlFiles: htmlFiles)
 	}
 	
+	task copyExternalJs(type: Copy) {
+		from "${webrootSrc}/js/external"
+		include '*.js'
+		into "${webrootDest}/js/external"
+	}
+	
 	task copyCss(type: Copy) {
 		from "${webrootSrc}/css"
 		include '*.css'
@@ -125,6 +131,7 @@ project(':game') {
 	gzipJs.dependsOn minifyJs
 	processResources.dependsOn gzipJs
 	processResources.dependsOn copyHtml
+	processResources.dependsOn copyExternalJs
 	processResources.dependsOn copyCss
 	processResources.dependsOn copyAssets
 }
