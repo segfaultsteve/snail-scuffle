@@ -18,3 +18,7 @@ button:hover {
 button::-moz-focus-inner {
 	border: 0;
 }
+
+#components {
+	display: none;
+}

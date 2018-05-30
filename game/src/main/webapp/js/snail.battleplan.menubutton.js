@@ -1,11 +1,11 @@
-/* global snail */
-
-(function($) {
-	const create = function ($container, onSelectionChanged) {
+var snail = (function(snail, $) {
+	snail.battleplan = snail.battleplan || {};
+	snail.battleplan.menubutton = {};
+	
+	const componentHtml = $('#components .components-menubutton').html();
+	
+	snail.battleplan.menubutton.create = function ($container, onSelectionChanged) {
 		// private variables
-		const controlHtml = ''
-			+ '<button type="button" class="menubutton-button"></button>'
-			+ '<ul class="menubutton-list"></ul>';
 		let options = ['None'];
 		let selected = 0;
 		
@@ -71,7 +71,7 @@
 		
 		// init code
 		$container.addClass('menubutton');
-		$container.html(controlHtml);
+		$container.html(componentHtml);
 		$container.find('.menubutton-button').click(onButtonClicked);
 		$container.find('.menubutton-list').click(onOptionClicked);
 		
@@ -82,7 +82,5 @@
 		};
 	};
 	
-	snail.battleplan.menubutton = {
-		create: create
-	};
-}(jQuery));
+	return snail;
+}(snail || {}, jQuery));

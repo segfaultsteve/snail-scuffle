@@ -1,7 +1,10 @@
-/* global snail */
-
-(function ($) {
-	const create = function ($container) {
+var snail = (function (snail, $) {
+	snail.battleplan = snail.battleplan || {};
+	snail.battleplan.itembutton = {};
+	
+	const componentHtml = $('#components .components-itembutton').html();
+	
+	snail.battleplan.itembutton.create = function ($container) {
 		// private variables
 		const states = {
 			noCondition: 'noCondition',
@@ -99,16 +102,11 @@
 		
 		// init code
 		$container.addClass('itembutton');
-		$.get('/html/battleplan.itembutton.html')
-		.done(function (result) {
-			$container.html(result);
-			menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'), onMenubuttonSelectionChanged);
-			$container.find('.itembutton-condition-addicon, .itembutton-condition-addtext').click(onAddConditionClicked);
-			$container.find('.itembutton-condition-removeicon').click(onRemoveConditionClicked);
-			$container.find('.itembutton-condition-type').change(onTypeSelectionChange);
-			menubutton.setOptionsList(items, selectedItem);
-			setState(states.noCondition);
-		});
+		$container.html(componentHtml);
+		menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'), onMenubuttonSelectionChanged);
+		$container.find('.itembutton-condition-addicon, .itembutton-condition-addtext').click(onAddConditionClicked);
+		$container.find('.itembutton-condition-removeicon').click(onRemoveConditionClicked);
+		$container.find('.itembutton-condition-type').change(onTypeSelectionChange);
 		
 		return {
 			setOptionsList: setOptionsList,
@@ -117,7 +115,5 @@
 		}
 	};
 	
-	snail.battleplan.itembutton = {
-		create: create
-	};
-}(jQuery));
+	return snail;
+}(snail, jQuery));

@@ -1,16 +1,25 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel=stylesheet type="text/css" href="css/snail.css"/>
-    <link rel=stylesheet type="text/css" href="css/snail.battleplan.css"/>
-    <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-  </head>
-  <body>
-		<main id="battleplan" class="page"></main>
-		<script src="js/snail.js"></script>
-		<script src="js/snail.battleplan.js"></script>
-		<script src="js/snail.battleplan.menubutton.js"></script>
-		<script src="js/snail.battleplan.itembutton.js"></script>
-    <script src="js/main.js"></script>
+	<head>
+		<meta charset="UTF-8">
+		<link rel=stylesheet type="text/css" href="css/snail.css"/>
+		<link rel=stylesheet type="text/css" href="css/snail.battleplan.css"/>
+		<script
+			  src="https://code.jquery.com/jquery-3.3.1.min.js"
+			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+			  crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<main id="battleplan" class="page">${htmlFiles["battleplan.html"]}</main>
+		<section id="components">
+			<div class="components-menubutton">${htmlFiles["battleplan.menubutton.html"]}</div>
+			<div class="components-itembutton">${htmlFiles["battleplan.itembutton.html"]}</div>
+		</section>
+		<script src="js/all.js"></script>
+    <script>
+			jQuery(document).ready(function () {
+				snail.init();
+			});
+		</script>
   </body>
 </html>

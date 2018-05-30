@@ -1,11 +1,12 @@
 buildscript {
-    repositories {
-        jcenter()
-    }
+	repositories {
+		jcenter()
+	}
 
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
-    }
+	dependencies {
+		classpath 'com.eriwen:gradle-js-plugin:2.12.0'
+		classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
+	}
 }
 
 allprojects {
@@ -48,6 +49,12 @@ project(':common') {
 project(':game') {
 	apply plugin: 'com.github.johnrengelman.shadow'
 	apply plugin: 'application'
+	apply plugin: 'com.eriwen.gradle.js'
+	
+	ext {
+		webrootSrc = 'src/main/webapp'
+		webrootDest = 'src/main/resources/webroot'
+	}
 
 	dependencies {
 		compile project(':common')
@@ -58,6 +65,68 @@ project(':game') {
 	}
 
 	mainClassName = 'com.snailscuffle.game.Main'
+	
+	javascript.source {
+		dev.js {
+			srcDir "${webrootSrc}/js"
+			include '*.js'
+			exclude '*.min.js'
+		}
+		prod.js {
+			srcDir "${webrootSrc}/js"
+			include '*.min.js'
+		}
+	}
+	
+	combineJs {
+		encoding = 'UTF-8'
+		source = javascript.source.dev.js.files
+		dest = file("${webrootDest}/js/all.js")
+	}
+	
+	minifyJs {
+		source = combineJs
+		dest = file("${webrootDest}/js/all-min.js")
+		sourceMap = file("${webrootDest}/js/all.sourcemap.json")
+		closure {
+			compilationLevel = 'WHITESPACE_ONLY'
+			compilerOptions.languageIn = 'ECMASCRIPT6_STRICT'
+		}
+	}
+	
+	gzipJs {
+		source = file("${webrootDest}/js/all-min.js")
+		dest = file("${webrootDest}/js/all-min.js.gz")
+	}
+	
+	task copyHtml(type: Copy) {
+		def htmlFiles = [:]
+		file("src/main/webapp/html").eachFile() {
+			file -> htmlFiles[file.name] = file.text
+		}
+		
+		from "${webrootSrc}"
+		include 'index.html'
+		into "${webrootDest}"
+		expand(htmlFiles: htmlFiles)
+	}
+	
+	task copyCss(type: Copy) {
+		from "${webrootSrc}/css"
+		include '*.css'
+		into "${webrootDest}/css"
+	}
+	
+	task copyAssets(type: Copy) {
+		from "${webrootSrc}/assets"
+		into "${webrootDest}/assets"
+	}
+	
+	gzipJs.dependsOn minifyJs
+	processResources.dependsOn gzipJs
+	processResources.dependsOn copyHtml
+	processResources.dependsOn copyCss
+	processResources.dependsOn copyAssets
 }
 
 project(':simulator') {
