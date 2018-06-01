@@ -3,15 +3,15 @@
 #battleplan {
 	height: 98vh;
 	display: grid;
-	grid-template-rows: 2% 8% 1fr 20% 7% 2%;
-	grid-template-columns: 2% 15% 45% 1fr 20% 2%;
+	grid-template-rows: 2% 8% 1fr 25% 7% 2%;
+	grid-template-columns: 2% 2em 60% 1fr 20% 2em 2%;
 	grid-template-areas:
-		". . . . . ."
-		". snail snail snail snail ."
-		". equip equip . stats ."
-		". instructions instructions . submit ."
-		". presets presets . submit ."
-		". . . . . .";
+		". . . . . . ."
+		". snail snail snail snail snail ."
+		". . equip . stats . ."
+		". . instructions . submit . ."
+		". . presets . submit . ."
+		". . . . . . .";
 	grid-gap: 1em 0;
 }
 
@@ -71,37 +71,42 @@
 
 #battleplan .equip {
 	display: grid;
-	grid-template-rows: 5% repeat(5, 1fr) 5%;
-	grid-template-columns: 2em 30% 1fr 2em;
+	grid-template-rows: 2% repeat(5, 1fr) 2%;
+	grid-template-columns: 30% 1fr;
 	grid-template-areas:
-		". . . ."
-		". weapon . ."
-		". shell . ."
-		". accessory . ."
-		". item1 item1 ."
-		". item2 item2 ."
-		". . . .";
+		". ."
+		"weapon ."
+		"shell ."
+		"accessory ."
+		"item1 item1"
+		"item2 item2"
+		". .";
 	grid-gap: 1em 0;
 }
 
 #battleplan .equip-weapon {
 	grid-area: weapon;
+	align-self: center;
 }
 
 #battleplan .equip-shell {
 	grid-area: shell;
+	align-self: center;
 }
 
 #battleplan .equip-accessory {
 	grid-area: accessory;
+	align-self: center;
 }
 
 #battleplan .equip-item1 {
 	grid-area: item1;
+	align-self: center;
 }
 
 #battleplan .equip-item2 {
 	grid-area: item2;
+	align-self: center;
 }
 
 
@@ -238,8 +243,69 @@
 }
 
 
+/* INSTRUCTIONS */
+
+#battleplan .instructionbox {
+	padding: 0.5em 0.5em 0.5em 2em;
+	border: 1px solid black;
+	border-radius: 0.5em;
+}
+
+#battleplan .instructionbox.collapsed:hover {
+	cursor: pointer;
+}
+
+#battleplan .instructionbox-collapseicon:hover {
+	cursor: pointer;
+}
+
+#battleplan .instructionbox-expandicon,
+#battleplan .instructionbox-collapseicon {
+	vertical-align: middle;
+	float: right;
+	padding-right: 1em;
+}
+
+#battleplan .instructionbox.collapsed {
+	width: 9.5em;
+}
+
+#battleplan .instructionbox.expanding {
+	animation-name: expand-instructionbox;
+	animation-duration: 0.2s;
+}
+
+#battleplan .instructionbox.expanded {
+	width: calc(100% - 2.5em);
+	height: 90%;
+}
+
+#battleplan .instructionbox.collapsing {
+	animation-name: expand-instructionbox;
+	animation-duration: 0.2s;
+	animation-direction: reverse;
+}
+
+@keyframes expand-instructionbox {
+	from {
+		width: 9.5em;
+	}
+	
+	to {
+		width: calc(100% - 2.5em);
+		height: 90%;
+	}
+}
+
+
 /* PRESET BUTTONS */
 
 #battleplan .presets-button {
 	border-radius: 0.7em;
+}
+
+
+/* SUBMIT BUTTON */
+#battleplan .submit {
+	margin: 2em;
 }

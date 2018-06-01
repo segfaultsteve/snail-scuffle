@@ -7,7 +7,7 @@ var snail = (function (snail) {
 	const accessories = ['Steroids', 'Snail Mail', 'Caffeine', 'Charged Attack', 'Adrenaline', 'Salted Shell', 'Thorns', 'Defibrillator', 'No Accessory'];
 	const items = ['Attack Boost', 'Defense Boost', 'Speed Boost', 'None'];
 	
-	let weaponButton, shellButton, accessoryButton, item1Button, item2Button;
+	let weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructions;
 	
 	// private methods
 	const createMenuButton = function ($container, items, defaultSelection) {
@@ -29,6 +29,7 @@ var snail = (function (snail) {
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), accessories, 'No Accessory');
 		item1Button = createItemButton($container.find('.equip-item1'), items);
 		item2Button = createItemButton($container.find('.equip-item2'), items);
+		instructions = snail.battleplan.instructions.create($container.find('.instructions'));
 	};
 	
 	snail.battleplan.get = function () {

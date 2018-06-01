@@ -14,7 +14,6 @@ var snail = (function (snail, $) {
 		};
 		
 		let menubutton;
-		let items;
 		let selectedItem;
 		
 		// private methods
@@ -85,11 +84,8 @@ var snail = (function (snail, $) {
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedOption) {
-			items = optionsList;
 			selectedItem = selectedOption;
-			if (menubutton) {
-				menubutton.setOptionsList(optionsList, selectedOption);
-			}
+			menubutton.setOptionsList(optionsList, selectedOption);
 		};
 		
 		const setSelectedOption = function (selectedOption) {
@@ -112,8 +108,8 @@ var snail = (function (snail, $) {
 			setOptionsList: setOptionsList,
 			setSelectedOption: setSelectedOption,
 			getSelectedOption: getSelectedOption
-		}
+		};
 	};
 	
 	return snail;
-}(snail, jQuery));
+}(snail || {}, jQuery));
