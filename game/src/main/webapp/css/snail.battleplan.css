@@ -220,6 +220,8 @@
 	vertical-align: middle;
 	margin-left: 1em;
 	cursor: pointer;
+	width: 1.2em;
+	height: 1.2em;
 }
 
 #battleplan .itembutton-condition-addtext,
@@ -264,6 +266,8 @@
 	vertical-align: middle;
 	float: right;
 	padding-right: 1em;
+	width: 1em;
+	height: 1em;
 }
 
 #battleplan .instructionbox.collapsed {
