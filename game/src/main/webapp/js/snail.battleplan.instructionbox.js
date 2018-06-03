@@ -1,11 +1,10 @@
 var snail = (function (snail, $) {
 	snail.battleplan = snail.battleplan || {};
-	snail.battleplan.instructions = {};
+	snail.battleplan.instructionbox = {};
 	
-	const instructionBoxHtml = $('#components .components-instructionbox').html();
-	const instructionHtml = $('#components .components-instruction').html();
+	const componentHtml = $('#components .components-instructionbox').html();
 	
-	snail.battleplan.instructions.create = function ($container) {
+	snail.battleplan.instructionbox.create = function ($container) {
 		// private variables
 		const states = {
 			collapsed: 'collapsed',
@@ -14,12 +13,15 @@ var snail = (function (snail, $) {
 			collapsing: 'collapsing'
 		};
 		
-		let $instructionbox, $expandicon, $collapseicon;
+		let $instructionbox, $expandicon, $collapseicon, $instructions, $addbox, $defaultattack;
 		
 		// private methods
 		const beginExpand = function () {
 			$instructionbox.removeClass(states.collapsed);
 			$instructionbox.addClass(states.expanding);
+			$instructions.show();
+			$addbox.show();
+			$defaultattack.show();
 			$instructionbox.one('animationend', endExpand);
 		};
 		
@@ -41,26 +43,40 @@ var snail = (function (snail, $) {
 			$instructionbox.removeClass(states.collapsing);
 			$instructionbox.addClass(states.collapsed);
 			$collapseicon.hide();
+			$instructions.hide();
+			$addbox.hide();
+			$defaultattack.hide();
 			$expandicon.show();
 			$instructionbox.one('click', beginExpand);
 		};
 		
+		// event handlers
+		const onAddInstruction = function () {
+			snail.battleplan.instruction.create($instructions);
+		};
+		
 		// public methods
-		const get = function () {
+		const getInstructions = function () {
 			
 		};
 		
 		// init code
-		$container.html(instructionBoxHtml);
+		$container.html(componentHtml);
 		$instructionbox = $container.find('.instructionbox');
+		$instructions = $instructionbox.find('.instructionbox-instructions');
+		$addbox = $instructionbox.find('.instructionbox-addbox');
+		$defaultattack = $instructionbox.find('.instructionbox-defaultattack');
 		$expandicon = $container.find('.instructionbox-expandicon');
 		$collapseicon = $container.find('.instructionbox-collapseicon');
+		
+		$addbox.on('click', '.instructionbox-addbox-addicon, .instructionbox-addbox-text', onAddInstruction);
+		
 		endCollapse();
 		
 		return {
-			get: get
+			getInstructions: getInstructions
 		};
-	}
+	};
 	
 	return snail;
 }(snail || {}, jQuery));

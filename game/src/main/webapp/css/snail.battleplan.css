@@ -1,9 +1,26 @@
+/* GLOBAL */
+
+#battleplan .addicon,
+#battleplan .removeicon {
+	vertical-align: middle;
+	margin-left: 1em;
+	cursor: pointer;
+	width: 1.2em;
+	height: 1.2em;
+}
+
+#battleplan select {
+	border: 1px solid black;
+	background-color: white;
+}
+
+
 /* TOP-LEVEL GRID */
 
 #battleplan {
 	height: 98vh;
 	display: grid;
-	grid-template-rows: 2% 8% 1fr 25% 7% 2%;
+	grid-template-rows: 2% 8% 1fr 30% 7% 2%;
 	grid-template-columns: 2% 2em 60% 1fr 20% 2em 2%;
 	grid-template-areas:
 		". . . . . . ."
@@ -81,7 +98,7 @@
 		"item1 item1"
 		"item2 item2"
 		". .";
-	grid-gap: 1em 0;
+	grid-gap: 0.8em 0;
 }
 
 #battleplan .equip-weapon {
@@ -215,15 +232,6 @@
 	top: 0.5em;
 }
 
-#battleplan .itembutton-condition-addicon,
-#battleplan .itembutton-condition-removeicon {
-	vertical-align: middle;
-	margin-left: 1em;
-	cursor: pointer;
-	width: 1.2em;
-	height: 1.2em;
-}
-
 #battleplan .itembutton-condition-addtext,
 #battleplan .itembutton-condition-usetext {
 	margin-left: 0.5em;
@@ -245,16 +253,30 @@
 }
 
 
-/* INSTRUCTIONS */
+/* INSTRUCTION BOX */
 
 #battleplan .instructionbox {
-	padding: 0.5em 0.5em 0.5em 2em;
+	padding-left: 2em;
 	border: 1px solid black;
 	border-radius: 0.5em;
 }
 
+#battleplan .instructionbox.collapsing,
+#battleplan .instructionbox.collapsed,
+#battleplan .instructionbox.expanding {
+	overflow: hidden;
+}
+
+#battleplan .instructionbox.expanded {
+	overflow: auto;
+}
+
 #battleplan .instructionbox.collapsed:hover {
 	cursor: pointer;
+}
+
+#battleplan .instructionbox-header {
+	margin: 0.5em 0 0.5em 0;
 }
 
 #battleplan .instructionbox-collapseicon:hover {
@@ -271,7 +293,7 @@
 }
 
 #battleplan .instructionbox.collapsed {
-	width: 9.5em;
+	width: 10em;
 }
 
 #battleplan .instructionbox.expanding {
@@ -281,7 +303,7 @@
 
 #battleplan .instructionbox.expanded {
 	width: calc(100% - 2.5em);
-	height: 90%;
+	height: 100%;
 }
 
 #battleplan .instructionbox.collapsing {
@@ -292,13 +314,64 @@
 
 @keyframes expand-instructionbox {
 	from {
-		width: 9.5em;
+		width: 10em;
+		height: 1.5em;
 	}
 	
 	to {
 		width: calc(100% - 2.5em);
-		height: 90%;
+		height: 100%;
 	}
+}
+
+#battleplan .instructionbox-instructions {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+#battleplan .instructionbox-addbox {
+	margin: 0.1em 0.5em 0.1em 0;
+	padding: 0.5em 0 0.5em 0;
+	border: 1px solid black;
+	border-radius: 0.5em;
+}
+
+#battleplan .instructionbox-addbox-text {
+	margin-left: 0.5em;
+	cursor: pointer;
+}
+
+#battleplan .instructionbox-defaultattack {
+	margin-left: 3.1em;
+	color: gray;
+}
+
+
+/* INSTRUCTIONS */
+
+#battleplan .instructionbox-instructions .instruction {
+	margin: 0.1em 0.5em 0.1em 0;
+	border: 1px solid black;
+	border-radius: 0.5em;
+	list-style-type: none;
+}
+
+#battleplan .instructionbox-instructions .instruction-removeicon {
+	margin-top:0.8em;
+	margin-bottom: 0.8em;
+}
+
+#battleplan .instructionbox-instructions .instruction-type,
+#battleplan .instructionbox-instructions .instruction-item,
+#battleplan .instructionbox-instructions .instruction-waitcondition {
+	margin-left: 0.5em;
+	vertical-align: middle;
+}
+
+#battleplan .instructionbox-instructions .instruction-waitcondition-ap {
+	width: 2em;
+	height: 0.8em;
 }
 
 
