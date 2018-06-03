@@ -13,8 +13,7 @@ var snail = (function (snail, $) {
 			usesCondition: 'usesCondition'
 		};
 		
-		let menubutton;
-		let selectedItem;
+		let menubutton, selectedItem;
 		
 		// private methods
 		const setState = function (newState) {
@@ -50,7 +49,7 @@ var snail = (function (snail, $) {
 			$container.find('.itembutton-condition-hascondition-inequality').val('gte');
 			$container.find('.itembutton-condition-hascondition-threshold').val('');
 			$container.find('.itembutton-condition-usescondition-item').val('attack');
-		}
+		};
 		
 		// event handlers
 		const onMenubuttonSelectionChanged = function (selection) {
@@ -80,7 +79,7 @@ var snail = (function (snail, $) {
 			} else {
 				setState(states.hasCondition);
 			}
-		}
+		};
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedOption) {
@@ -90,11 +89,11 @@ var snail = (function (snail, $) {
 		
 		const setSelectedOption = function (selectedOption) {
 			menubutton.setSelectedOption(selectedOption);
-		}
+		};
 		
 		const getSelectedOption = function () {
 			return menubutton.getSelectedOption();
-		}
+		};
 		
 		// init code
 		$container.addClass('itembutton');

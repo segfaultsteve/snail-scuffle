@@ -29,7 +29,7 @@ var snail = (function (snail) {
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), accessories, 'No Accessory');
 		item1Button = createItemButton($container.find('.equip-item1'), items);
 		item2Button = createItemButton($container.find('.equip-item2'), items);
-		instructions = snail.battleplan.instructions.create($container.find('.instructions'));
+		instructions = snail.battleplan.instructionbox.create($container.find('.instructions'));
 	};
 	
 	snail.battleplan.get = function () {
@@ -38,7 +38,8 @@ var snail = (function (snail) {
 			shell: shellButton.getSelectedOption(),
 			accessory: accessoryButton.getSelectedOption(),
 			item1: item1Button.getSelectedOption(),
-			item2: item2Button.getSelectedOption()
+			item2: item2Button.getSelectedOption(),
+			instructions: instructions.getInstructions()
 		};
 	}
 	

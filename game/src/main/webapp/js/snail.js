@@ -11,4 +11,4 @@ var snail = (function(snail, $) {
 	};
 	
 	return snail;
-})(snail || {}, jQuery);
+}(snail || {}, jQuery));
