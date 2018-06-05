@@ -1,6 +1,6 @@
 package com.snailscuffle.game;
 
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -10,12 +10,12 @@ public class GameSettings {
 	
 	public final int port;
 	
-	private static final String CONFIG_FILE = "src/main/resources/config.properties";
+	private static final String CONFIG_FILE = "/config.properties";
 	private static final Logger logger = LoggerFactory.getLogger(GameSettings.class);
 	
 	public GameSettings() {
 		Properties config = new Properties();
-		try (FileInputStream configFile = new FileInputStream(CONFIG_FILE)) {
+		try (InputStream configFile = this.getClass().getResourceAsStream(CONFIG_FILE)) {
 			config.load(configFile);
 		} catch (Exception e) {
 			logger.error("Could not load config file", e);

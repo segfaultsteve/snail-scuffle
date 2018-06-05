@@ -1,5 +1,6 @@
 body {
 	font-family: 'lucida sans unicode', sans-serif;
+	font-size: 1.8vh;
 }
 
 button {
@@ -17,4 +18,8 @@ button:hover {
 
 button::-moz-focus-inner {
 	border: 0;
+}
+
+#components {
+	display: none;
 }

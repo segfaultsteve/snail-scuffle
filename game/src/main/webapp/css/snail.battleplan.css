@@ -1,18 +1,35 @@
+/* GLOBAL */
+
+#battleplan .addicon,
+#battleplan .removeicon {
+	vertical-align: middle;
+	margin-left: 1em;
+	cursor: pointer;
+	width: 1.2em;
+	height: 1.2em;
+}
+
+#battleplan select {
+	border: 1px solid black;
+	background-color: white;
+}
+
+
 /* TOP-LEVEL GRID */
 
 #battleplan {
 	height: 98vh;
 	display: grid;
-	grid-template-rows: 2% 60px 1fr 150px 50px 2%;
-	grid-template-columns: 2% 200px 600px 1fr 300px 2%;
+	grid-template-rows: 2% 8% 1fr 30% 7% 2%;
+	grid-template-columns: 2% 2em 60% 1fr 20% 2em 2%;
 	grid-template-areas:
-		". . . . . ."
-		". snail snail snail snail ."
-		". equip equip . stats ."
-		". instructions instructions . submit ."
-		". presets presets . submit ."
-		". . . . . .";
-	grid-gap: 20px 0;
+		". . . . . . ."
+		". snail snail snail snail snail ."
+		". . equip . stats . ."
+		". . instructions . submit . ."
+		". . presets . submit . ."
+		". . . . . . .";
+	grid-gap: 1em 0;
 }
 
 #battleplan .snails {
@@ -46,7 +63,7 @@
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "dale gail todd doug";
-	grid-gap: 0 20px;
+	grid-gap: 0 1em;
 	
 }
 
@@ -71,37 +88,42 @@
 
 #battleplan .equip {
 	display: grid;
-	grid-template-rows: 5% repeat(5, 1fr) 5%;
-	grid-template-columns: 30px 200px 1fr 30px;
+	grid-template-rows: 2% repeat(5, 1fr) 2%;
+	grid-template-columns: 30% 1fr;
 	grid-template-areas:
-		". . . ."
-		". weapon . ."
-		". shell . ."
-		". accessory . ."
-		". item1 item1 ."
-		". item2 item2 ."
-		". . . .";
-	grid-gap: 5px 0;
+		". ."
+		"weapon ."
+		"shell ."
+		"accessory ."
+		"item1 item1"
+		"item2 item2"
+		". .";
+	grid-gap: 0.8em 0;
 }
 
 #battleplan .equip-weapon {
 	grid-area: weapon;
+	align-self: center;
 }
 
 #battleplan .equip-shell {
 	grid-area: shell;
+	align-self: center;
 }
 
 #battleplan .equip-accessory {
 	grid-area: accessory;
+	align-self: center;
 }
 
 #battleplan .equip-item1 {
 	grid-area: item1;
+	align-self: center;
 }
 
 #battleplan .equip-item2 {
 	grid-area: item2;
+	align-self: center;
 }
 
 
@@ -111,7 +133,7 @@
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "preset1 preset2 preset3 preset4";
-	grid-gap: 0 20px;
+	grid-gap: 0 1em;
 }
 
 #battleplan .preset-button.preset1 {
@@ -145,8 +167,7 @@
 }
 
 #battleplan .menubutton-button {
-	height: 50px;
-	padding: 10px 10px 10px 30px;
+	padding: 1em 1em 1em 2em;
 	text-align: left;
 }
 
@@ -162,11 +183,12 @@
 #battleplan .menubutton-list {
 	display: none;
 	position: absolute;
-	top: 24px;
+	top: 1.5em;
+	left: 60%;
 	z-index: 999;
-	width: 200px;
+	width: 12em;
 	margin: 0;
-	padding: 8px;
+	padding: 0.5em;
 	background: white;
 	color: black;
 	border: 1px solid black;
@@ -174,7 +196,7 @@
 }
 
 #battleplan .menubutton-list li {
-	padding: 15px;
+	padding: 0.9em;
 	border-bottom: solid 1px #ccc;
 }
 
@@ -190,36 +212,30 @@
 /* EQUIPMENT DROPDOWN BUTTONS */
 
 #battleplan .equip .menubutton-button {
-	width: 250px;
-}
-
-#battleplan .equip .menubutton-list {
-	left: 140px;
+	width: 100%;
+	max-width: 18em;
+	min-width: 12em;
 }
 
 
 /* ITEM DROPDOWN BUTTONS */
 
+#battleplan .itembutton {
+	min-width: 45em;
+}
+
 #battleplan .itembutton .menubutton-button {
-	width: 175px;
+	width: 12em;
 }
 
 #battleplan .itembutton .menubutton-list {
-	top: 8px;
-	left: 100px;
-}
-
-#battleplan .itembutton-condition-addicon,
-#battleplan .itembutton-condition-removeicon {
-	vertical-align: middle;
-	margin-left: 20px;
-	cursor: pointer;
+	top: 0.5em;
 }
 
 #battleplan .itembutton-condition-addtext,
 #battleplan .itembutton-condition-usetext {
-	margin-left: 10px;
-	margin-right: 5px;
+	margin-left: 0.5em;
+	margin-right: 0.25em;
 }
 
 #battleplan .itembutton-condition-addtext {
@@ -227,18 +243,146 @@
 }
 
 #battleplan .itembutton-condition select {
-	margin-left: 5px;
-	margin-right: 5px;
+	margin-left: 0.25em;
+	margin-right: 0.25em;
 }
 
 #battleplan .itembutton-condition-hascondition-threshold {
-	width: 25px;
-	margin-left: 5px;
+	width: 2em;
+	margin-left: 0.25em;
+}
+
+
+/* INSTRUCTION BOX */
+
+#battleplan .instructionbox {
+	padding-left: 2em;
+	border: 1px solid black;
+	border-radius: 0.5em;
+}
+
+#battleplan .instructionbox.collapsing,
+#battleplan .instructionbox.collapsed,
+#battleplan .instructionbox.expanding {
+	overflow: hidden;
+}
+
+#battleplan .instructionbox.expanded {
+	overflow: auto;
+}
+
+#battleplan .instructionbox.collapsed:hover {
+	cursor: pointer;
+}
+
+#battleplan .instructionbox-header {
+	margin: 0.5em 0 0.5em 0;
+}
+
+#battleplan .instructionbox-collapseicon:hover {
+	cursor: pointer;
+}
+
+#battleplan .instructionbox-expandicon,
+#battleplan .instructionbox-collapseicon {
+	vertical-align: middle;
+	float: right;
+	padding-right: 1em;
+	width: 1em;
+	height: 1em;
+}
+
+#battleplan .instructionbox.collapsed {
+	width: 10em;
+}
+
+#battleplan .instructionbox.expanding {
+	animation-name: expand-instructionbox;
+	animation-duration: 0.2s;
+}
+
+#battleplan .instructionbox.expanded {
+	width: calc(100% - 2.5em);
+	height: 100%;
+}
+
+#battleplan .instructionbox.collapsing {
+	animation-name: expand-instructionbox;
+	animation-duration: 0.2s;
+	animation-direction: reverse;
+}
+
+@keyframes expand-instructionbox {
+	from {
+		width: 10em;
+		height: 1.5em;
+	}
+	
+	to {
+		width: calc(100% - 2.5em);
+		height: 100%;
+	}
+}
+
+#battleplan .instructionbox-instructions {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+#battleplan .instructionbox-addbox {
+	margin: 0.1em 0.5em 0.1em 0;
+	padding: 0.5em 0 0.5em 0;
+	border: 1px solid black;
+	border-radius: 0.5em;
+}
+
+#battleplan .instructionbox-addbox-text {
+	margin-left: 0.5em;
+	cursor: pointer;
+}
+
+#battleplan .instructionbox-defaultattack {
+	margin-left: 3.1em;
+	color: gray;
+}
+
+
+/* INSTRUCTIONS */
+
+#battleplan .instructionbox-instructions .instruction {
+	margin: 0.1em 0.5em 0.1em 0;
+	border: 1px solid black;
+	border-radius: 0.5em;
+	list-style-type: none;
+}
+
+#battleplan .instructionbox-instructions .instruction-removeicon {
+	margin-top:0.8em;
+	margin-bottom: 0.8em;
+}
+
+#battleplan .instructionbox-instructions .instruction-type,
+#battleplan .instructionbox-instructions .instruction-item,
+#battleplan .instructionbox-instructions .instruction-waitcondition {
+	margin-left: 0.5em;
+	vertical-align: middle;
+}
+
+#battleplan .instructionbox-instructions .instruction-waitcondition-ap {
+	width: 2em;
+	height: 0.8em;
 }
 
 
 /* PRESET BUTTONS */
 
 #battleplan .presets-button {
-	border-radius: 10px;
+	border-radius: 0.7em;
+}
+
+
+/* SUBMIT BUTTON */
+#battleplan .submit {
+	margin: 2em;
 }

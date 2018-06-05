@@ -28,3 +28,4 @@ build/
 ## Application specific
 *.log
 *.tmp
+game/src/main/resources/webroot/
