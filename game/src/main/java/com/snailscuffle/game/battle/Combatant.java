@@ -169,6 +169,9 @@ class Combatant {
 			recorder.recordUseItem(this, Item.SPEED, Stat.AP, SPEED_BOOST_AP_INCREASE);
 			break;
 			
+		case NONE:
+			return;
+			
 		default:
 			throw new RuntimeException("Unexpected item");
 		}

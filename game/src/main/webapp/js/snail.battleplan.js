@@ -1,47 +1,47 @@
 var snail = (function (snail) {
 	snail.battleplan = snail.battleplan || {};
+	snail.battleplan.model = snail.battleplan.model || {};
 	
 	// private variables
-	const weapons = ['A Salt Rifle', 'Rocket Launcher', 'Laser'];
-	const shells = ['Aluminum', 'Steel', 'No Shell'];
-	const accessories = ['Steroids', 'Snail Mail', 'Caffeine', 'Charged Attack', 'Adrenaline', 'Salted Shell', 'Thorns', 'Defibrillator', 'No Accessory'];
-	const items = ['Attack Boost', 'Defense Boost', 'Speed Boost', 'None'];
-	
+	const model = snail.battleplan.model;
 	let weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructions;
 	
 	// private methods
-	const createMenuButton = function ($container, items, defaultSelection) {
+	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex) {
 		const button = snail.battleplan.menubutton.create($container);
-		button.setOptionsList(items, defaultSelection);
+		itemsPromise.done(function (items) {
+			const displayNames = items.map(i => i.displayName);
+			button.setOptionsList(displayNames, defaultSelectionIndex);
+		});
 		return button;
-	}
+	};
 	
-	const createItemButton = function ($container, items) {
+	const createItemButton = function ($container, itemsPromise) {
 		const button = snail.battleplan.itembutton.create($container);
-		button.setOptionsList(items, 'None');
+		itemsPromise.done(function (items) {
+			const displayNames = items.map(i => i.displayName);
+			button.setOptionsList(displayNames, 'last');
+		});
 		return button;
-	}
+	};
 	
 	// public methods
 	snail.battleplan.init = function ($container) {
-		weaponButton = createMenuButton($container.find('.equip-weapon'), weapons, weapons[0]);
-		shellButton = createMenuButton($container.find('.equip-shell'), shells, 'No Shell');
-		accessoryButton = createMenuButton($container.find('.equip-accessory'), accessories, 'No Accessory');
-		item1Button = createItemButton($container.find('.equip-item1'), items);
-		item2Button = createItemButton($container.find('.equip-item2'), items);
+		weaponButton = createMenuButton($container.find('.equip-weapon'), model.promiseWeapons(), 0);
+		shellButton = createMenuButton($container.find('.equip-shell'), model.promiseShells(), 'last');
+		accessoryButton = createMenuButton($container.find('.equip-accessory'), model.promiseAccessories(), 'last');
+		item1Button = createItemButton($container.find('.equip-item1'), model.promiseItems());
+		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems());
 		instructions = snail.battleplan.instructionbox.create($container.find('.instructions'));
+		
+		weaponButton.addSelectionChangedHandler(function (index, weapon) { model.setWeapon(weapon) });
+		shellButton.addSelectionChangedHandler(function (index, shell) { model.setShell(shell) });
+		accessoryButton.addSelectionChangedHandler(function (index, accessory) { model.setAccessory(accessory) });
+		item1Button.addSelectionChangedHandler(function (index, item) { model.setItem(0, item) });
+		item1Button.addConditionChangedHandler(function (condition) { model.setItemCondition(0, condition) });
+		item2Button.addSelectionChangedHandler(function (index, item) { model.setItem(1, item) });
+		item2Button.addConditionChangedHandler(function (condition) { model.setItemCondition(1, condition) });
 	};
-	
-	snail.battleplan.get = function () {
-		return {
-			weapon: weaponButton.getSelectedOption(),
-			shell: shellButton.getSelectedOption(),
-			accessory: accessoryButton.getSelectedOption(),
-			item1: item1Button.getSelectedOption(),
-			item2: item2Button.getSelectedOption(),
-			instructions: instructions.getInstructions()
-		};
-	}
 	
 	return snail;
 }(snail || {}));

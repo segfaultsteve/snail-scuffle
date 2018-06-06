@@ -51,7 +51,7 @@ public class BattleEvent implements Serializable {
 			throw new InvalidBattleException("Action not found");
 		}
 		
-		if (action == Action.USE_ITEM && itemUsed == null) {
+		if (action == Action.USE_ITEM && (itemUsed == null || itemUsed == Item.NONE)) {
 			throw new InvalidBattleException("Event of type USE_ITEM must include a non-null item to use");
 		}
 		

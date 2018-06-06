@@ -40,6 +40,7 @@ public class Main {
 		context.setBaseResource(Resource.newResource(findWebRoot()));
 		context.addServlet(DefaultServlet.class, "/");
 		context.addServlet(BattleServlet.class, "/battle");
+		context.addServlet(InfoServlet.class, "/info/*");
 		
 		server.addConnector(connector);
 		server.setHandler(context);

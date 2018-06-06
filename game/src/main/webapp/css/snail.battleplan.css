@@ -294,6 +294,7 @@
 
 #battleplan .instructionbox.collapsed {
 	width: 10em;
+	height: 2.2em;
 }
 
 #battleplan .instructionbox.expanding {
@@ -315,7 +316,7 @@
 @keyframes expand-instructionbox {
 	from {
 		width: 10em;
-		height: 1.5em;
+		height: 2.2em;
 	}
 	
 	to {
@@ -384,5 +385,5 @@
 
 /* SUBMIT BUTTON */
 #battleplan .submit {
-	margin: 2em;
+	margin: 6em 2em 2em 2em;
 }

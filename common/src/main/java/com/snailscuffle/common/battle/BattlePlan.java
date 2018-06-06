@@ -63,6 +63,14 @@ public class BattlePlan implements Serializable {
 			accessory = Accessory.NONE;
 		}
 		
+		if (item1 == null) {
+			item1 = Item.NONE;
+		}
+		
+		if (item2 == null) {
+			item2 = Item.NONE;
+		}
+		
 		if (item1Rule != null) {
 			item1Rule.validate();
 		}

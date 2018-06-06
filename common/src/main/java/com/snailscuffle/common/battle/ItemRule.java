@@ -42,11 +42,11 @@ public class ItemRule implements Serializable {
 	}
 	
 	public void validate() {
-		if (hasCondition == null && enemyUsesCondition == null) {
+		if (hasCondition == null && (enemyUsesCondition == null || enemyUsesCondition == Item.NONE)) {
 			throw new InvalidBattleException("Item rule is missing condition");
 		}
 		
-		if (hasCondition != null && enemyUsesCondition != null) {
+		if (hasCondition != null && (enemyUsesCondition != null || enemyUsesCondition == Item.NONE)) {
 			throw new InvalidBattleException("Item rule is overspecified");
 		}
 		
@@ -73,7 +73,7 @@ public class ItemRule implements Serializable {
 	}
 	
 	public boolean triggersWhenEnemyUses(Item item) {
-		return (enemyUsesCondition != null && item == enemyUsesCondition);
+		return (enemyUsesCondition != null && enemyUsesCondition != Item.NONE && item == enemyUsesCondition);
 	}
 	
 }

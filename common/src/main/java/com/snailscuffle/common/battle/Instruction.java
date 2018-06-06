@@ -65,13 +65,13 @@ public class Instruction implements Serializable {
 		
 		if (type == Type.USE) {
 			apThreshold = 0;
-			if (itemToUse == null) {
+			if (itemToUse == null || itemToUse == Item.NONE) {
 				throw new InvalidBattleException("USE instruction is missing itemToUse");
 			}
 		}
 		
 		if (type == Type.WAIT) {
-			itemToUse = null;
+			itemToUse = Item.NONE;
 			if (apThreshold < 0) {
 				apThreshold = 0;
 			}

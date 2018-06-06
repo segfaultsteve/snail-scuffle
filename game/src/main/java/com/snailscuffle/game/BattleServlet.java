@@ -7,8 +7,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.server.HttpConnection;
-import org.eclipse.jetty.server.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,12 +44,7 @@ public class BattleServlet extends HttpServlet {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().print(ErrorResponse.unexpectedError().because(e.getMessage()));
 		}
-		markHandled(request);
-	}
-	
-	private static void markHandled(HttpServletRequest request) {
-		Request baseRequest = (request instanceof Request) ? ((Request)request) : HttpConnection.getCurrentConnection().getHttpChannel().getRequest();
-		baseRequest.setHandled(true);
+		ServletUtil.markHandled(request);
 	}
 
 }

@@ -50,7 +50,7 @@ var snail = (function (snail, $) {
 			$instructionbox.one('click', beginExpand);
 		};
 		
-		// event handlers
+		// callbacks
 		const onAddInstruction = function () {
 			snail.battleplan.instruction.create($instructions);
 		};

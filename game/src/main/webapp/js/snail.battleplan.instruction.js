@@ -30,7 +30,7 @@ var snail = (function (snail, $) {
 			$this.find('.instruction-waitcondition-ap').val('');
 		};
 		
-		// event handlers
+		// callbacks
 		const onTypeChanged = function () {
 			const lastType = instructionType;
 			instructionType = this.value;

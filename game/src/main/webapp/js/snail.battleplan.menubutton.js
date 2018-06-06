@@ -4,10 +4,10 @@ var snail = (function(snail, $) {
 	
 	const componentHtml = $('#components .components-menubutton').html();
 	
-	snail.battleplan.menubutton.create = function ($container, onSelectionChanged) {
+	snail.battleplan.menubutton.create = function ($container) {
 		// private variables
-		let options = ['None'];
-		let selected = 0;
+		let selectionChangedHandlers = [];
+		let options, selected;
 		
 		// private methods
 		const refreshOptionsList = function () {
@@ -21,9 +21,9 @@ var snail = (function(snail, $) {
 		
 		const updateButtonText = function () {
 			$container.find('.menubutton-button').text(options[selected]);
-		}
+		};
 		
-		// event handlers
+		// callbacks
 		const onButtonClicked = function (e) {
 			const $list = $container.find('.menubutton-list');
 			const $allLists = $('.menubutton-list');
@@ -37,36 +37,39 @@ var snail = (function(snail, $) {
 				});
 				e.stopPropagation();
 			}
-		}
+		};
 		
 		const onOptionClicked = function (e) {
-			setSelectedOption($(e.target).text());
-		}
+			const index = options.indexOf($(e.target).text());
+			setSelectedOption(index);
+		};
 		
 		// public methods
-		const setOptionsList = function (optionsList, selectedOption) {
+		const setOptionsList = function (optionsList, selectedIndex) {
 			options = [];
 			selected = 0;
 			for (let i = 0; i < optionsList.length; i++) {
 				options[i] = optionsList[i];
 			}
 			refreshOptionsList();
-			setSelectedOption(selectedOption);
+			setSelectedOption(selectedIndex);
 		};
 		
-		const setSelectedOption = function (selectedOption) {
-			const index = options.indexOf(selectedOption);
-			if (index >= 0) {
-				selected = index;
-				updateButtonText();
-				if (onSelectionChanged) {
-					onSelectionChanged(selectedOption, index);
-				}
+		const setSelectedOption = function (index) {
+			if (index === 'last') {
+				index = options.length - 1;
 			}
+			selected = index;
+			updateButtonText();
+			selectionChangedHandlers.forEach(handler => handler(index, options[index]));
 		};
 		
 		const getSelectedOption = function () {
 			return options[selected];
+		};
+		
+		const addSelectionChangedHandler = function(handler) {
+			selectionChangedHandlers.push(handler);
 		};
 		
 		// init code
@@ -78,7 +81,8 @@ var snail = (function(snail, $) {
 		return {
 			setOptionsList: setOptionsList,
 			setSelectedOption: setSelectedOption,
-			getSelectedOption: getSelectedOption
+			getSelectedOption: getSelectedOption,
+			addSelectionChangedHandler: addSelectionChangedHandler
 		};
 	};
 	
