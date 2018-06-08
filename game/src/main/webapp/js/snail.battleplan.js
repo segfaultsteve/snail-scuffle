@@ -4,7 +4,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	const model = snail.battleplan.model;
-	let weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructions;
+	let weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex) {
@@ -32,7 +32,7 @@ var snail = (function (snail) {
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), model.promiseAccessories(), 'last');
 		item1Button = createItemButton($container.find('.equip-item1'), model.promiseItems());
 		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems());
-		instructions = snail.battleplan.instructionbox.create($container.find('.instructions'));
+		instructionBox = snail.battleplan.instructionbox.create($container.find('.instructions'));
 		
 		weaponButton.addSelectionChangedHandler(function (index, weapon) { model.setWeapon(weapon) });
 		shellButton.addSelectionChangedHandler(function (index, shell) { model.setShell(shell) });
@@ -41,6 +41,7 @@ var snail = (function (snail) {
 		item1Button.addConditionChangedHandler(function (condition) { model.setItemCondition(0, condition) });
 		item2Button.addSelectionChangedHandler(function (index, item) { model.setItem(1, item) });
 		item2Button.addConditionChangedHandler(function (condition) { model.setItemCondition(1, condition) });
+		instructionBox.addInstructionsChangedHandler(function () { model.setInstructions(instructionBox.getInstructions()) });
 	};
 	
 	return snail;

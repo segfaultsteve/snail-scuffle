@@ -11,8 +11,9 @@ var snail = (function (snail, $) {
 			use: 'use',
 			wait: 'wait'
 		};
-		
-		let $this, instructionType;
+		let instructionUpdatedHandlers = [];
+		let instructionRemovedHandlers = [];
+		let $this, thisInstruction, instructionType;
 		
 		// private methods
 		const setState = function (newState) {
@@ -30,6 +31,10 @@ var snail = (function (snail, $) {
 			$this.find('.instruction-waitcondition-ap').val('');
 		};
 		
+		const notifyInstructionUpdated = function () {
+			instructionUpdatedHandlers.forEach(handler => handler(thisInstruction));
+		};
+		
 		// callbacks
 		const onTypeChanged = function () {
 			const lastType = instructionType;
@@ -39,16 +44,62 @@ var snail = (function (snail, $) {
 				resetTypeSpecificElements();
 				setState(instructionType);
 			}
+			
+			notifyInstructionUpdated();
+		};
+		
+		const onItemChanged = function () {
+			notifyInstructionUpdated();
+		};
+		
+		const onApThresholdChanged = function () {
+			notifyInstructionUpdated();
+		};
+		
+		const onRemoveIconClicked = function() {
+			instructionRemovedHandlers.forEach(handler => handler(thisInstruction));
+			$this.remove();
+		};
+		
+		// public methods
+		const addInstructionUpdatedHandler = function (callback) {
+			instructionUpdatedHandlers.push(callback);
+		};
+		
+		const addInstructionRemovedHandler = function (callback) {
+			instructionRemovedHandlers.push(callback);
+		};
+		
+		const getData = function () {
+			const model = snail.battleplan.model;
+			if (instructionType === 'attack') {
+				return model.createAttackInstruction();
+			} else if (instructionType === 'use') {
+				const item = $this.find('.instruction-item').val();
+				return model.createUseItemInstruction(item);
+			} else {
+				const apThreshold = $this.find('.instruction-waitcondition-ap').val();
+				return model.createWaitForApInstruction(apThreshold);
+			}
 		};
 		
 		// init code
 		$container.append(componentHtml);
 		$this = $container.find('.instruction:last');
 		$this.find('.instruction-type').change(onTypeChanged);
-		$this.find('.instruction-removeicon').click(function () {
-			$this.remove();
-		});
+		$this.find('.instruction-item').change(onItemChanged);
+		$this.find('.instruction-waitcondition-ap').change(onApThresholdChanged);
+		$this.find('.instruction-removeicon').click(onRemoveIconClicked);
+		
+		instructionType = 'attack';
 		setState(states.attack);
+		
+		thisInstruction = {
+			addInstructionUpdatedHandler: addInstructionUpdatedHandler,
+			addInstructionRemovedHandler: addInstructionRemovedHandler,
+			getData: getData
+		};
+		return thisInstruction;
 	};
 	
 	return snail;

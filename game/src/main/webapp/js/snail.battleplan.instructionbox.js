@@ -12,7 +12,8 @@ var snail = (function (snail, $) {
 			expanded: 'expanded',
 			collapsing: 'collapsing'
 		};
-		
+		let instructionList = [];
+		let instructionsChangedHandlers = [];
 		let $instructionbox, $expandicon, $collapseicon, $instructions, $addbox, $defaultattack;
 		
 		// private methods
@@ -52,12 +53,37 @@ var snail = (function (snail, $) {
 		
 		// callbacks
 		const onAddInstruction = function () {
-			snail.battleplan.instruction.create($instructions);
+			const newInstruction = snail.battleplan.instruction.create($instructions);
+			newInstruction.addInstructionUpdatedHandler(onInstructionUpdated);
+			newInstruction.addInstructionRemovedHandler(onInstructionRemoved);
+			instructionList.push(newInstruction);
+			instructionsChangedHandlers.forEach(handler => handler());
+		};
+		
+		const onInstructionUpdated = function () {
+			instructionsChangedHandlers.forEach(handler => handler());
+		};
+		
+		const onInstructionRemoved = function (instruction) {
+			const index = instructionList.indexOf(instruction);
+			if (index > -1) {
+				instructionList.splice(index, 1);
+			}
+			instructionsChangedHandlers.forEach(handler => handler());
 		};
 		
 		// public methods
-		const getInstructions = function () {
-			
+		this.getInstructions = function () {
+			let instructionData = [];
+			for (let i = 0; i < instructionList.length; i++) {
+				const instruction = instructionList[i].getData();
+				instructionData.push(instruction);
+			}
+			return instructionData;
+		};
+		
+		this.addInstructionsChangedHandler = function (handler) {
+			instructionsChangedHandlers.push(handler);
 		};
 		
 		// init code
@@ -73,9 +99,7 @@ var snail = (function (snail, $) {
 		
 		endCollapse();
 		
-		return {
-			getInstructions: getInstructions
-		};
+		return this;
 	};
 	
 	return snail;

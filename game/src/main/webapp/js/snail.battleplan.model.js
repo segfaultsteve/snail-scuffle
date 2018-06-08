@@ -15,7 +15,7 @@ var snail = (function (snail) {
 			hasCondition: null,
 			enemyUsesCondition: null
 		}];
-	let instructions;
+	let instructions = [];
 	
 	// private methods
 	const findByDisplayName = function (equipInfoArray, displayName) {
@@ -26,6 +26,14 @@ var snail = (function (snail) {
 		}
 		
 		throw `invalid equipment name: '${displayName}'`;
+	};
+	
+	const createInstruction = function (type, itemToUse, apThreshold) {
+		return {
+			type: type,
+			itemToUse: itemToUse,
+			apThreshold: apThreshold
+		};
 	};
 	
 	// public methods
@@ -101,6 +109,18 @@ var snail = (function (snail) {
 	
 	snail.battleplan.model.setItemCondition = function (index, condition) {
 		itemConditions[index] = condition;
+	};
+	
+	snail.battleplan.model.createAttackInstruction = function () {
+		return createInstruction('attack', null, null);
+	};
+	
+	snail.battleplan.model.createUseItemInstruction = function (item) {
+		return createInstruction('use', item, null);
+	};
+	
+	snail.battleplan.model.createWaitForApInstruction = function (apThreshold) {
+		return createInstruction('wait', null, apThreshold);
 	};
 	
 	snail.battleplan.model.setInstructions = function (newInstructions) {
