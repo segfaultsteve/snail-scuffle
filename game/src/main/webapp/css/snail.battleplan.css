@@ -5,8 +5,7 @@
 	vertical-align: middle;
 	margin-left: 1em;
 	cursor: pointer;
-	width: 1.2em;
-	height: 1.2em;
+	font-size: 1.5em;
 }
 
 #battleplan select {
@@ -245,6 +244,7 @@
 #battleplan .itembutton-condition select {
 	margin-left: 0.25em;
 	margin-right: 0.25em;
+	font-size: 1em;
 }
 
 #battleplan .itembutton-condition-hascondition-threshold {
@@ -279,17 +279,14 @@
 	margin: 0.5em 0 0.5em 0;
 }
 
-#battleplan .instructionbox-collapseicon:hover {
+#battleplan .instructionbox-header-collapseicon:hover {
 	cursor: pointer;
 }
 
-#battleplan .instructionbox-expandicon,
-#battleplan .instructionbox-collapseicon {
-	vertical-align: middle;
+#battleplan .instructionbox-header-expandicon,
+#battleplan .instructionbox-header-collapseicon {
 	float: right;
 	padding-right: 1em;
-	width: 1em;
-	height: 1em;
 }
 
 #battleplan .instructionbox.collapsed {
@@ -353,14 +350,10 @@
 
 #battleplan .instructionbox-instructions .instruction {
 	margin: 0.1em 0.5em 0.1em 0;
+	padding: 0.2em 0 0.2em 0;
 	border: 1px solid black;
 	border-radius: 0.5em;
 	list-style-type: none;
-}
-
-#battleplan .instructionbox-instructions .instruction-removeicon {
-	margin-top:0.8em;
-	margin-bottom: 0.8em;
 }
 
 #battleplan .instructionbox-instructions .instruction-type,
@@ -368,6 +361,7 @@
 #battleplan .instructionbox-instructions .instruction-waitcondition {
 	margin-left: 0.5em;
 	vertical-align: middle;
+	font-size: 1em;
 }
 
 #battleplan .instructionbox-instructions .instruction-waitcondition-ap {

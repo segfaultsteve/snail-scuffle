@@ -66,8 +66,8 @@ var snail = (function (snail, $) {
 		$instructions = $instructionbox.find('.instructionbox-instructions');
 		$addbox = $instructionbox.find('.instructionbox-addbox');
 		$defaultattack = $instructionbox.find('.instructionbox-defaultattack');
-		$expandicon = $container.find('.instructionbox-expandicon');
-		$collapseicon = $container.find('.instructionbox-collapseicon');
+		$expandicon = $container.find('.instructionbox-header-expandicon');
+		$collapseicon = $container.find('.instructionbox-header-collapseicon');
 		
 		$addbox.on('click', '.instructionbox-addbox-addicon, .instructionbox-addbox-text', onAddInstruction);
 		
