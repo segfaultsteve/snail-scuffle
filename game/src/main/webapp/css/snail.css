@@ -3,6 +3,11 @@ body {
 	font-size: 1.8vh;
 }
 
+input, select {
+	font-family: inherit;
+	font-size: inherit;
+}
+
 button {
 	font-family: inherit;
 	font-size: inherit;

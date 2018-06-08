@@ -244,7 +244,6 @@
 #battleplan .itembutton-condition select {
 	margin-left: 0.25em;
 	margin-right: 0.25em;
-	font-size: 1em;
 }
 
 #battleplan .itembutton-condition-hascondition-threshold {
@@ -361,12 +360,11 @@
 #battleplan .instructionbox-instructions .instruction-waitcondition {
 	margin-left: 0.5em;
 	vertical-align: middle;
-	font-size: 1em;
 }
 
 #battleplan .instructionbox-instructions .instruction-waitcondition-ap {
 	width: 2em;
-	height: 0.8em;
+	text-align: center;
 }
 
 
