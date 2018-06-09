@@ -55,7 +55,7 @@ var snail = (function (snail, $) {
 		};
 		
 		const notfiyConditionChangeHandlers = function () {
-			let condition = snail.battleplan.model.createEmptyItemCondition();
+			let condition = null;
 			if (state === states.hasCondition) {
 				const player = ($container.find('.itembutton-condition-type').val() === 'ihave') ? 'me' : 'enemy';
 				const stat = $container.find('.itembutton-condition-hascondition-stat').val();

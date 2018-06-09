@@ -6,15 +6,7 @@ var snail = (function (snail) {
 	let getSnails, getWeapons, getShells, getAccessories, getItems;
 	let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
 	let selectedItems = ['none', 'none'];
-	let itemConditions = [
-		{
-			hasCondition: null,
-			enemyUsesCondition: null
-		},
-		{
-			hasCondition: null,
-			enemyUsesCondition: null
-		}];
+	let itemConditions = [null, null];
 	let instructions = [];
 	
 	// private methods
@@ -79,13 +71,6 @@ var snail = (function (snail) {
 		getItems.then(function (items) {
 			selectedItems[index] = findByDisplayName(items, item);
 		});
-	};
-	
-	snail.battleplan.model.createEmptyItemCondition = function () {
-		return {
-			hasCondition: null,
-			enemyUsesCondition: null
-		};
 	};
 	
 	snail.battleplan.model.createHasCondition = function (player, stat, inequality, threshold) {
