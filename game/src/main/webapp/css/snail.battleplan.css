@@ -66,19 +66,19 @@
 	
 }
 
-#battleplan .snails-button.dale {
+#battleplan .snails-dale {
 	grid-area: dale;
 }
 
-#battleplan .snails-button.gail {
+#battleplan .snails-gail {
 	grid-area: gail;
 }
 
-#battleplan .snails-button.todd {
+#battleplan .snails-todd {
 	grid-area: todd;
 }
 
-#battleplan .snails-button.doug {
+#battleplan .snails-doug {
 	grid-area: doug;
 }
 
@@ -154,8 +154,12 @@
 
 /* SNAIL BUTTONS */
 
-#battleplan .snails-button {
+#battleplan .snails button {
 	border-radius: 15px;
+}
+
+#battleplan .snails .selected-snail {
+	background: #aaa;
 }
 
 

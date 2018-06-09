@@ -4,7 +4,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	const model = snail.battleplan.model;
-	let weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
+	let snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex) {
@@ -25,8 +25,22 @@ var snail = (function (snail) {
 		return button;
 	};
 	
+	const setSelectedSnail = function (newSnail, $container) {
+		$container.find('.snails button').removeClass('selected-snail');
+		if (newSnail in snailButtons) {
+			snailButtons[newSnail].addClass('selected-snail');
+			snail.battleplan.model.setSnail(newSnail);
+		}
+	};
+	
 	// public methods
 	snail.battleplan.init = function ($container) {
+		snailButtons = {
+			Dale: $container.find('.snails-dale'),
+			Gail: $container.find('.snails-gail'),
+			Todd: $container.find('.snails-todd'),
+			Doug: $container.find('.snails-doug')
+		};
 		weaponButton = createMenuButton($container.find('.equip-weapon'), model.promiseWeapons(), 0);
 		shellButton = createMenuButton($container.find('.equip-shell'), model.promiseShells(), 'last');
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), model.promiseAccessories(), 'last');
@@ -34,6 +48,7 @@ var snail = (function (snail) {
 		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems());
 		instructionBox = snail.battleplan.instructionbox.create($container.find('.instructions'));
 		
+		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue, $container) });
 		weaponButton.addSelectionChangedHandler(function (index, weapon) { model.setWeapon(weapon) });
 		shellButton.addSelectionChangedHandler(function (index, shell) { model.setShell(shell) });
 		accessoryButton.addSelectionChangedHandler(function (index, accessory) { model.setAccessory(accessory) });
@@ -42,6 +57,8 @@ var snail = (function (snail) {
 		item2Button.addSelectionChangedHandler(function (index, item) { model.setItem(1, item) });
 		item2Button.addConditionChangedHandler(function (condition) { model.setItemCondition(1, condition) });
 		instructionBox.addInstructionsChangedHandler(function () { model.setInstructions(instructionBox.getInstructions()) });
+		
+		setSelectedSnail('Dale', $container);
 	};
 	
 	return snail;
