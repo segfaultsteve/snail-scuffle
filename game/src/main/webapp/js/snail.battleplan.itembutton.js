@@ -14,7 +14,7 @@ var snail = (function (snail, $) {
 		};
 		let selectionChangedHandlers = [];
 		let conditionChangedHandlers = [];
-		let menubutton, options, state, selectedItem;
+		let menubutton, options, state;
 		
 		// private methods
 		const setState = function (newState) {
@@ -42,8 +42,6 @@ var snail = (function (snail, $) {
 					}
 				}
 			}
-			
-			notfiyConditionChangeHandlers();
 		};
 		
 		const resetConditionElements = function () {
@@ -71,26 +69,25 @@ var snail = (function (snail, $) {
 		
 		// callbacks
 		const onMenubuttonSelectionChanged = function (index, selection) {
-			const lastSelection = selectedItem;
-			selectedItem = selection;
-			
 			if (index === options.length - 1) {
 				selectionChangedHandlers.forEach(handler => handler(index, selection));
 				setState(states.noCondition);
-			} else if (selection === lastSelection) {
-				return;
 			} else {
 				selectionChangedHandlers.forEach(handler => handler(index, selection));
 				setState(states.addCondition);
 			}
+			
+			notfiyConditionChangeHandlers();
 		};
 		
 		const onAddConditionClicked = function() {
 			setState(states.hasCondition);
+			notfiyConditionChangeHandlers();
 		};
 		
 		const onRemoveConditionClicked = function() {
 			setState(states.addCondition);
+			notfiyConditionChangeHandlers();
 		};
 		
 		const onTypeSelectionChange = function () {
@@ -99,30 +96,48 @@ var snail = (function (snail, $) {
 			} else {
 				setState(states.hasCondition);
 			}
+			notfiyConditionChangeHandlers();
 		};
 		
 		// public methods
-		const setOptionsList = function (optionsList, selectedIndex) {
-			options = optionsList;
-			const numericIndex = (selectedIndex === 'last') ? options.length - 1 : selectedIndex;
-			selectedItem = options[numericIndex];
-			menubutton.setOptionsList(optionsList, selectedIndex);
-		};
-		
-		const setSelectedOption = function (selectedOption) {
-			menubutton.setSelectedOption(selectedOption);
-		};
-		
-		const getSelectedOption = function () {
-			return menubutton.getSelectedOption();
-		};
-		
 		const addSelectionChangedHandler = function (handler) {
 			selectionChangedHandlers.push(handler);
 		};
 		
 		const addConditionChangedHandler = function (handler) {
 			conditionChangedHandlers.push(handler);
+		};
+		
+		const setOptionsList = function (optionsList, selectedIndex) {
+			options = optionsList;
+			menubutton.setOptionsList(optionsList, selectedIndex);
+		};
+		
+		const getSelectedOption = function () {
+			return menubutton.getSelectedOption();
+		};
+		
+		const setSelectedOption = function (selectedOption) {
+			menubutton.setSelectedOption(selectedOption);
+		};
+		
+		const setSelectedIndex = function (selectedIndex) {
+			menubutton.setSelectedIndex(selectedIndex);
+		};
+		
+		const setRule = function (rule) {
+			if (rule && rule.hasCondition) {
+				const hc = rule.hasCondition;
+				$container.find('.itembutton-condition-type').val(hc.player === 'me' ? 'ihave' : 'enemyhas');
+				$container.find('.itembutton-condition-hascondition-stat').val(hc.stat);
+				$container.find('.itembutton-condition-hascondition-inequality').val(hc.inequality);
+				$container.find('.itembutton-condition-hascondition-threshold').val(hc.threshold);
+				setState(states.hasCondition);
+			} else if (rule && rule.enemyUsesCondition) {
+				$container.find('.itembutton-condition-type').val('enemyuses');
+				$container.find('.itembutton-condition-usescondition-item').val(rule.enemyUsesCondition);
+				setState(states.usesCondition);
+			}
 		};
 		
 		// init code
@@ -140,11 +155,13 @@ var snail = (function (snail, $) {
 		setState(states.noCondition);
 		
 		return {
-			setOptionsList: setOptionsList,
-			setSelectedOption: setSelectedOption,
-			getSelectedOption: getSelectedOption,
 			addSelectionChangedHandler: addSelectionChangedHandler,
-			addConditionChangedHandler: addConditionChangedHandler
+			addConditionChangedHandler: addConditionChangedHandler,
+			setOptionsList: setOptionsList,
+			getSelectedOption: getSelectedOption,
+			setSelectedOption: setSelectedOption,
+			setSelectedIndex: setSelectedIndex,
+			setRule: setRule
 		};
 	};
 	

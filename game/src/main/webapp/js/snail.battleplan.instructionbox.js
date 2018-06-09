@@ -51,17 +51,35 @@ var snail = (function (snail, $) {
 			$instructionbox.one('click', beginExpand);
 		};
 		
-		// callbacks
-		const onAddInstruction = function () {
+		const addNewInstruction = function () {
 			const newInstruction = snail.battleplan.instruction.create($instructions);
-			newInstruction.addInstructionUpdatedHandler(onInstructionUpdated);
-			newInstruction.addInstructionRemovedHandler(onInstructionRemoved);
 			instructionList.push(newInstruction);
+			return newInstruction;
+		};
+		
+		const addHandlersForInstruction = function (instruction) {
+			instruction.addInstructionUpdatedHandler(onInstructionUpdated);
+			instruction.addInstructionRemovedHandler(onInstructionRemoved);
+		};
+		
+		const notifyInstructionsChangedHandlers = function () {
 			instructionsChangedHandlers.forEach(handler => handler());
 		};
 		
+		const clearInstructions = function () {
+			instructionList.forEach(instruction => instruction.remove());
+			instructionList = [];
+		};
+		
+		// callbacks
+		const onAddInstruction = function () {
+			const newInstruction = addNewInstruction();
+			addHandlersForInstruction(newInstruction);
+			notifyInstructionsChangedHandlers();
+		};
+		
 		const onInstructionUpdated = function () {
-			instructionsChangedHandlers.forEach(handler => handler());
+			notifyInstructionsChangedHandlers();
 		};
 		
 		const onInstructionRemoved = function (instruction) {
@@ -69,11 +87,15 @@ var snail = (function (snail, $) {
 			if (index > -1) {
 				instructionList.splice(index, 1);
 			}
-			instructionsChangedHandlers.forEach(handler => handler());
+			notifyInstructionsChangedHandlers();
 		};
 		
 		// public methods
-		this.getInstructions = function () {
+		const addInstructionsChangedHandler = function (handler) {
+			instructionsChangedHandlers.push(handler);
+		};
+		
+		const getInstructions = function () {
 			let instructionData = [];
 			for (let i = 0; i < instructionList.length; i++) {
 				const instruction = instructionList[i].getData();
@@ -82,8 +104,22 @@ var snail = (function (snail, $) {
 			return instructionData;
 		};
 		
-		this.addInstructionsChangedHandler = function (handler) {
-			instructionsChangedHandlers.push(handler);
+		const setInstructions = function (newInstructions) {
+			let instructionsAreTheSame = (newInstructions.length === instructionList.length);
+			for (let i = 0; instructionsAreTheSame && i < instructionList.length; i++) {
+				const oldInstructionData = instructionList[i].getData();
+				instructionsAreTheSame = snail.battleplan.model.instructionsAreIdentical(oldInstructionData, newInstructions[i]);
+			}
+			
+			if (!instructionsAreTheSame) {
+				clearInstructions();
+				for (let i = 0; i < newInstructions.length; i++) {
+					const instruction = addNewInstruction();
+					instruction.setData(newInstructions[i]);
+					addHandlersForInstruction(instruction);
+				}
+				notifyInstructionsChangedHandlers();
+			}
 		};
 		
 		// init code
@@ -99,7 +135,11 @@ var snail = (function (snail, $) {
 		
 		endCollapse();
 		
-		return this;
+		return {
+			addInstructionsChangedHandler: addInstructionsChangedHandler,
+			getInstructions: getInstructions,
+			setInstructions: setInstructions
+		};
 	};
 	
 	return snail;

@@ -58,7 +58,7 @@ var snail = (function (snail, $) {
 		
 		const onRemoveIconClicked = function() {
 			instructionRemovedHandlers.forEach(handler => handler(thisInstruction));
-			$this.remove();
+			thisInstruction.remove();
 		};
 		
 		// public methods
@@ -83,6 +83,24 @@ var snail = (function (snail, $) {
 			}
 		};
 		
+		const setData = function (newData) {
+			instructionType = newData.type;
+			setState(newData.type);
+			$this.find('.instruction-type').val(newData.type);
+			
+			if (newData.itemToUse) {
+				$this.find('.instruction-item').val(newData.itemToUse);
+			} else if (newData.apThreshold) {
+				$this.find('.instruction-waitcondition-ap').val(newData.apThreshold);
+			}
+			
+			notifyInstructionUpdated();
+		};
+		
+		const remove = function () {
+			$this.remove();
+		};
+		
 		// init code
 		$container.append(componentHtml);
 		$this = $container.find('.instruction:last');
@@ -97,7 +115,9 @@ var snail = (function (snail, $) {
 		thisInstruction = {
 			addInstructionUpdatedHandler: addInstructionUpdatedHandler,
 			addInstructionRemovedHandler: addInstructionRemovedHandler,
-			getData: getData
+			getData: getData,
+			setData: setData,
+			remove: remove
 		};
 		return thisInstruction;
 	};

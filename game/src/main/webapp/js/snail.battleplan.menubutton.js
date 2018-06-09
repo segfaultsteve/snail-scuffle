@@ -7,7 +7,7 @@ var snail = (function(snail, $) {
 	snail.battleplan.menubutton.create = function ($container) {
 		// private variables
 		let selectionChangedHandlers = [];
-		let options, selected;
+		let options, selectedIndex;
 		
 		// private methods
 		const refreshOptionsList = function () {
@@ -20,7 +20,7 @@ var snail = (function(snail, $) {
 		};
 		
 		const updateButtonText = function () {
-			$container.find('.menubutton-button').text(options[selected]);
+			$container.find('.menubutton-button').text(options[selectedIndex]);
 		};
 		
 		// callbacks
@@ -40,32 +40,39 @@ var snail = (function(snail, $) {
 		};
 		
 		const onOptionClicked = function (e) {
-			const index = options.indexOf($(e.target).text());
-			setSelectedOption(index);
+			setSelectedOption($(e.target).text());
 		};
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedIndex) {
 			options = [];
-			selected = 0;
 			for (let i = 0; i < optionsList.length; i++) {
 				options[i] = optionsList[i];
 			}
 			refreshOptionsList();
-			setSelectedOption(selectedIndex);
+			setSelectedIndex(selectedIndex);
 		};
 		
-		const setSelectedOption = function (index) {
+		const setSelectedOption = function (option) {
+			const index = options.indexOf(option);
+			if (index > -1) {
+				setSelectedIndex(index);
+			}
+		};
+		
+		const setSelectedIndex = function (index) {
 			if (index === 'last') {
 				index = options.length - 1;
 			}
-			selected = index;
-			updateButtonText();
-			selectionChangedHandlers.forEach(handler => handler(index, options[index]));
+			if (index !== selectedIndex) {
+				selectedIndex = index;
+				updateButtonText();
+				selectionChangedHandlers.forEach(handler => handler(index, options[index]));
+			}
 		};
 		
 		const getSelectedOption = function () {
-			return options[selected];
+			return options[selectedIndex];
 		};
 		
 		const addSelectionChangedHandler = function(handler) {
@@ -81,6 +88,7 @@ var snail = (function(snail, $) {
 		return {
 			setOptionsList: setOptionsList,
 			setSelectedOption: setSelectedOption,
+			setSelectedIndex: setSelectedIndex,
 			getSelectedOption: getSelectedOption,
 			addSelectionChangedHandler: addSelectionChangedHandler
 		};

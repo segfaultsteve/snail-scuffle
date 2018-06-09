@@ -4,7 +4,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	const model = snail.battleplan.model;
-	let snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
+	let $battleplan, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex) {
@@ -25,22 +25,62 @@ var snail = (function (snail) {
 		return button;
 	};
 	
-	const setSelectedSnail = function (newSnail, $container) {
-		$container.find('.snails button').removeClass('selected-snail');
-		if (newSnail in snailButtons) {
-			snailButtons[newSnail].addClass('selected-snail');
-			snail.battleplan.model.setSnail(newSnail);
+	const setSelectedSnail = function (newSnail) {
+		const currentSnail = $battleplan.find('.snails .selected-snail').text();
+		if (newSnail !== currentSnail) {
+			$battleplan.find('.snails button').removeClass('selected-snail');
+			if (newSnail in snailButtons) {
+				snailButtons[newSnail].addClass('selected-snail');
+				snail.battleplan.model.setSnail(newSnail);
+			}
+		}
+	};
+	
+	// callbacks
+	const onBattlePlanUpdated = function (updatedElement, newValue) {
+		switch (updatedElement) {
+			case 'snail':
+				setSelectedSnail(newValue);
+				break;
+			case 'weapon':
+				weaponButton.setSelectedOption(newValue);
+				break;
+			case 'shell':
+				shellButton.setSelectedOption(newValue);
+				break;
+			case 'accessory':
+				accessoryButton.setSelectedOption(newValue);
+				break;
+			case 'item1':
+				item1Button.setSelectedOption(newValue);
+				break;
+			case 'item2':
+				item2Button.setSelectedOption(newValue);
+				break;
+			case 'item1Rule':
+				item1Button.setRule(newValue);
+				break;
+			case 'item2Rule':
+				item2Button.setRule(newValue);
+				break;
+			case 'instructions':
+				instructionBox.setInstructions(newValue);
+				break;
 		}
 	};
 	
 	// public methods
 	snail.battleplan.init = function ($container) {
+		$battleplan = $container;
+		
+		// create components and set initial state
 		snailButtons = {
 			Dale: $container.find('.snails-dale'),
 			Gail: $container.find('.snails-gail'),
 			Todd: $container.find('.snails-todd'),
 			Doug: $container.find('.snails-doug')
 		};
+		setSelectedSnail('Dale');
 		weaponButton = createMenuButton($container.find('.equip-weapon'), model.promiseWeapons(), 0);
 		shellButton = createMenuButton($container.find('.equip-shell'), model.promiseShells(), 'last');
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), model.promiseAccessories(), 'last');
@@ -48,7 +88,8 @@ var snail = (function (snail) {
 		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems());
 		instructionBox = snail.battleplan.instructionbox.create($container.find('.instructions'));
 		
-		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue, $container) });
+		// bind callbacks for user-initiated updates (i.e., via UI)
+		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
 		weaponButton.addSelectionChangedHandler(function (index, weapon) { model.setWeapon(weapon) });
 		shellButton.addSelectionChangedHandler(function (index, shell) { model.setShell(shell) });
 		accessoryButton.addSelectionChangedHandler(function (index, accessory) { model.setAccessory(accessory) });
@@ -58,7 +99,8 @@ var snail = (function (snail) {
 		item2Button.addConditionChangedHandler(function (condition) { model.setItemCondition(1, condition) });
 		instructionBox.addInstructionsChangedHandler(function () { model.setInstructions(instructionBox.getInstructions()) });
 		
-		setSelectedSnail('Dale', $container);
+		// bind callback for model-initiated updates
+		snail.battleplan.model.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
 	};
 	
 	return snail;
