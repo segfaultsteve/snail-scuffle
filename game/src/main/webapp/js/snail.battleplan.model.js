@@ -106,8 +106,12 @@ var snail = (function (snail) {
 	}
 	
 	snail.battleplan.model.setItemCondition = function (index, condition) {
-		itemConditions[index] = condition;
-		notifyBattlePlanUpdatedHandlers('item' + (index + 1) + 'Rule', itemConditions[index]);
+		if (selectedItems[index].name === 'none') {
+			itemConditions[index] = null;
+		} else {
+			itemConditions[index] = condition;
+			notifyBattlePlanUpdatedHandlers('item' + (index + 1) + 'Rule', itemConditions[index]);
+		}
 	};
 	
 	snail.battleplan.model.itemConditionsAreIdentical = function (cond1, cond2) {

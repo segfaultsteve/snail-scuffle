@@ -4,16 +4,14 @@ var snail = (function (snail, $) {
 	
 	const componentHtml = $('#components .components-instruction').html();
 	
-	snail.battleplan.instruction.create = function ($container) {
+	snail.battleplan.instruction.create = function ($container, onInstructionUpdated, onInstructionRemoved) {
 		// private variables
 		const states = {
 			attack: 'attack',
 			use: 'use',
 			wait: 'wait'
 		};
-		let instructionUpdatedHandlers = [];
-		let instructionRemovedHandlers = [];
-		let $this, thisInstruction, instructionType;
+		let $this, thisInstruction, instructionUpdatedHandler, instructionRemovedHandler, instructionType;
 		
 		// private methods
 		const setState = function (newState) {
@@ -31,10 +29,6 @@ var snail = (function (snail, $) {
 			$this.find('.instruction-waitcondition-ap').val('');
 		};
 		
-		const notifyInstructionUpdated = function () {
-			instructionUpdatedHandlers.forEach(handler => handler(thisInstruction));
-		};
-		
 		// callbacks
 		const onTypeChanged = function () {
 			const lastType = instructionType;
@@ -45,31 +39,23 @@ var snail = (function (snail, $) {
 				setState(instructionType);
 			}
 			
-			notifyInstructionUpdated();
+			instructionUpdatedHandler(thisInstruction);
 		};
 		
 		const onItemChanged = function () {
-			notifyInstructionUpdated();
+			instructionUpdatedHandler(thisInstruction);
 		};
 		
 		const onApThresholdChanged = function () {
-			notifyInstructionUpdated();
+			instructionUpdatedHandler(thisInstruction);
 		};
 		
 		const onRemoveIconClicked = function() {
-			instructionRemovedHandlers.forEach(handler => handler(thisInstruction));
+			instructionRemovedHandler(thisInstruction);
 			thisInstruction.remove();
 		};
 		
 		// public methods
-		const addInstructionUpdatedHandler = function (callback) {
-			instructionUpdatedHandlers.push(callback);
-		};
-		
-		const addInstructionRemovedHandler = function (callback) {
-			instructionRemovedHandlers.push(callback);
-		};
-		
 		const getData = function () {
 			const model = snail.battleplan.model;
 			if (instructionType === 'attack') {
@@ -94,7 +80,7 @@ var snail = (function (snail, $) {
 				$this.find('.instruction-waitcondition-ap').val(newData.apThreshold);
 			}
 			
-			notifyInstructionUpdated();
+			instructionUpdatedHandler(thisInstruction);
 		};
 		
 		const remove = function () {
@@ -108,13 +94,15 @@ var snail = (function (snail, $) {
 		$this.find('.instruction-item').change(onItemChanged);
 		$this.find('.instruction-waitcondition-ap').change(onApThresholdChanged);
 		$this.find('.instruction-removeicon').click(onRemoveIconClicked);
+		instructionUpdatedHandler = onInstructionUpdated || function () { };
+		instructionRemovedHandler = onInstructionRemoved || function () { };
 		
 		instructionType = 'attack';
 		setState(states.attack);
 		
 		thisInstruction = {
-			addInstructionUpdatedHandler: addInstructionUpdatedHandler,
-			addInstructionRemovedHandler: addInstructionRemovedHandler,
+			onInstructionUpdated: function (handler) { instructionUpdatedHandler = handler },
+			onInstructionRemoved: function (handler) { instructionRemovedHandler = handler },
 			getData: getData,
 			setData: setData,
 			remove: remove

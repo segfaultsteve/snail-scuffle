@@ -4,7 +4,7 @@ var snail = (function (snail, $) {
 	
 	const componentHtml = $('#components .components-instructionbox').html();
 	
-	snail.battleplan.instructionbox.create = function ($container) {
+	snail.battleplan.instructionbox.init = function ($container) {
 		// private variables
 		const states = {
 			collapsed: 'collapsed',
@@ -13,7 +13,6 @@ var snail = (function (snail, $) {
 			collapsing: 'collapsing'
 		};
 		let instructionList = [];
-		let instructionsChangedHandlers = [];
 		let $instructionbox, $expandicon, $collapseicon, $instructions, $addbox, $defaultattack;
 		
 		// private methods
@@ -51,35 +50,29 @@ var snail = (function (snail, $) {
 			$instructionbox.one('click', beginExpand);
 		};
 		
-		const addNewInstruction = function () {
-			const newInstruction = snail.battleplan.instruction.create($instructions);
-			instructionList.push(newInstruction);
-			return newInstruction;
-		};
-		
-		const addHandlersForInstruction = function (instruction) {
-			instruction.addInstructionUpdatedHandler(onInstructionUpdated);
-			instruction.addInstructionRemovedHandler(onInstructionRemoved);
-		};
-		
-		const notifyInstructionsChangedHandlers = function () {
-			instructionsChangedHandlers.forEach(handler => handler());
-		};
-		
 		const clearInstructions = function () {
 			instructionList.forEach(instruction => instruction.remove());
 			instructionList = [];
 		};
 		
+		const updateModel = function () {
+			let instructionData = [];
+			for (let i = 0; i < instructionList.length; i++) {
+				const instruction = instructionList[i].getData();
+				instructionData.push(instruction);
+			}
+			snail.battleplan.model.setInstructions(instructionData)
+		};
+		
 		// callbacks
 		const onAddInstruction = function () {
-			const newInstruction = addNewInstruction();
-			addHandlersForInstruction(newInstruction);
-			notifyInstructionsChangedHandlers();
+			const newInstruction = snail.battleplan.instruction.create($instructions, onInstructionUpdated, onInstructionRemoved);
+			instructionList.push(newInstruction);
+			updateModel();
 		};
 		
 		const onInstructionUpdated = function () {
-			notifyInstructionsChangedHandlers();
+			updateModel();
 		};
 		
 		const onInstructionRemoved = function (instruction) {
@@ -87,24 +80,11 @@ var snail = (function (snail, $) {
 			if (index > -1) {
 				instructionList.splice(index, 1);
 			}
-			notifyInstructionsChangedHandlers();
+			updateModel();
 		};
 		
 		// public methods
-		const addInstructionsChangedHandler = function (handler) {
-			instructionsChangedHandlers.push(handler);
-		};
-		
-		const getInstructions = function () {
-			let instructionData = [];
-			for (let i = 0; i < instructionList.length; i++) {
-				const instruction = instructionList[i].getData();
-				instructionData.push(instruction);
-			}
-			return instructionData;
-		};
-		
-		const setInstructions = function (newInstructions) {
+		snail.battleplan.instructionbox.setInstructions = function (newInstructions) {
 			let instructionsAreTheSame = (newInstructions.length === instructionList.length);
 			for (let i = 0; instructionsAreTheSame && i < instructionList.length; i++) {
 				const oldInstructionData = instructionList[i].getData();
@@ -114,11 +94,13 @@ var snail = (function (snail, $) {
 			if (!instructionsAreTheSame) {
 				clearInstructions();
 				for (let i = 0; i < newInstructions.length; i++) {
-					const instruction = addNewInstruction();
+					const instruction = snail.battleplan.instruction.create($instructions);
+					instructionList.push(instruction);
 					instruction.setData(newInstructions[i]);
-					addHandlersForInstruction(instruction);
+					instruction.onInstructionUpdated(onInstructionUpdated);
+					instruction.onInstructionRemoved(onInstructionRemoved);
 				}
-				notifyInstructionsChangedHandlers();
+				updateModel();
 			}
 		};
 		
@@ -134,12 +116,6 @@ var snail = (function (snail, $) {
 		$addbox.on('click', '.instructionbox-addbox-addicon, .instructionbox-addbox-text', onAddInstruction);
 		
 		endCollapse();
-		
-		return {
-			addInstructionsChangedHandler: addInstructionsChangedHandler,
-			getInstructions: getInstructions,
-			setInstructions: setInstructions
-		};
 	};
 	
 	return snail;

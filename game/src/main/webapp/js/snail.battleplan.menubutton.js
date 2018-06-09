@@ -4,9 +4,8 @@ var snail = (function(snail, $) {
 	
 	const componentHtml = $('#components .components-menubutton').html();
 	
-	snail.battleplan.menubutton.create = function ($container) {
+	snail.battleplan.menubutton.create = function ($container, onSelectionChanged) {
 		// private variables
-		let selectionChangedHandlers = [];
 		let options, selectedIndex;
 		
 		// private methods
@@ -67,16 +66,12 @@ var snail = (function(snail, $) {
 			if (index !== selectedIndex) {
 				selectedIndex = index;
 				updateButtonText();
-				selectionChangedHandlers.forEach(handler => handler(index, options[index]));
+				onSelectionChanged(index, options[index]);
 			}
 		};
 		
 		const getSelectedOption = function () {
 			return options[selectedIndex];
-		};
-		
-		const addSelectionChangedHandler = function(handler) {
-			selectionChangedHandlers.push(handler);
 		};
 		
 		// init code
@@ -89,8 +84,7 @@ var snail = (function(snail, $) {
 			setOptionsList: setOptionsList,
 			setSelectedOption: setSelectedOption,
 			setSelectedIndex: setSelectedIndex,
-			getSelectedOption: getSelectedOption,
-			addSelectionChangedHandler: addSelectionChangedHandler
+			getSelectedOption: getSelectedOption
 		};
 	};
 	

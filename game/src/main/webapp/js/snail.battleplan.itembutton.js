@@ -4,7 +4,7 @@ var snail = (function (snail, $) {
 	
 	const componentHtml = $('#components .components-itembutton').html();
 	
-	snail.battleplan.itembutton.create = function ($container) {
+	snail.battleplan.itembutton.create = function ($container, onItemChanged, onItemConditionChanged) {
 		// private variables
 		const states = {
 			noCondition: 'noCondition',
@@ -12,8 +12,6 @@ var snail = (function (snail, $) {
 			hasCondition: 'hasCondition',
 			usesCondition: 'usesCondition'
 		};
-		let selectionChangedHandlers = [];
-		let conditionChangedHandlers = [];
 		let menubutton, options, state;
 		
 		// private methods
@@ -52,7 +50,7 @@ var snail = (function (snail, $) {
 			$container.find('.itembutton-condition-usescondition-item').val('attack');
 		};
 		
-		const notfiyConditionChangeHandlers = function () {
+		const notifyItemConditionChanged = function () {
 			let condition = null;
 			if (state === states.hasCondition) {
 				const player = ($container.find('.itembutton-condition-type').val() === 'ihave') ? 'me' : 'enemy';
@@ -64,30 +62,30 @@ var snail = (function (snail, $) {
 				const item = $container.find('.itembutton-condition-usescondition-item').val();
 				condition = snail.battleplan.model.createEnemyUsesCondition(item);
 			}
-			conditionChangedHandlers.forEach(handler => handler(condition));
+			onItemConditionChanged(condition);
 		};
 		
 		// callbacks
 		const onMenubuttonSelectionChanged = function (index, selection) {
 			if (index === options.length - 1) {
-				selectionChangedHandlers.forEach(handler => handler(index, selection));
+				onItemChanged(index, selection);
 				setState(states.noCondition);
 			} else {
-				selectionChangedHandlers.forEach(handler => handler(index, selection));
+				onItemChanged(index, selection);
 				setState(states.addCondition);
 			}
 			
-			notfiyConditionChangeHandlers();
+			notifyItemConditionChanged();
 		};
 		
 		const onAddConditionClicked = function() {
 			setState(states.hasCondition);
-			notfiyConditionChangeHandlers();
+			notifyItemConditionChanged();
 		};
 		
 		const onRemoveConditionClicked = function() {
 			setState(states.addCondition);
-			notfiyConditionChangeHandlers();
+			notifyItemConditionChanged();
 		};
 		
 		const onTypeSelectionChange = function () {
@@ -96,18 +94,10 @@ var snail = (function (snail, $) {
 			} else {
 				setState(states.hasCondition);
 			}
-			notfiyConditionChangeHandlers();
+			notifyItemConditionChanged();
 		};
 		
 		// public methods
-		const addSelectionChangedHandler = function (handler) {
-			selectionChangedHandlers.push(handler);
-		};
-		
-		const addConditionChangedHandler = function (handler) {
-			conditionChangedHandlers.push(handler);
-		};
-		
 		const setOptionsList = function (optionsList, selectedIndex) {
 			options = optionsList;
 			menubutton.setOptionsList(optionsList, selectedIndex);
@@ -125,43 +115,48 @@ var snail = (function (snail, $) {
 			menubutton.setSelectedIndex(selectedIndex);
 		};
 		
-		const setRule = function (rule) {
-			if (rule && rule.hasCondition) {
-				const hc = rule.hasCondition;
+		const setCondition = function (condition) {
+			if (condition && condition.hasCondition) {
+				const hc = condition.hasCondition;
 				$container.find('.itembutton-condition-type').val(hc.player === 'me' ? 'ihave' : 'enemyhas');
 				$container.find('.itembutton-condition-hascondition-stat').val(hc.stat);
 				$container.find('.itembutton-condition-hascondition-inequality').val(hc.inequality);
 				$container.find('.itembutton-condition-hascondition-threshold').val(hc.threshold);
 				setState(states.hasCondition);
-			} else if (rule && rule.enemyUsesCondition) {
+			} else if (condition && condition.enemyUsesCondition) {
 				$container.find('.itembutton-condition-type').val('enemyuses');
-				$container.find('.itembutton-condition-usescondition-item').val(rule.enemyUsesCondition);
+				$container.find('.itembutton-condition-usescondition-item').val(condition.enemyUsesCondition);
 				setState(states.usesCondition);
+			} else {
+				const selectedOption = menubutton.getSelectedOption();
+				const selectedIndex = options.indexOf(selectedOption);
+				if (selectedIndex === options.length - 1) {
+					setState(states.noCondition);
+				} else {
+					setState(states.addCondition);
+				}
 			}
 		};
 		
 		// init code
 		$container.addClass('itembutton');
 		$container.html(componentHtml);
-		menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'))
-		menubutton.addSelectionChangedHandler(onMenubuttonSelectionChanged);
+		menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'), onMenubuttonSelectionChanged)
 		$container.find('.itembutton-condition-addicon, .itembutton-condition-addtext').click(onAddConditionClicked);
 		$container.find('.itembutton-condition-removeicon').click(onRemoveConditionClicked);
 		$container.find('.itembutton-condition-type').change(onTypeSelectionChange);
-		$container.find('.itembutton-condition-hascondition-stat').change(notfiyConditionChangeHandlers);
-		$container.find('.itembutton-condition-hascondition-inequality').change(notfiyConditionChangeHandlers);
-		$container.find('.itembutton-condition-hascondition-threshold').change(notfiyConditionChangeHandlers);
-		$container.find('.itembutton-condition-usescondition-item').change(notfiyConditionChangeHandlers);
+		$container.find('.itembutton-condition-hascondition-stat').change(notifyItemConditionChanged);
+		$container.find('.itembutton-condition-hascondition-inequality').change(notifyItemConditionChanged);
+		$container.find('.itembutton-condition-hascondition-threshold').change(notifyItemConditionChanged);
+		$container.find('.itembutton-condition-usescondition-item').change(notifyItemConditionChanged);
 		setState(states.noCondition);
 		
 		return {
-			addSelectionChangedHandler: addSelectionChangedHandler,
-			addConditionChangedHandler: addConditionChangedHandler,
 			setOptionsList: setOptionsList,
 			getSelectedOption: getSelectedOption,
 			setSelectedOption: setSelectedOption,
 			setSelectedIndex: setSelectedIndex,
-			setRule: setRule
+			setCondition: setCondition
 		};
 	};
 	
