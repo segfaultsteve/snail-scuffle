@@ -100,15 +100,15 @@ var snail = (function (snail, $) {
 		// public methods
 		const setOptionsList = function (optionsList, selectedIndex) {
 			options = optionsList;
-			menubutton.setOptionsList(optionsList, selectedIndex);
+			menubutton.setOptionsList(options, selectedIndex);
 		};
 		
 		const getSelectedOption = function () {
 			return menubutton.getSelectedOption();
 		};
 		
-		const setSelectedOption = function (selectedOption) {
-			menubutton.setSelectedOption(selectedOption);
+		const setSelectedOption = function (displayName) {
+			menubutton.setSelectedOption(displayName);
 		};
 		
 		const setSelectedIndex = function (selectedIndex) {
@@ -128,8 +128,9 @@ var snail = (function (snail, $) {
 				$container.find('.itembutton-condition-usescondition-item').val(condition.enemyUsesCondition);
 				setState(states.usesCondition);
 			} else {
+				const displayNames = options.map(option => option.displayName);
 				const selectedOption = menubutton.getSelectedOption();
-				const selectedIndex = options.indexOf(selectedOption);
+				const selectedIndex = displayNames.indexOf(selectedOption.displayName);
 				if (selectedIndex === options.length - 1) {
 					setState(states.noCondition);
 				} else {

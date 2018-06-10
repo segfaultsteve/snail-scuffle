@@ -6,25 +6,10 @@ var snail = (function(snail, $) {
 	
 	snail.battleplan.menubutton.create = function ($container, onSelectionChanged) {
 		// private variables
-		let options, selectedIndex;
-		
-		// private methods
-		const refreshOptionsList = function () {
-			const $list = $container.find('.menubutton-list');
-			$list.empty();
-			for (let i = 0; i < options.length; i++) {
-				const li = '<li>' + options[i] + '</li>';
-				$list.append(li);
-			}
-		};
-		
-		const updateButtonText = function () {
-			$container.find('.menubutton-button').text(options[selectedIndex]);
-		};
+		let $button, $list, options, selectedIndex;
 		
 		// callbacks
 		const onButtonClicked = function (e) {
-			const $list = $container.find('.menubutton-list');
 			const $allLists = $('.menubutton-list');
 			const initiallyHidden = $list.is(':hidden');
 			
@@ -44,16 +29,17 @@ var snail = (function(snail, $) {
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedIndex) {
-			options = [];
-			for (let i = 0; i < optionsList.length; i++) {
-				options[i] = optionsList[i];
+			options = optionsList;
+			for (let i = 0; i < options.length; i++) {
+				const li = '<li>' + options[i].displayName + '</li>';
+				$list.append(li);
 			}
-			refreshOptionsList();
 			setSelectedIndex(selectedIndex);
 		};
 		
-		const setSelectedOption = function (option) {
-			const index = options.indexOf(option);
+		const setSelectedOption = function (displayName) {
+			const displayNames = options.map(option => option.displayName);
+			const index = displayNames.indexOf(displayName);
 			if (index > -1) {
 				setSelectedIndex(index);
 			}
@@ -65,7 +51,7 @@ var snail = (function(snail, $) {
 			}
 			if (index !== selectedIndex) {
 				selectedIndex = index;
-				updateButtonText();
+				$button.text(options[selectedIndex].displayName);
 				onSelectionChanged(index, options[index]);
 			}
 		};
@@ -77,8 +63,11 @@ var snail = (function(snail, $) {
 		// init code
 		$container.addClass('menubutton');
 		$container.html(componentHtml);
-		$container.find('.menubutton-button').click(onButtonClicked);
-		$container.find('.menubutton-list').click(onOptionClicked);
+		$button = $container.find('.menubutton-button');
+		$list = $container.find('.menubutton-list');
+		
+		$button.click(onButtonClicked);
+		$list.click(onOptionClicked);
 		
 		return {
 			setOptionsList: setOptionsList,

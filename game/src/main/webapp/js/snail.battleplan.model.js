@@ -52,38 +52,28 @@ var snail = (function (snail) {
 	snail.battleplan.model.promiseItems = function () { return getItems; };
 	
 	snail.battleplan.model.setSnail = function (newSnail) {
-		getSnails.then(function (snails) {
-			selectedSnail = findByProperty(snails, 'displayName', newSnail);
-			notifyBattlePlanUpdatedHandlers('snail', selectedSnail.displayName);
-		});
+		selectedSnail = newSnail;
+		notifyBattlePlanUpdatedHandlers('snail', selectedSnail);
 	};
 	
 	snail.battleplan.model.setWeapon = function (weapon) {
-		getWeapons.then(function (weapons) {
-			selectedWeapon = findByProperty(weapons, 'displayName', weapon);
-			notifyBattlePlanUpdatedHandlers('weapon', selectedWeapon.displayName);
-		});
+		selectedWeapon = weapon;
+		notifyBattlePlanUpdatedHandlers('weapon', selectedWeapon);
 	};
 	
 	snail.battleplan.model.setShell = function (shell) {
-		getShells.then(function (shells) {
-			selectedShell = findByProperty(shells, 'displayName', shell);
-			notifyBattlePlanUpdatedHandlers('shell', selectedShell.displayName);
-		});
+		selectedShell = shell;
+		notifyBattlePlanUpdatedHandlers('shell', selectedShell);
 	};
 	
 	snail.battleplan.model.setAccessory = function (accessory) {
-		getAccessories.then(function (accessories) {
-			selectedAccessory = findByProperty(accessories, 'displayName', accessory);
-			notifyBattlePlanUpdatedHandlers('accessory', selectedAccessory.displayName);
-		});
+		selectedAccessory = accessory;
+		notifyBattlePlanUpdatedHandlers('accessory', selectedAccessory);
 	};
 	
 	snail.battleplan.model.setItem = function (index, item) {
-		getItems.then(function (items) {
-			selectedItems[index] = findByProperty(items, 'displayName', item);
-			notifyBattlePlanUpdatedHandlers('item' + (index + 1), selectedItems[index].displayName);
-		});
+		selectedItems[index] = item;
+		notifyBattlePlanUpdatedHandlers('item' + (index + 1), selectedItems[index]);
 	};
 	
 	snail.battleplan.model.createHasCondition = function (player, stat, inequality, threshold) {
@@ -164,7 +154,7 @@ var snail = (function (snail) {
 			item2Rule: itemConditions[1],
 			instructions: instructions
 		};
-	}
+	};
 	
 	return snail;
 }(snail || {}));

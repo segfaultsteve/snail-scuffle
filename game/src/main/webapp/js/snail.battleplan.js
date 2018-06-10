@@ -4,16 +4,17 @@ var snail = (function (snail) {
 	
 	// private variables
 	const model = snail.battleplan.model;
-	let $battleplan, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
+	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
-		const onSelectionChanged = function (selectedIndex, selectedItem) { selectionChangedHandler(selectedItem) };
+		const onSelectionChanged = function (selectedIndex, selectedItem) {
+			selectionChangedHandler(selectedItem)
+		};
 		const button = snail.battleplan.menubutton.create($container, onSelectionChanged);
 		
 		itemsPromise.done(function (items) {
-			const displayNames = items.map(i => i.displayName);
-			button.setOptionsList(displayNames, defaultSelectionIndex);
+			button.setOptionsList(items, defaultSelectionIndex);
 		});
 		
 		return button;
@@ -25,19 +26,19 @@ var snail = (function (snail) {
 		const button = snail.battleplan.itembutton.create($container, onItemChanged, onItemConditionChanged);
 		
 		itemsPromise.done(function (items) {
-			const displayNames = items.map(i => i.displayName);
-			button.setOptionsList(displayNames, 'last');
+			button.setOptionsList(items, 'last');
 		});
 		
 		return button;
 	};
 	
-	const setSelectedSnail = function (newSnail) {
+	const setSelectedSnail = function (displayName) {
 		const currentSnail = $battleplan.find('.snails .selected-snail').text();
-		if (newSnail !== currentSnail) {
+		if (displayName !== currentSnail) {
 			$battleplan.find('.snails button').removeClass('selected-snail');
-			if (newSnail in snailButtons) {
-				snailButtons[newSnail].addClass('selected-snail');
+			const newSnail = snails.filter(snail => snail.displayName === displayName)[0];
+			if (newSnail) {
+				snailButtons[newSnail.name].addClass('selected-snail');
 				snail.battleplan.model.setSnail(newSnail);
 			}
 		}
@@ -47,22 +48,22 @@ var snail = (function (snail) {
 	const onBattlePlanUpdated = function (updatedElement, newValue) {
 		switch (updatedElement) {
 			case 'snail':
-				setSelectedSnail(newValue);
+				setSelectedSnail(newValue.displayName);
 				break;
 			case 'weapon':
-				weaponButton.setSelectedOption(newValue);
+				weaponButton.setSelectedOption(newValue.displayName);
 				break;
 			case 'shell':
-				shellButton.setSelectedOption(newValue);
+				shellButton.setSelectedOption(newValue.displayName);
 				break;
 			case 'accessory':
-				accessoryButton.setSelectedOption(newValue);
+				accessoryButton.setSelectedOption(newValue.displayName);
 				break;
 			case 'item1':
-				item1Button.setSelectedOption(newValue);
+				item1Button.setSelectedOption(newValue.displayName);
 				break;
 			case 'item2':
-				item2Button.setSelectedOption(newValue);
+				item2Button.setSelectedOption(newValue.displayName);
 				break;
 			case 'item1Rule':
 				item1Button.setCondition(newValue);
@@ -82,12 +83,11 @@ var snail = (function (snail) {
 		
 		// create components and set initial state
 		snailButtons = {
-			Dale: $container.find('.snails-dale'),
-			Gail: $container.find('.snails-gail'),
-			Todd: $container.find('.snails-todd'),
-			Doug: $container.find('.snails-doug')
+			dale: $container.find('.snails-dale'),
+			gail: $container.find('.snails-gail'),
+			todd: $container.find('.snails-todd'),
+			doug: $container.find('.snails-doug')
 		};
-		setSelectedSnail('Dale');
 		weaponButton = createMenuButton($container.find('.equip-weapon'), model.promiseWeapons(), 0, model.setWeapon);
 		shellButton = createMenuButton($container.find('.equip-shell'), model.promiseShells(), 'last', model.setShell);
 		accessoryButton = createMenuButton($container.find('.equip-accessory'), model.promiseAccessories(), 'last', model.setAccessory);
@@ -95,8 +95,14 @@ var snail = (function (snail) {
 		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems(), 1);
 		instructionBox = snail.battleplan.instructionbox;
 		instructionBox.init($container.find('.instructions'));
+		
 		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
 		snail.battleplan.model.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		
+		model.promiseSnails().done(function (snailList) {
+			snails = snailList;
+			setSelectedSnail(snails[0].displayName);
+		});
 	};
 	
 	return snail;
