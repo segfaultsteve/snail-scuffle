@@ -4,6 +4,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	const model = snail.battleplan.model;
+	let presetButtons = [];
 	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
@@ -81,7 +82,6 @@ var snail = (function (snail) {
 	snail.battleplan.init = function ($container) {
 		$battleplan = $container;
 		
-		// create components and set initial state
 		snailButtons = {
 			dale: $container.find('.snails-dale'),
 			gail: $container.find('.snails-gail'),
@@ -95,6 +95,10 @@ var snail = (function (snail) {
 		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems(), 1);
 		instructionBox = snail.battleplan.instructionbox;
 		instructionBox.init($container.find('.instructions'));
+		for (let i = 0; i < 4; i++) {
+			let $preset = $container.find('.preset' + (i + 1));
+			presetButtons[i] = snail.battleplan.presetbutton.create($preset, i + 1);
+		}
 		
 		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
 		snail.battleplan.model.addBattlePlanUpdatedHandler(onBattlePlanUpdated);

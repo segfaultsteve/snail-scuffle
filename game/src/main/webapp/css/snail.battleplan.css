@@ -27,7 +27,7 @@
 		". . equip . stats . ."
 		". . instructions . submit . ."
 		". . presets . submit . ."
-		". . . . . . .";
+		". . presets . . . .";
 	grid-gap: 1em 0;
 }
 
@@ -135,19 +135,19 @@
 	grid-gap: 0 1em;
 }
 
-#battleplan .preset-button.preset1 {
+#battleplan .preset1 {
 	grid-area: preset1;
 }
 
-#battleplan .preset-button.preset2 {
+#battleplan .preset2 {
 	grid-area: preset2;
 }
 
-#battleplan .preset-button.preset3 {
+#battleplan .preset3 {
 	grid-area: preset3;
 }
 
-#battleplan .preset-button.preset4 {
+#battleplan .preset4 {
 	grid-area: preset4;
 }
 
@@ -373,8 +373,31 @@
 
 /* PRESET BUTTONS */
 
-#battleplan .presets-button {
+#battleplan .presetbutton-button {
+	width: 100%;
+	height: 60%;
 	border-radius: 0.7em;
+}
+
+#battleplan .presetbutton-options {
+	display: none;
+	padding-top: 0.2em;
+	text-align: right;
+}
+
+#battleplan .presets-presetbutton:hover .presetbutton-options {
+	display: block;
+}
+
+#battleplan .presetbutton-options-save,
+#battleplan .presetbutton-options-clear {
+	margin-right: 0.7em;
+	cursor: pointer;
+}
+
+#battleplan .presetbutton-options-save:hover,
+#battleplan .presetbutton-options-clear:hover {
+	text-decoration: underline;
 }
 
 
