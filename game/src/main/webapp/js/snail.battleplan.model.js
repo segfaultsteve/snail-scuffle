@@ -1,11 +1,11 @@
-var snail = (function (snail) {
+var snail = (function (snail, $) {
 	snail.battleplan = snail.battleplan || {};
 	snail.battleplan.model = snail.battleplan.model || {};
 	
 	// private variables
-	let getSnails, getWeapons, getShells, getAccessories, getItems;
+	let data, getSnails, getWeapons, getShells, getAccessories, getItems;
 	let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
-	let selectedItems = ['none', 'none'];
+	let selectedItems = [null, null];
 	let itemConditions = [null, null];
 	let instructions = [];
 	let battlePlanUpdatedHandlers = [];
@@ -32,8 +32,29 @@ var snail = (function (snail) {
 		};
 	};
 	
+	const presetKey = function (presetNumber) {
+		return 'preset' + presetNumber;
+	};
+	
+	const setBattlePlan = function (bp) {
+		$.when(getSnails, getWeapons, getShells, getAccessories, getItems)
+		.then(function (snailsResponse, weaponsResponse, shellsResponse, accessoriesResponse, itemsResponse) {
+			const model = snail.battleplan.model;
+			model.setSnail(findByProperty(snailsResponse[0], 'name', bp.snail));
+			model.setWeapon(findByProperty(weaponsResponse[0], 'name', bp.weapon));
+			model.setShell(findByProperty(shellsResponse[0], 'name', bp.shell));
+			model.setAccessory(findByProperty(accessoriesResponse[0], 'name', bp.accessory));
+			model.setItem(0, findByProperty(itemsResponse[0], 'name', bp.item1));
+			model.setItem(1, findByProperty(itemsResponse[0], 'name', bp.item2));
+			model.setItemCondition(0, bp.item1Rule);
+			model.setItemCondition(1, bp.item2Rule);
+			model.setInstructions(bp.instructions);
+		});
+	};
+	
 	// public methods
 	snail.battleplan.model.init = function (data) {
+		this.data = data;
 		getSnails = data.promiseSnailInfo();
 		getWeapons = data.promiseWeaponInfo();
 		getShells = data.promiseShellInfo();
@@ -156,5 +177,36 @@ var snail = (function (snail) {
 		};
 	};
 	
+	snail.battleplan.model.getPresetDisplayName = function (presetNumber) {
+		const key = presetKey(presetNumber);
+		const loadedObject = this.data.loadLocal(key);
+		return loadedObject ? loadedObject.displayName : null;
+	};
+	
+	snail.battleplan.model.saveBattlePlan = function (presetNumber, displayName) {
+		const key = presetKey(presetNumber);
+		const value = {
+			displayName: displayName,
+			battlePlan: this.getBattlePlan()
+		};
+		this.data.saveLocal(key, value);
+	};
+	
+	snail.battleplan.model.loadBattlePlan = function (presetNumber) {
+		const key = presetKey(presetNumber);
+		const loadedObject = this.data.loadLocal(key);
+		if (loadedObject) {
+			setBattlePlan(loadedObject.battlePlan);
+			return loadedObject.displayName;
+		} else {
+			return null;
+		}
+	};
+	
+	snail.battleplan.model.deleteBattlePlan = function (presetNumber) {
+		const key = presetKey(presetNumber);
+		this.data.deleteLocal(key);
+	};
+	
 	return snail;
-}(snail || {}));
+}(snail || {}, jQuery));

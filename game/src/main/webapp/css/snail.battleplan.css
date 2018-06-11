@@ -389,13 +389,13 @@
 	display: block;
 }
 
-#battleplan .presetbutton-options-save,
+#battleplan .presetbutton-options-set,
 #battleplan .presetbutton-options-clear {
 	margin-right: 0.7em;
 	cursor: pointer;
 }
 
-#battleplan .presetbutton-options-save:hover,
+#battleplan .presetbutton-options-set:hover,
 #battleplan .presetbutton-options-clear:hover {
 	text-decoration: underline;
 }
