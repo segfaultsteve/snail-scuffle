@@ -133,6 +133,7 @@
 	grid-template-columns: repeat(4, 1fr);
 	grid-template-areas: "preset1 preset2 preset3 preset4";
 	grid-gap: 0 1em;
+	position: relative;
 }
 
 #battleplan .preset1 {
@@ -373,6 +374,11 @@
 
 /* PRESET BUTTONS */
 
+#battleplan .presetbutton {
+	width: 100%;
+	height: 100%;
+}
+
 #battleplan .presetbutton-button {
 	width: 100%;
 	height: 60%;
@@ -385,7 +391,7 @@
 	text-align: right;
 }
 
-#battleplan .presets-presetbutton:hover .presetbutton-options {
+#battleplan .presetbutton:hover .presetbutton-options {
 	display: block;
 }
 
@@ -398,6 +404,45 @@
 #battleplan .presetbutton-options-set:hover,
 #battleplan .presetbutton-options-clear:hover {
 	text-decoration: underline;
+}
+
+#battleplan .presetname {
+	position: absolute;
+	bottom: 5em;
+	z-index: 1;
+	padding: 0.5em;
+	background-color: white;
+	border: 1px solid black;
+	border-radius: 0.5em;
+}
+
+#battleplan .preset1 .presetname {
+	left: 1em;
+}
+
+#battleplan .preset2 .presetname {
+	left: calc(25% + 1.5em);
+}
+
+#battleplan .preset3 .presetname {
+	left: calc(50% + 1.5em);
+}
+
+#battleplan .preset4 .presetname {
+	left: calc(75% + 1.5em);
+}
+
+#battleplan .presetname-label,
+#battleplan .presetname-text {
+	display: block;
+}
+
+#battleplan .presetname-text {
+	margin: 0.5em 0 0.5em 0;
+}
+
+#battleplan .presetname-buttons {
+	text-align: right;
 }
 
 

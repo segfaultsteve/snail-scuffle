@@ -4,11 +4,11 @@ var snail = (function(snail, $) {
 	
 	const componentHtml = $('#components .components-presetbutton').html();
 	
-	snail.battleplan.presetbutton.create = function ($container, presetNumber) {
+	snail.battleplan.presetbutton.init = function ($container, presetNumber) {
 		// local variables
 		const emptyText = '[Empty]';
 		const defaultText = 'Preset ' + presetNumber;
-		let $button, $save, $clear;
+		let $button, $set, $clear, $namebox, $nametext, $save, $cancel;
 		
 		// callbacks
 		const onButtonClicked = function () {
@@ -16,9 +16,12 @@ var snail = (function(snail, $) {
 			$button.text(displayName || emptyText);
 		};
 		
-		const onSaveClicked = function () {
-			snail.battleplan.model.saveBattlePlan(presetNumber, defaultText);
-			$button.text(defaultText);
+		const onSetClicked = function () {
+			let name = $button.text();
+			name = (name === emptyText) ? defaultText : name;
+			$namebox.show();
+			$nametext.val(name);
+			$nametext.focus();
 		};
 		
 		const onClearClicked = function () {
@@ -26,21 +29,49 @@ var snail = (function(snail, $) {
 			$button.text(emptyText);
 		};
 		
+		const onSaveClicked = function () {
+			let name = $nametext.val();
+			name = (name.length > 0) ? name : defaultText;
+			snail.battleplan.model.saveBattlePlan(presetNumber, name);
+			$button.text(name);
+			$namebox.hide();
+		};
+		
+		const onCancelClicked = function () {
+			$namebox.hide();
+		};
+		
 		// init code
 		$container.html(componentHtml);
 		$button = $container.find('.presetbutton-button');
-		$save = $container.find('.presetbutton-options-set');
+		$set = $container.find('.presetbutton-options-set');
 		$clear = $container.find('.presetbutton-options-clear');
+		$namebox = $container.find('.presetname');
+		$nametext = $container.find('.presetname-text');
+		$save = $container.find('.presetname-buttons-save');
+		$cancel = $container.find('.presetname-buttons-cancel');
 		
 		$button.click(onButtonClicked);
-		$save.click(onSaveClicked);
+		$set.click(onSetClicked);
 		$clear.click(onClearClicked);
+		$save.click(onSaveClicked);
+		$cancel.click(onCancelClicked);
 		
 		const displayName = snail.battleplan.model.getPresetDisplayName(presetNumber);
 		$button.text(displayName || emptyText);
+		$namebox.hide();
 		
-		return {
-		};
+		$nametext.focus(function () {
+			setTimeout(function () { $nametext.select() }, 50);
+		});
+		
+		$nametext.keyup(function (e) {
+			if (e.keyCode === 13) {					// Enter
+				$save.click();
+			} else if (e.keyCode === 27) {	// ESC
+				$cancel.click();
+			}
+		});
 	};
 	
 	return snail;
