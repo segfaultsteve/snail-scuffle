@@ -19,13 +19,14 @@
 #battleplan {
 	height: 98vh;
 	display: grid;
-	grid-template-rows: 2% 8% 1fr 30% 7% 2%;
+	grid-template-rows: 2% 8% 1fr 10% 20% 7% 2%;
 	grid-template-columns: 2% 2em 60% 1fr 20% 2em 2%;
 	grid-template-areas:
 		". . . . . . ."
 		". snail snail snail snail snail ."
-		". . equip . stats . ."
-		". . instructions . submit . ."
+		". . equip . info . ."
+		". . instructionbox . info . ."
+		". . instructionbox . submit . ."
 		". . presets . submit . ."
 		". . presets . . . .";
 	grid-gap: 1em 0;
@@ -39,16 +40,16 @@
 	grid-area: equip
 }
 
-#battleplan .instructions {
-	grid-area: instructions;
+#battleplan .instructionbox {
+	grid-area: instructionbox;
 }
 
 #battleplan .presets {
 	grid-area: presets;
 }
 
-#battleplan .stats {
-	grid-area: stats;
+#battleplan .info {
+	grid-area: info;
 }
 
 #battleplan .submit {
@@ -150,6 +151,31 @@
 
 #battleplan .preset4 {
 	grid-area: preset4;
+}
+
+/* INFO GRID */
+
+#battleplan .info {
+	display: grid;
+	grid-template-rows: 10% 25% 10% 1fr;
+	grid-template-columns: 1fr 1fr;
+	grid-template-areas:
+		". ."
+		"timer timer"
+		". ."
+		"playerstats enemystats";
+}
+
+#battleplan .info-timer {
+	grid-area: timer;
+}
+
+#battleplan .info-playerstats {
+	grid-area: playerstats;
+}
+
+#battleplan .info-enemystats {
+	grid-area: enemystats;
 }
 
 
@@ -304,7 +330,7 @@
 }
 
 #battleplan .instructionbox.expanded {
-	width: calc(100% - 2.5em);
+	width: calc(100% - 2em);
 	height: 100%;
 }
 
@@ -445,8 +471,49 @@
 	text-align: right;
 }
 
+/* TIMER */
+
+#battleplan .info-timer-blocks {
+	display: flex;
+	justify-content: space-between;
+}
+
+#battleplan .info-timer-blocks-block {
+	display: inline-block;
+	width: 4em;
+	height: 4em;
+	background-color: #aaa;
+}
+
+#battleplan .info-timer-remaining {
+	padding-top: 1em;
+}
+
+
+/* PLAYER STATS */
+
+#battleplan .info-playerstats {
+	height: 10em;
+	justify-self: left;
+}
+
+#battleplan .info-enemystats {
+	height: 10em;
+	justify-self: right;
+}
+
+#battleplan .info-playerstats-name,
+#battleplan .info-enemystats-name {
+	text-align: center;
+}
+
+#battleplan .numeric-stat {
+	padding-left: 2em;
+	text-align: right;
+}
+
 
 /* SUBMIT BUTTON */
 #battleplan .submit {
-	margin: 6em 2em 2em 2em;
+	margin: 0 2em 2em 2em;
 }

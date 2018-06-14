@@ -93,7 +93,7 @@ var snail = (function (snail) {
 		item1Button = createItemButton($container.find('.equip-item1'), model.promiseItems(), 0);
 		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems(), 1);
 		instructionBox = snail.battleplan.instructionbox;
-		instructionBox.init($container.find('.instructions'));
+		instructionBox.init($container.find('.instructionbox'));
 		for (let i = 0; i < 4; i++) {
 			let $preset = $container.find('.preset' + (i + 1));
 			snail.battleplan.presetbutton.init($preset, i + 1);

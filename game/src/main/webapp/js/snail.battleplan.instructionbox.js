@@ -1,10 +1,8 @@
-var snail = (function (snail, $) {
+var snail = (function (snail) {
 	snail.battleplan = snail.battleplan || {};
 	snail.battleplan.instructionbox = {};
 	
-	const componentHtml = $('#components .components-instructionbox').html();
-	
-	snail.battleplan.instructionbox.init = function ($container) {
+	snail.battleplan.instructionbox.init = function ($instructionbox) {
 		// private variables
 		const states = {
 			collapsed: 'collapsed',
@@ -13,7 +11,7 @@ var snail = (function (snail, $) {
 			collapsing: 'collapsing'
 		};
 		let instructionList = [];
-		let $instructionbox, $expandicon, $collapseicon, $instructions, $addbox, $defaultattack;
+		let $expandicon, $collapseicon, $instructions, $addbox, $defaultattack;
 		
 		// private methods
 		const beginExpand = function () {
@@ -105,13 +103,11 @@ var snail = (function (snail, $) {
 		};
 		
 		// init code
-		$container.html(componentHtml);
-		$instructionbox = $container.find('.instructionbox');
 		$instructions = $instructionbox.find('.instructionbox-instructions');
 		$addbox = $instructionbox.find('.instructionbox-addbox');
 		$defaultattack = $instructionbox.find('.instructionbox-defaultattack');
-		$expandicon = $container.find('.instructionbox-header-expandicon');
-		$collapseicon = $container.find('.instructionbox-header-collapseicon');
+		$expandicon = $instructionbox.find('.instructionbox-header-expandicon');
+		$collapseicon = $instructionbox.find('.instructionbox-header-collapseicon');
 		
 		$addbox.on('click', '.instructionbox-addbox-addicon, .instructionbox-addbox-text', onAddInstruction);
 		
@@ -119,4 +115,4 @@ var snail = (function (snail, $) {
 	};
 	
 	return snail;
-}(snail || {}, jQuery));
+}(snail || {}));

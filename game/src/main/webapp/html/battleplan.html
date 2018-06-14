@@ -11,7 +11,19 @@
 	<div class="equip-item1"></div>
 	<div class="equip-item2"></div>
 </section>
-<section class="instructions">
+<section class="instructionbox">
+	<div class="instructionbox-header">
+		Instructions
+		<span class="instructionbox-header-expandicon">❯</span>
+		<span class="instructionbox-header-collapseicon">❮</span>
+	</div>
+	<ul class="instructionbox-instructions">
+	</ul>
+	<div class="instructionbox-addbox">
+		<span class="instructionbox-addbox-addicon addicon">+</span>
+		<i class="instructionbox-addbox-text">Add Instruction</i>
+	</div>
+	<div class="instructionbox-defaultattack">Attack &times; <span style="font-size: 1.5em">&infin;</span></div>
 </section>
 <section class="presets">
 	<div class="presets-presetbutton preset1"></div>
@@ -19,20 +31,68 @@
 	<div class="presets-presetbutton preset3"></div>
 	<div class="presets-presetbutton preset4"></div>
 </section>
-<section class="stats">
-	<section class="stats-timer">
-		<div class="stats-timer-blocks">
-			<span class="stats-timer-blocks-block"></span>
-			<span class="stats-timer-blocks-block"></span>
-			<span class="stats-timer-blocks-block"></span>
-			<span class="stats-timer-blocks-block"></span>
+<section class="info">
+	<div class="info-timer">
+		<div class="info-timer-blocks">
+			<div class="info-timer-blocks-block block1"></div>
+			<div class="info-timer-blocks-block block2"></div>
+			<div class="info-timer-blocks-block block3"></div>
+			<div class="info-timer-blocks-block block4"></div>
 		</div>
-		<div class="stats-timer-remaining">
+		<div class="info-timer-remaining">
 			Approximate time remaining:
-			<span class="stats-timer-remaining-time"></span>
+			<span class="info-timer-remaining-time"></span>
 		</div>
-	</section>
-	<section class="stats-player">
-	</section>
+	</div>
+	<div class="info-playerstats">
+		<div class="info-playerstats-name">Player</div>
+			<table>
+				<tr>
+					<td>HP</td>
+					<td class="info-playerstats-hp numeric-stat">100</td>
+				</tr>
+				<tr>
+					<td>AP</td>
+					<td class="info-playerstats-ap numeric-stat">0</td>
+				</tr>
+				<tr>
+					<td>Attack</td>
+					<td class="info-playerstats-attack numeric-stat">0</td>
+				</tr>
+				<tr>
+					<td>Defense</td>
+					<td class="info-playerstats-defense numeric-stat">0</td>
+				</tr>
+				<tr>
+					<td>Speed</td>
+					<td class="info-playerstats-speed numeric-stat">0</td>
+				</tr>
+			</table>
+	</div>
+	<div class="info-enemystats">
+		<div class="info-enemystats-name">Enemy</div>
+		<table>
+			<tr>
+				<td>HP</td>
+				<td class="info-enemystats-hp numeric-stat">100</td>
+			</tr>
+			<tr>
+				<td>AP</td>
+				<td class="info-enemystats-ap numeric-stat">0</td>
+			</tr>
+			<tr>
+				<td>Attack</td>
+				<td class="info-enemystats-attack numeric-stat">0</td>
+			</tr>
+			<tr>
+				<td>Defense</td>
+				<td class="info-enemystats-defense numeric-stat">0</td>
+			</tr>
+			<tr>
+				<td>Speed</td>
+				<td class="info-enemystats-speed numeric-stat">0</td>
+			</tr>
+		</table>
+	</div>
 </section>
 <button class="submit">Submit</button>
