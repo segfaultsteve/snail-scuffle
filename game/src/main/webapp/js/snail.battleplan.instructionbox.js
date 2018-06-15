@@ -59,7 +59,7 @@ var snail = (function (snail) {
 				const instruction = instructionList[i].getData();
 				instructionData.push(instruction);
 			}
-			snail.battleplan.model.setInstructions(instructionData)
+			snail.model.battleplan.setInstructions(instructionData)
 		};
 		
 		// callbacks
@@ -86,7 +86,7 @@ var snail = (function (snail) {
 			let instructionsAreTheSame = (newInstructions.length === instructionList.length);
 			for (let i = 0; instructionsAreTheSame && i < instructionList.length; i++) {
 				const oldInstructionData = instructionList[i].getData();
-				instructionsAreTheSame = snail.battleplan.model.instructionsAreIdentical(oldInstructionData, newInstructions[i]);
+				instructionsAreTheSame = snail.model.battleplan.instructionsAreIdentical(oldInstructionData, newInstructions[i]);
 			}
 			
 			if (!instructionsAreTheSame) {

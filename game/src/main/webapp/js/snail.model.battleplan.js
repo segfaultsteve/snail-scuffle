@@ -1,9 +1,9 @@
 var snail = (function (snail, $) {
-	snail.battleplan = snail.battleplan || {};
-	snail.battleplan.model = snail.battleplan.model || {};
+	snail.model = snail.model || {};
+	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let data, getSnails, getWeapons, getShells, getAccessories, getItems;
+	let dataLayer, getSnails, getWeapons, getShells, getAccessories, getItems;
 	let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
 	let selectedItems = [null, null];
 	let itemConditions = [null, null];
@@ -39,65 +39,65 @@ var snail = (function (snail, $) {
 	const setBattlePlan = function (bp) {
 		$.when(getSnails, getWeapons, getShells, getAccessories, getItems)
 		.then(function (snailsResponse, weaponsResponse, shellsResponse, accessoriesResponse, itemsResponse) {
-			const model = snail.battleplan.model;
-			model.setSnail(findByProperty(snailsResponse[0], 'name', bp.snail));
-			model.setWeapon(findByProperty(weaponsResponse[0], 'name', bp.weapon));
-			model.setShell(findByProperty(shellsResponse[0], 'name', bp.shell));
-			model.setAccessory(findByProperty(accessoriesResponse[0], 'name', bp.accessory));
-			model.setItem(0, findByProperty(itemsResponse[0], 'name', bp.item1));
-			model.setItem(1, findByProperty(itemsResponse[0], 'name', bp.item2));
-			model.setItemCondition(0, bp.item1Rule);
-			model.setItemCondition(1, bp.item2Rule);
-			model.setInstructions(bp.instructions);
+			const bpmodel = snail.model.battleplan;
+			bpmodel.setSnail(findByProperty(snailsResponse[0], 'name', bp.snail));
+			bpmodel.setWeapon(findByProperty(weaponsResponse[0], 'name', bp.weapon));
+			bpmodel.setShell(findByProperty(shellsResponse[0], 'name', bp.shell));
+			bpmodel.setAccessory(findByProperty(accessoriesResponse[0], 'name', bp.accessory));
+			bpmodel.setItem(0, findByProperty(itemsResponse[0], 'name', bp.item1));
+			bpmodel.setItem(1, findByProperty(itemsResponse[0], 'name', bp.item2));
+			bpmodel.setItemCondition(0, bp.item1Rule);
+			bpmodel.setItemCondition(1, bp.item2Rule);
+			bpmodel.setInstructions(bp.instructions);
 		});
 	};
 	
 	// public methods
-	snail.battleplan.model.init = function (data) {
-		this.data = data;
-		getSnails = data.promiseSnailInfo();
-		getWeapons = data.promiseWeaponInfo();
-		getShells = data.promiseShellInfo();
-		getAccessories = data.promiseAccessoryInfo();
-		getItems = data.promiseItemInfo();
+	snail.model.battleplan.init = function (data) {
+		dataLayer = data;
+		getSnails = dataLayer.promiseSnailInfo();
+		getWeapons = dataLayer.promiseWeaponInfo();
+		getShells = dataLayer.promiseShellInfo();
+		getAccessories = dataLayer.promiseAccessoryInfo();
+		getItems = dataLayer.promiseItemInfo();
 	};
 	
-	snail.battleplan.model.addBattlePlanUpdatedHandler = function (handler) {
+	snail.model.battleplan.addBattlePlanUpdatedHandler = function (handler) {
 		battlePlanUpdatedHandlers.push(handler);
 	};
 	
-	snail.battleplan.model.promiseSnails = function () { return getSnails; };
-	snail.battleplan.model.promiseWeapons = function () { return getWeapons; };
-	snail.battleplan.model.promiseShells = function () { return getShells; };
-	snail.battleplan.model.promiseAccessories = function () { return getAccessories; };
-	snail.battleplan.model.promiseItems = function () { return getItems; };
+	snail.model.battleplan.promiseSnails = function () { return getSnails; };
+	snail.model.battleplan.promiseWeapons = function () { return getWeapons; };
+	snail.model.battleplan.promiseShells = function () { return getShells; };
+	snail.model.battleplan.promiseAccessories = function () { return getAccessories; };
+	snail.model.battleplan.promiseItems = function () { return getItems; };
 	
-	snail.battleplan.model.setSnail = function (newSnail) {
+	snail.model.battleplan.setSnail = function (newSnail) {
 		selectedSnail = newSnail;
 		notifyBattlePlanUpdatedHandlers('snail', selectedSnail);
 	};
 	
-	snail.battleplan.model.setWeapon = function (weapon) {
+	snail.model.battleplan.setWeapon = function (weapon) {
 		selectedWeapon = weapon;
 		notifyBattlePlanUpdatedHandlers('weapon', selectedWeapon);
 	};
 	
-	snail.battleplan.model.setShell = function (shell) {
+	snail.model.battleplan.setShell = function (shell) {
 		selectedShell = shell;
 		notifyBattlePlanUpdatedHandlers('shell', selectedShell);
 	};
 	
-	snail.battleplan.model.setAccessory = function (accessory) {
+	snail.model.battleplan.setAccessory = function (accessory) {
 		selectedAccessory = accessory;
 		notifyBattlePlanUpdatedHandlers('accessory', selectedAccessory);
 	};
 	
-	snail.battleplan.model.setItem = function (index, item) {
+	snail.model.battleplan.setItem = function (index, item) {
 		selectedItems[index] = item;
 		notifyBattlePlanUpdatedHandlers('item' + (index + 1), selectedItems[index]);
 	};
 	
-	snail.battleplan.model.createHasCondition = function (player, stat, inequality, threshold) {
+	snail.model.battleplan.createHasCondition = function (player, stat, inequality, threshold) {
 		return {
 			hasCondition: {
 				player: player,
@@ -109,14 +109,14 @@ var snail = (function (snail, $) {
 		};
 	};
 	
-	snail.battleplan.model.createEnemyUsesCondition = function (item) {
+	snail.model.battleplan.createEnemyUsesCondition = function (item) {
 		return {
 			hasCondition: null,
 			enemyUsesCondition: item
 		};
 	}
 	
-	snail.battleplan.model.setItemCondition = function (index, condition) {
+	snail.model.battleplan.setItemCondition = function (index, condition) {
 		if (selectedItems[index].name === 'none') {
 			itemConditions[index] = null;
 		} else {
@@ -125,7 +125,7 @@ var snail = (function (snail, $) {
 		}
 	};
 	
-	snail.battleplan.model.itemConditionsAreIdentical = function (cond1, cond2) {
+	snail.model.battleplan.itemConditionsAreIdentical = function (cond1, cond2) {
 		if (cond1.hasCondition) {
 			const hc1 = cond1.hasCondition;
 			const hc2 = cond2.hasCondition;
@@ -139,31 +139,31 @@ var snail = (function (snail, $) {
 		}
 	};
 	
-	snail.battleplan.model.createAttackInstruction = function () {
+	snail.model.battleplan.createAttackInstruction = function () {
 		return createInstruction('attack', null, null);
 	};
 	
-	snail.battleplan.model.createUseItemInstruction = function (item) {
+	snail.model.battleplan.createUseItemInstruction = function (item) {
 		return createInstruction('use', item, null);
 	};
 	
-	snail.battleplan.model.createWaitForApInstruction = function (apThreshold) {
+	snail.model.battleplan.createWaitForApInstruction = function (apThreshold) {
 		return createInstruction('wait', null, apThreshold);
 	};
 	
-	snail.battleplan.model.setInstructions = function (newInstructions) {
+	snail.model.battleplan.setInstructions = function (newInstructions) {
 		instructions = newInstructions;
 		notifyBattlePlanUpdatedHandlers('instructions', instructions);
 	};
 	
-	snail.battleplan.model.instructionsAreIdentical = function (inst1, inst2) {
+	snail.model.battleplan.instructionsAreIdentical = function (inst1, inst2) {
 		return (inst1 && inst2
 						&& inst1.type && inst2.type && inst1.type === inst2.type
 						&& inst1.itemToUse === inst2.itemToUse
 						&& inst1.apThreshold === inst2.apThreshold);
 	};
 	
-	snail.battleplan.model.getBattlePlan = function () {
+	snail.model.battleplan.getBattlePlan = function () {
 		return {
 			snail: selectedSnail.name,
 			weapon: selectedWeapon.name,
@@ -177,24 +177,24 @@ var snail = (function (snail, $) {
 		};
 	};
 	
-	snail.battleplan.model.getPresetDisplayName = function (presetNumber) {
+	snail.model.battleplan.getPresetDisplayName = function (presetNumber) {
 		const key = presetKey(presetNumber);
-		const loadedObject = this.data.loadLocal(key);
+		const loadedObject = dataLayer.loadLocal(key);
 		return loadedObject ? loadedObject.displayName : null;
 	};
 	
-	snail.battleplan.model.saveBattlePlan = function (presetNumber, displayName) {
+	snail.model.battleplan.saveBattlePlan = function (presetNumber, displayName) {
 		const key = presetKey(presetNumber);
 		const value = {
 			displayName: displayName,
 			battlePlan: this.getBattlePlan()
 		};
-		this.data.saveLocal(key, value);
+		dataLayer.saveLocal(key, value);
 	};
 	
-	snail.battleplan.model.loadBattlePlan = function (presetNumber) {
+	snail.model.battleplan.loadBattlePlan = function (presetNumber) {
 		const key = presetKey(presetNumber);
-		const loadedObject = this.data.loadLocal(key);
+		const loadedObject = dataLayer.loadLocal(key);
 		if (loadedObject) {
 			setBattlePlan(loadedObject.battlePlan);
 			return loadedObject.displayName;
@@ -203,9 +203,9 @@ var snail = (function (snail, $) {
 		}
 	};
 	
-	snail.battleplan.model.deleteBattlePlan = function (presetNumber) {
+	snail.model.battleplan.deleteBattlePlan = function (presetNumber) {
 		const key = presetKey(presetNumber);
-		this.data.deleteLocal(key);
+		dataLayer.deleteLocal(key);
 	};
 	
 	return snail;

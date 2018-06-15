@@ -1,9 +1,10 @@
 var snail = (function (snail) {
 	snail.battleplan = snail.battleplan || {};
-	snail.battleplan.model = snail.battleplan.model || {};
+	snail.model = snail.model || {};
+	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	const model = snail.battleplan.model;
+	const bpmodel = snail.model.battleplan;
 	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
@@ -21,8 +22,8 @@ var snail = (function (snail) {
 	};
 	
 	const createItemButton = function ($container, itemsPromise, itemSlot) {
-		const onItemChanged = function (selectedIndex, selectedItem) { model.setItem(itemSlot, selectedItem) };
-		const onItemConditionChanged = function (condition) { model.setItemCondition(itemSlot, condition) };
+		const onItemChanged = function (selectedIndex, selectedItem) { bpmodel.setItem(itemSlot, selectedItem) };
+		const onItemConditionChanged = function (condition) { bpmodel.setItemCondition(itemSlot, condition) };
 		const button = snail.battleplan.itembutton.create($container, onItemChanged, onItemConditionChanged);
 		
 		itemsPromise.done(function (items) {
@@ -39,7 +40,7 @@ var snail = (function (snail) {
 			const newSnail = snails.filter(snail => snail.displayName === displayName)[0];
 			if (newSnail) {
 				snailButtons[newSnail.name].addClass('selected-snail');
-				snail.battleplan.model.setSnail(newSnail);
+				bpmodel.setSnail(newSnail);
 			}
 		}
 	};
@@ -87,11 +88,11 @@ var snail = (function (snail) {
 			todd: $container.find('.snails-todd'),
 			doug: $container.find('.snails-doug')
 		};
-		weaponButton = createMenuButton($container.find('.equip-weapon'), model.promiseWeapons(), 0, model.setWeapon);
-		shellButton = createMenuButton($container.find('.equip-shell'), model.promiseShells(), 'last', model.setShell);
-		accessoryButton = createMenuButton($container.find('.equip-accessory'), model.promiseAccessories(), 'last', model.setAccessory);
-		item1Button = createItemButton($container.find('.equip-item1'), model.promiseItems(), 0);
-		item2Button = createItemButton($container.find('.equip-item2'), model.promiseItems(), 1);
+		weaponButton = createMenuButton($container.find('.equip-weapon'), bpmodel.promiseWeapons(), 0, bpmodel.setWeapon);
+		shellButton = createMenuButton($container.find('.equip-shell'), bpmodel.promiseShells(), 'last', bpmodel.setShell);
+		accessoryButton = createMenuButton($container.find('.equip-accessory'), bpmodel.promiseAccessories(), 'last', bpmodel.setAccessory);
+		item1Button = createItemButton($container.find('.equip-item1'), bpmodel.promiseItems(), 0);
+		item2Button = createItemButton($container.find('.equip-item2'), bpmodel.promiseItems(), 1);
 		instructionBox = snail.battleplan.instructionbox;
 		instructionBox.init($container.find('.instructionbox'));
 		for (let i = 0; i < 4; i++) {
@@ -100,9 +101,9 @@ var snail = (function (snail) {
 		}
 		
 		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
-		snail.battleplan.model.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		bpmodel.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
 		
-		model.promiseSnails().done(function (snailList) {
+		bpmodel.promiseSnails().done(function (snailList) {
 			snails = snailList;
 			setSelectedSnail(snails[0].displayName);
 		});

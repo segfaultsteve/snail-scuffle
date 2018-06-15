@@ -6,7 +6,7 @@ var snail = (function(snail, $) {
 	
 	// public methods
 	snail.init = function () {
-		snail.battleplan.model.init(snail.data);
+		snail.model.battleplan.init(snail.data);
 		snail.battleplan.init(pages.$battleplan);
 		pages.$battleplan.show();
 	};

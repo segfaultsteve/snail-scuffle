@@ -12,7 +12,7 @@ var snail = (function(snail, $) {
 		
 		// callbacks
 		const onButtonClicked = function () {
-			const displayName = snail.battleplan.model.loadBattlePlan(presetNumber);
+			const displayName = snail.model.battleplan.loadBattlePlan(presetNumber);
 			$button.text(displayName || emptyText);
 		};
 		
@@ -25,14 +25,14 @@ var snail = (function(snail, $) {
 		};
 		
 		const onClearClicked = function () {
-			snail.battleplan.model.deleteBattlePlan(presetNumber);
+			snail.model.battleplan.deleteBattlePlan(presetNumber);
 			$button.text(emptyText);
 		};
 		
 		const onSaveClicked = function () {
 			let name = $nametext.val();
 			name = (name.length > 0) ? name : defaultText;
-			snail.battleplan.model.saveBattlePlan(presetNumber, name);
+			snail.model.battleplan.saveBattlePlan(presetNumber, name);
 			$button.text(name);
 			$namebox.hide();
 		};
@@ -57,7 +57,7 @@ var snail = (function(snail, $) {
 		$save.click(onSaveClicked);
 		$cancel.click(onCancelClicked);
 		
-		const displayName = snail.battleplan.model.getPresetDisplayName(presetNumber);
+		const displayName = snail.model.battleplan.getPresetDisplayName(presetNumber);
 		$button.text(displayName || emptyText);
 		$namebox.hide();
 		

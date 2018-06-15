@@ -57,10 +57,10 @@ var snail = (function (snail, $) {
 				const stat = $container.find('.itembutton-condition-hascondition-stat').val();
 				const inequality = $container.find('.itembutton-condition-hascondition-inequality').val();
 				const threshold = $container.find('.itembutton-condition-hascondition-threshold').val();
-				condition = snail.battleplan.model.createHasCondition(player, stat, inequality, threshold);
+				condition = snail.model.battleplan.createHasCondition(player, stat, inequality, threshold);
 			} else if (state === states.usesCondition) {
 				const item = $container.find('.itembutton-condition-usescondition-item').val();
-				condition = snail.battleplan.model.createEnemyUsesCondition(item);
+				condition = snail.model.battleplan.createEnemyUsesCondition(item);
 			}
 			onItemConditionChanged(condition);
 		};

@@ -57,15 +57,15 @@ var snail = (function (snail, $) {
 		
 		// public methods
 		const getData = function () {
-			const model = snail.battleplan.model;
+			const bpmodel = snail.model.battleplan;
 			if (instructionType === 'attack') {
-				return model.createAttackInstruction();
+				return bpmodel.createAttackInstruction();
 			} else if (instructionType === 'use') {
 				const item = $this.find('.instruction-item').val();
-				return model.createUseItemInstruction(item);
+				return bpmodel.createUseItemInstruction(item);
 			} else {
 				const apThreshold = $this.find('.instruction-waitcondition-ap').val();
-				return model.createWaitForApInstruction(apThreshold);
+				return bpmodel.createWaitForApInstruction(apThreshold);
 			}
 		};
 		
