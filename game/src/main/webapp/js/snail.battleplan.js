@@ -1,4 +1,4 @@
-var snail = (function (snail) {
+var snail = (function (snail, $) {
 	snail.battleplan = snail.battleplan || {};
 	snail.model = snail.model || {};
 	snail.model.battleplan = snail.model.battleplan || {};
@@ -33,19 +33,24 @@ var snail = (function (snail) {
 		return button;
 	};
 	
-	const setSelectedSnail = function (displayName) {
-		const currentSnail = $battleplan.find('.snails .selected-snail').text();
-		if (displayName !== currentSnail) {
-			$battleplan.find('.snails button').removeClass('selected-snail');
-			const newSnail = snails.filter(snail => snail.displayName === displayName)[0];
-			if (newSnail) {
-				snailButtons[newSnail.name].addClass('selected-snail');
-				bpmodel.setSnail(newSnail);
-				if (newSnail.name === 'doug') {
-					shellButton.disable();
-				} else {
-					shellButton.enable();
-				}
+	const setSnail = function (displayName) {
+		const newSnail = snails.filter(snail => snail.displayName === displayName)[0];
+		if (newSnail) {
+			bpmodel.setSnail(newSnail);
+		}
+	};
+	
+	const updateSnailButtons = function (newSnail) {
+		const $selectedSnailButton = $battleplan.find('.snails .selected-snail');
+		const selectedSnailDisplayName = $selectedSnailButton.find('.snails-button-name').text();
+		if (newSnail.displayName !== selectedSnailDisplayName) {
+			$selectedSnailButton.removeClass('selected-snail');
+			snailButtons[newSnail.name].addClass('selected-snail');
+			
+			if (newSnail.name === 'doug') {
+				shellButton.disable();
+			} else {
+				shellButton.enable();
 			}
 		}
 	};
@@ -54,7 +59,7 @@ var snail = (function (snail) {
 	const onBattlePlanUpdated = function (updatedElement, newValue) {
 		switch (updatedElement) {
 			case 'snail':
-				setSelectedSnail(newValue.displayName);
+				updateSnailButtons(newValue);
 				break;
 			case 'weapon':
 				weaponButton.setSelectedOption(newValue.displayName);
@@ -83,6 +88,12 @@ var snail = (function (snail) {
 		}
 	};
 	
+	const onSnailButtonClicked = function (e) {
+		const $button = $(e.target).closest('.snails-button');
+		const displayName = $button.find('.snails-button-name').text();
+		setSnail(displayName);
+	};
+	
 	// public methods
 	snail.battleplan.init = function ($container) {
 		$battleplan = $container;
@@ -106,14 +117,17 @@ var snail = (function (snail) {
 		}
 		snail.battleplan.stats.init($battleplan.find('.info-playerstats'));
 		
-		$battleplan.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
+		$battleplan.find('.snails-button').click(onSnailButtonClicked);
 		bpmodel.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
 		
 		bpmodel.promiseSnails().done(function (snailList) {
 			snails = snailList;
-			setSelectedSnail(snails[0].displayName);
+			for (let i = 0; i < snails.length; i++) {
+				snailButtons[snails[i].name].find('.snails-button-description').text(snails[i].description);
+			}
+			bpmodel.setSnail(snails[0]);
 		});
 	};
 	
 	return snail;
-}(snail || {}));
+}(snail || {}, jQuery));
