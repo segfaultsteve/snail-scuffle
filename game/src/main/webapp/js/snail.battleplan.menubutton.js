@@ -98,6 +98,20 @@ var snail = (function(snail, $) {
 			return options[selectedIndex];
 		};
 		
+		const enable = function () {
+			if ($button.hasClass('disabled-button')) {
+				$button.removeClass('disabled-button');
+				$button.click(onButtonClicked);
+			}
+		};
+		
+		const disable = function () {
+			if (!$button.hasClass('disabled-button')) {
+				$button.addClass('disabled-button');
+				$button.off('click', onButtonClicked);
+			}
+		};
+		
 		// init code
 		$container.addClass('menubutton');
 		$container.html(componentHtml);
@@ -111,7 +125,9 @@ var snail = (function(snail, $) {
 			setOptionsList: setOptionsList,
 			setSelectedOption: setSelectedOption,
 			setSelectedIndex: setSelectedIndex,
-			getSelectedOption: getSelectedOption
+			getSelectedOption: getSelectedOption,
+			enable: enable,
+			disable: disable
 		};
 	};
 	

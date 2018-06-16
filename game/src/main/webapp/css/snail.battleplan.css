@@ -202,13 +202,17 @@
 	text-align: left;
 }
 
-#battleplan .menubutton-button:hover,
-#battleplan .menubutton-button:focus {
+#battleplan .menubutton-button:not(.disabled-button):hover,
+#battleplan .menubutton-button:not(.disabled-button):focus {
 	background: #ddd;
 }
 
 #battleplan .menubutton-button::-moz-focus-inner {
 	border: 0;
+}
+
+#battleplan .menubutton-button.disabled-button {
+	color: #aaa;
 }
 
 #battleplan .menubutton-list {

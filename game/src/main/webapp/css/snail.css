@@ -17,7 +17,7 @@ button {
 	cursor: pointer;
 }
 
-button:hover {
+button:not(.disabled-button):hover {
 	background: #ddd;
 }
 

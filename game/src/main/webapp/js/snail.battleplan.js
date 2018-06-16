@@ -5,7 +5,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	const bpmodel = snail.model.battleplan;
-	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, stats;
+	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
@@ -41,6 +41,11 @@ var snail = (function (snail) {
 			if (newSnail) {
 				snailButtons[newSnail.name].addClass('selected-snail');
 				bpmodel.setSnail(newSnail);
+				if (newSnail.name === 'doug') {
+					shellButton.disable();
+				} else {
+					shellButton.enable();
+				}
 			}
 		}
 	};

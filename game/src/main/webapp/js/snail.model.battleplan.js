@@ -88,8 +88,15 @@ var snail = (function (snail, $) {
 	};
 	
 	snail.model.battleplan.setShell = function (shell) {
-		selectedShell = shell;
-		notifyBattlePlanUpdatedHandlers('shell', selectedShell);
+		if (selectedSnail && selectedSnail.name !== 'doug') {
+			selectedShell = shell;
+			notifyBattlePlanUpdatedHandlers('shell', selectedShell);
+		} else {
+			getShells.then(function (shells) {
+				selectedShell = findByProperty(shells, 'name', 'none');
+				notifyBattlePlanUpdatedHandlers('shell', selectedShell);
+			});
+		}
 	};
 	
 	snail.model.battleplan.setAccessory = function (accessory) {
