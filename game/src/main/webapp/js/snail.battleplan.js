@@ -5,7 +5,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	const bpmodel = snail.model.battleplan;
-	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox;
+	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, stats;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
@@ -83,24 +83,25 @@ var snail = (function (snail) {
 		$battleplan = $container;
 		
 		snailButtons = {
-			dale: $container.find('.snails-dale'),
-			gail: $container.find('.snails-gail'),
-			todd: $container.find('.snails-todd'),
-			doug: $container.find('.snails-doug')
+			dale: $battleplan.find('.snails-dale'),
+			gail: $battleplan.find('.snails-gail'),
+			todd: $battleplan.find('.snails-todd'),
+			doug: $battleplan.find('.snails-doug')
 		};
-		weaponButton = createMenuButton($container.find('.equip-weapon'), bpmodel.promiseWeapons(), 0, bpmodel.setWeapon);
-		shellButton = createMenuButton($container.find('.equip-shell'), bpmodel.promiseShells(), 'last', bpmodel.setShell);
-		accessoryButton = createMenuButton($container.find('.equip-accessory'), bpmodel.promiseAccessories(), 'last', bpmodel.setAccessory);
-		item1Button = createItemButton($container.find('.equip-item1'), bpmodel.promiseItems(), 0);
-		item2Button = createItemButton($container.find('.equip-item2'), bpmodel.promiseItems(), 1);
+		weaponButton = createMenuButton($battleplan.find('.equip-weapon'), bpmodel.promiseWeapons(), 0, bpmodel.setWeapon);
+		shellButton = createMenuButton($battleplan.find('.equip-shell'), bpmodel.promiseShells(), 'last', bpmodel.setShell);
+		accessoryButton = createMenuButton($battleplan.find('.equip-accessory'), bpmodel.promiseAccessories(), 'last', bpmodel.setAccessory);
+		item1Button = createItemButton($battleplan.find('.equip-item1'), bpmodel.promiseItems(), 0);
+		item2Button = createItemButton($battleplan.find('.equip-item2'), bpmodel.promiseItems(), 1);
 		instructionBox = snail.battleplan.instructionbox;
-		instructionBox.init($container.find('.instructionbox'));
+		instructionBox.init($battleplan.find('.instructionbox'));
 		for (let i = 0; i < 4; i++) {
-			let $preset = $container.find('.preset' + (i + 1));
+			let $preset = $battleplan.find('.preset' + (i + 1));
 			snail.battleplan.presetbutton.init($preset, i + 1);
 		}
+		snail.battleplan.stats.init($battleplan.find('.info-playerstats'));
 		
-		$container.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
+		$battleplan.find('.snails button').click(function (e) { setSelectedSnail(e.target.firstChild.nodeValue) });
 		bpmodel.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
 		
 		bpmodel.promiseSnails().done(function (snailList) {

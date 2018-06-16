@@ -512,6 +512,28 @@
 	text-align: right;
 }
 
+#battleplan .info-playerstats .stat-increased {
+	animation-name: flash-green;
+	animation-duration: 2s;
+}
+
+#battleplan .info-playerstats .stat-decreased {
+	animation-name: flash-red;
+	animation-duration: 2s;
+}
+
+@keyframes flash-green {
+	from { color: green; }
+	50% { color: green; }
+	to { color: black; }
+}
+
+@keyframes flash-red {
+	from { color: red; }
+	50% { color: red; }
+	to { color: black; }
+}
+
 
 /* SUBMIT BUTTON */
 #battleplan .submit {

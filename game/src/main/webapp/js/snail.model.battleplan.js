@@ -177,6 +177,30 @@ var snail = (function (snail, $) {
 		};
 	};
 	
+	snail.model.battleplan.getAttack = function () {
+		if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
+			return selectedSnail.attackModifier + selectedWeapon.attackModifier + selectedShell.attackModifier + selectedAccessory.attackModifier;
+		} else {
+			return 0;
+		}
+	};
+	
+	snail.model.battleplan.getDefense = function () {
+		if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
+			return selectedSnail.defenseModifier + selectedWeapon.defenseModifier + selectedShell.defenseModifier + selectedAccessory.defenseModifier;
+		} else {
+			return 0;
+		}
+	};
+	
+	snail.model.battleplan.getSpeed = function () {
+		if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
+			return selectedSnail.speedModifier + selectedWeapon.speedModifier + selectedShell.speedModifier + selectedAccessory.speedModifier;
+		} else {
+			return 0;
+		}
+	};
+	
 	snail.model.battleplan.getPresetDisplayName = function (presetNumber) {
 		const key = presetKey(presetNumber);
 		const loadedObject = dataLayer.loadLocal(key);
