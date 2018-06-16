@@ -74,6 +74,11 @@ var snail = (function (snail, $) {
 	
 	snail.model.battleplan.setSnail = function (newSnail) {
 		selectedSnail = newSnail;
+		if (selectedSnail.name === 'doug') {
+			getShells.then(function (shells) {
+				snail.model.battleplan.setShell(findByProperty(shells, 'name', 'none'));
+			});
+		}
 		notifyBattlePlanUpdatedHandlers('snail', selectedSnail);
 	};
 	
