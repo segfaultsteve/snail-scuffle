@@ -197,7 +197,8 @@
 }
 
 #battleplan .menubutton-button {
-	padding: 1em 1em 1em 2em;
+	height: 3.5em;
+	padding-left: 2em;
 	text-align: left;
 }
 
@@ -216,7 +217,6 @@
 	top: 1.5em;
 	left: 60%;
 	z-index: 999;
-	width: 12em;
 	margin: 0;
 	padding: 0.5em;
 	background: white;
@@ -241,12 +241,30 @@
 
 /* EQUIPMENT DROPDOWN BUTTONS */
 
-#battleplan .equip .menubutton-button {
-	width: 100%;
-	max-width: 18em;
-	min-width: 12em;
+#battleplan .equip>.menubutton .menubutton-button,
+#battleplan .equip>.menubutton .menubutton-list {
+	width: 18em;
 }
 
+#battleplan .equip>.menubutton .menubutton-button,
+#battleplan .equip>.menubutton .menubutton-list li {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: space-between;
+	align-items: center;
+}
+
+#battleplan .equip>.menubutton .equip-stats {
+	display: flex;
+	flex-flow: column nowrap;
+	justify-content: space-around;
+	font-size: 0.8em;
+	text-align: right;
+}
+
+#battleplan .equip>.menubutton .menubutton-button .equip-stats {
+	margin-right: 1em;
+}
 
 /* ITEM DROPDOWN BUTTONS */
 
@@ -260,6 +278,7 @@
 
 #battleplan .itembutton .menubutton-list {
 	top: 0.5em;
+	width: 10em;
 }
 
 #battleplan .itembutton-condition-addtext,
@@ -408,7 +427,7 @@
 #battleplan .presetbutton-button {
 	width: 100%;
 	height: 60%;
-	border-radius: 0.7em;
+	border-radius: 0.5em;
 }
 
 #battleplan .presetbutton-options {
@@ -514,23 +533,23 @@
 
 #battleplan .info-playerstats .stat-increased {
 	animation-name: flash-green;
-	animation-duration: 2s;
+	animation-duration: 1.5s;
 }
 
 #battleplan .info-playerstats .stat-decreased {
 	animation-name: flash-red;
-	animation-duration: 2s;
+	animation-duration: 1.5s;
 }
 
 @keyframes flash-green {
 	from { color: green; }
-	50% { color: green; }
+	33% { color: green; }
 	to { color: black; }
 }
 
 @keyframes flash-red {
 	from { color: red; }
-	50% { color: red; }
+	33% { color: red; }
 	to { color: black; }
 }
 

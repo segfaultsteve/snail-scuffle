@@ -8,6 +8,44 @@ var snail = (function(snail, $) {
 		// private variables
 		let $button, $list, options, selectedIndex;
 		
+		// private methods
+		const getStatStrings = function (equipInfo) {
+			const stats = [];
+			if (equipInfo.attackModifier !== 0) {
+				stats.push('A: ' + signedString(equipInfo.attackModifier));
+			}
+			if (equipInfo.defenseModifier !== 0) {
+				stats.push('D: ' + signedString(equipInfo.defenseModifier));
+			}
+			if (equipInfo.speedModifier !== 0) {
+				stats.push('S: ' + signedString(equipInfo.speedModifier));
+			}
+			if (equipInfo.other && equipInfo.other.apCost) {
+				stats.push('AP Cost: ' + equipInfo.other.apCost);
+			}
+			return stats;
+		};
+		
+		const signedString = function (num) {
+			if (num > 0) {
+				return '+' + num;
+			} else if (num < 0) {
+				return '−' + (-num);
+			} else {
+				return '  0';
+			}
+		};
+		
+		const htmlToDisplay = function (equipInfo) {
+			const stats = getStatStrings(equipInfo);
+			let html = '<span class="equip-name">' + equipInfo.displayName + '</span><div class="equip-stats">';
+			for (let i = 0; i < stats.length; i++) {
+				html += '<div class="equip-stat">' + stats[i] + '</div>';
+			}
+			html += '</div>';
+			return html;
+		};
+		
 		// callbacks
 		const onButtonClicked = function (e) {
 			const $allLists = $('.menubutton-list');
@@ -24,14 +62,14 @@ var snail = (function(snail, $) {
 		};
 		
 		const onOptionClicked = function (e) {
-			setSelectedOption($(e.target).text());
+			setSelectedOption($(e.target).parents('li').addBack('li').find('.equip-name').text());
 		};
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedIndex) {
 			options = optionsList;
 			for (let i = 0; i < options.length; i++) {
-				const li = '<li>' + options[i].displayName + '</li>';
+				const li = '<li>' + htmlToDisplay(options[i]) + '</li>';
 				$list.append(li);
 			}
 			setSelectedIndex(selectedIndex);
@@ -51,7 +89,7 @@ var snail = (function(snail, $) {
 			}
 			if (index !== selectedIndex) {
 				selectedIndex = index;
-				$button.text(options[selectedIndex].displayName);
+				$button.html(htmlToDisplay(options[selectedIndex]));
 				onSelectionChanged(index, options[index]);
 			}
 		};
