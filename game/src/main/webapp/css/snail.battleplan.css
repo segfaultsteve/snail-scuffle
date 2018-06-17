@@ -228,7 +228,6 @@
 	display: none;
 	position: absolute;
 	top: 1.5em;
-	left: 60%;
 	z-index: 999;
 	margin: 0;
 	padding: 0.5em;
@@ -243,6 +242,24 @@
 	border-bottom: solid 1px #ccc;
 }
 
+#battleplan .menubutton-list .item-tooltip {
+	opacity: 0;
+	position: absolute;
+	left: 105%;
+	padding: 0.5em 1em 0.5em 1em;
+	white-space: nowrap;
+	font-size: 0.8em;
+	color: white;
+	background-color: #333;
+	border-radius: 0.5em;
+	pointer-events: none;
+}
+
+#battleplan .menubutton-list li:hover .item-tooltip {
+	opacity: 1;
+	transition: opacity 0s linear 0.5s;
+}
+
 #battleplan .menubutton-list li:hover {
 	background: #ddd;
 }
@@ -254,9 +271,13 @@
 
 /* EQUIPMENT DROPDOWN BUTTONS */
 
-#battleplan .equip>.menubutton .menubutton-button,
-#battleplan .equip>.menubutton .menubutton-list {
+#battleplan .equip>.menubutton .menubutton-button{
 	width: 18em;
+}
+
+#battleplan .equip>.menubutton .menubutton-list {
+	left: 10em;
+	width: 16em;
 }
 
 #battleplan .equip>.menubutton .menubutton-button,
@@ -267,7 +288,7 @@
 	align-items: center;
 }
 
-#battleplan .equip>.menubutton .equip-stats {
+#battleplan .equip>.menubutton .item-stats {
 	display: flex;
 	flex-flow: column nowrap;
 	justify-content: space-around;
@@ -275,7 +296,7 @@
 	text-align: right;
 }
 
-#battleplan .equip>.menubutton .menubutton-button .equip-stats {
+#battleplan .equip>.menubutton .menubutton-button .item-stats {
 	margin-right: 1em;
 }
 
@@ -291,6 +312,7 @@
 
 #battleplan .itembutton .menubutton-list {
 	top: 0.5em;
+	left: 7em;
 	width: 10em;
 }
 

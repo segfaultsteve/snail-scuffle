@@ -78,16 +78,16 @@ public class Constants {
 	public static final int ADRENALINE_DIVISOR = 10;
 	
 	public static final String SALTED_SHELL_DISPLAY_NAME = "Salted Shell";
-	public static final String SALTED_SHELL_DESCRIPTION = "Halves Defense for the first round it is equipped; then doubles Attack in subsequent rounds";
+	public static final String SALTED_SHELL_DESCRIPTION = "Halves Defense for the first round it is equipped, then doubles Attack in subsequent rounds";
 	public static final int SALTED_SHELL_ATTACK_MULTIPLIER = 2;			// Attack *= SALTED_SHELL_ATTACK_MULTIPLIER
 	public static final double SALTED_SHELL_DEFENSE_MULTIPLIER = 0.5;	// Defense *= SALTED_SHELL_DEFENSE_MULTIPLIER
 	
 	public static final String THORNS_DISPLAY_NAME = "Thorns";
-	public static final String THORNS_DESCRIPTION = "Does 20% of damage taken back to enemy on each attack";
+	public static final String THORNS_DESCRIPTION = "Does 20% of damage taken back to enemy";
 	public static final double THORNS_DAMAGE_MULTIPLIER = 0.2;			// damage to attacker = THORNS_DAMAGE_MULTIPLIER * (damage taken)
 	
 	public static final String DEFIBRILLATOR_DISPLAY_NAME = "Defibrillator";
-	public static final String DEFIBRILLATOR_DESCRIPTION = "Mortal blow leaves player with 1 HP remaining";
+	public static final String DEFIBRILLATOR_DESCRIPTION = "Mortal blow leaves 1 HP remaining";
 	
 	public static final String NO_ACCESSORY_DISPLAY_NAME = "No Accessory";
 	

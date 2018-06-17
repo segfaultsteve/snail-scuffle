@@ -2,7 +2,8 @@ var snail = (function(snail, $) {
 	snail.battleplan = snail.battleplan || {};
 	snail.battleplan.menubutton = {};
 	
-	const componentHtml = $('#components .components-menubutton').html();
+	const menubuttonHtml = $('#components .components-menubutton').html();
+	const itemHtml = $('#components .components-menubutton-item').html();
 	
 	snail.battleplan.menubutton.create = function ($container, onSelectionChanged) {
 		// private variables
@@ -36,14 +37,23 @@ var snail = (function(snail, $) {
 			}
 		};
 		
-		const htmlToDisplay = function (equipInfo) {
-			const stats = getStatStrings(equipInfo);
-			let html = '<span class="equip-name">' + equipInfo.displayName + '</span><div class="equip-stats">';
-			for (let i = 0; i < stats.length; i++) {
-				html += '<div class="equip-stat">' + stats[i] + '</div>';
+		const createItem = function (equipInfo, includeTooltip) {
+			let $item = $(itemHtml);
+			$item.filter('.item-name').text(equipInfo.displayName);
+			
+			if (includeTooltip && equipInfo.description && equipInfo.description !== '') {
+				$item.filter('.item-tooltip').text(equipInfo.description);
+			} else {
+				$item = $item.not('.item-tooltip');
 			}
-			html += '</div>';
-			return html;
+			
+			const $stats = $item.filter('.item-stats');
+			const statStrings = getStatStrings(equipInfo);
+			for (let i = 0; i < statStrings.length; i++) {
+				$stats.append('<div class="item-stat">' + statStrings[i] + '</div>');
+			}
+			
+			return $item;
 		};
 		
 		// callbacks
@@ -62,15 +72,19 @@ var snail = (function(snail, $) {
 		};
 		
 		const onOptionClicked = function (e) {
-			setSelectedOption($(e.target).parents('li').addBack('li').find('.equip-name').text());
+			const $target = $(e.target);
+			if (!$target.hasClass('item-tooltip')) {
+				setSelectedOption($(e.target).parents('li').addBack('li').find('.item-name').text());
+			}
 		};
 		
 		// public methods
 		const setOptionsList = function (optionsList, selectedIndex) {
 			options = optionsList;
 			for (let i = 0; i < options.length; i++) {
-				const li = '<li>' + htmlToDisplay(options[i]) + '</li>';
-				$list.append(li);
+				const $li = $('<li></li>');
+				$li.html(createItem(options[i], true));
+				$list.append($li);
 			}
 			setSelectedIndex(selectedIndex);
 		};
@@ -89,7 +103,7 @@ var snail = (function(snail, $) {
 			}
 			if (index !== selectedIndex) {
 				selectedIndex = index;
-				$button.html(htmlToDisplay(options[selectedIndex]));
+				$button.html(createItem(options[selectedIndex]), false);
 				onSelectionChanged(index, options[index]);
 			}
 		};
@@ -114,7 +128,7 @@ var snail = (function(snail, $) {
 		
 		// init code
 		$container.addClass('menubutton');
-		$container.html(componentHtml);
+		$container.html(menubuttonHtml);
 		$button = $container.find('.menubutton-button');
 		$list = $container.find('.menubutton-list');
 		
