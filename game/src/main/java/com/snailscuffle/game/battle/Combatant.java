@@ -48,6 +48,7 @@ class Combatant {
 	private final List<ActiveBoost> activeBoosts = new ArrayList<>();
 	private int itemsUsed;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
+	private boolean defibrillatorHasActivated = false;
 
 	Combatant(BattleRecorder recorder) {
 		this.recorder = recorder;
@@ -130,9 +131,9 @@ class Combatant {
 			int damageToAttacker = (int) (THORNS_DAMAGE_MULTIPLIER * damage);
 			recorder.addEffectToLastEvent(opponent, Stat.HP, -1.0 * damageToAttacker / SCALE);
 			opponent.takeDamage(damageToAttacker, false);
-		} else if (hp.get() <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR) {
+		} else if (hp.get() <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR && !defibrillatorHasActivated) {
 			hp.set(SCALE);		// 1 HP
-			battlePlan.accessory = Accessory.NONE;	// only use defibrillator once
+			defibrillatorHasActivated = true;
 		}
 	}
 	
