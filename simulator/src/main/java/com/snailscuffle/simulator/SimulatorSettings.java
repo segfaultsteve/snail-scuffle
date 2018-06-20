@@ -10,6 +10,7 @@ public class SimulatorSettings {
 	
 	public final String databaseFilePath;
 	public final String tableName;
+	public final boolean goOverNetwork;
 	
 	private static final String CONFIG_FILE = "src/main/resources/config.properties";
 	private static final Logger logger = LoggerFactory.getLogger(SimulatorSettings.class);
@@ -26,6 +27,9 @@ public class SimulatorSettings {
 		logger.debug("databaseFilePath = {}", databaseFilePath);
 		
 		tableName = config.getProperty("tableName");
+		logger.debug("tableName = {}", tableName);
+		
+		goOverNetwork = Boolean.parseBoolean(config.getProperty("goOverNetwork"));
 		logger.debug("tableName = {}", tableName);
 	}
 
