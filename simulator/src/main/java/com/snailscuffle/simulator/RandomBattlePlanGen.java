@@ -147,10 +147,6 @@ public class RandomBattlePlanGen {
 			bp.shell = Shell.values()[parsedString[4]];
 			bp.snail = Snail.values()[parsedString[5]];
 					
-			//TODO: Figure out how we want to implement these. Below is just placeholder data 
-			bp.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 40);
-			bp.item2Rule = ItemRule.useWhenIHave(Stat.AP, Inequality.LESS_THAN_OR_EQUALS, 20);
-			
 			Instruction instruction1 = Instruction.attack();		
 			bp.instructions = new ArrayList<Instruction>();
 			bp.instructions.add(instruction1);
