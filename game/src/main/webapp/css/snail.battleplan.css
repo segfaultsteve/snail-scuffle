@@ -37,7 +37,7 @@
 }
 
 #battleplan .equip {
-	grid-area: equip
+	grid-area: equip;
 }
 
 #battleplan .instructionbox {
