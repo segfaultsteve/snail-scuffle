@@ -14,7 +14,7 @@ var snail = (function(snail, $) {
 		snail.model.init();
 		snail.model.battleplan.init(snail.data);
 		snail.model.battle.init();
-		snail.home.init();
+		snail.home.init(pages.$home);
 		snail.battleplan.init(pages.$battleplan);
 		
 		pages.$home.show();

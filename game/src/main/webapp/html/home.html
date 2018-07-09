@@ -13,8 +13,20 @@
 	<button type="button" class="mainmenu-marketplace mainmenu-button">
 		Marketplace
 	</button>
-	<button type="button" class="mainmenu-snailsalon mainmenu-button">
-		Snail Salon
-		<img src="assets/lock.png" class="lockimg">
+	<button type="button" class="mainmenu-snailsalon mainmenu-button disabled-button">
+		Snail Salon<img src="assets/lock.png" class="lockimg">
 	</button>
 </nav>
+<section class="modals">
+	<div class="modals-background hidden"></div>
+	<div class="modals-play hidden">
+		<div class="modals-play-closeicon">✕</div>
+		<button type="button" class="modals-play-skirmish">
+			Skirmish<div class="modals-play-subtext">(off-blockchain)</div>
+		</button>
+		<button type="button" class="modals-play-ranked disabled-button">
+			Ranked Battle<img src="assets/lock.png" class="lockimg">
+			<div class="modals-play-subtext">(recorded on blockchain)</div>
+		</button>
+	</div>
+</section>

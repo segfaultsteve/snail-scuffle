@@ -3,8 +3,16 @@
 #home .lockimg {
 	position: relative;
 	top: 0.1em;
-	margin-left: 0.5em;
+	margin-left: 0.25em;
 	height: 1em;
+}
+
+#home .disabled-button {
+	color: #aaa;
+}
+
+#home .hidden {
+	display: none !important;
 }
 
 
@@ -59,4 +67,57 @@
 	width: 100%;
 	height: 4em;
 	font-size: 1.5em;
+}
+
+
+/* MODALS */
+
+#home .modals-background {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	z-index: 1;
+	background-color: rgba(0,0,0,0.4);
+}
+
+#home .modals-play {
+	display:flex;
+	position: fixed;
+	width: 40vw;
+	height: 35vh;
+	top: 30vh;
+	left: 30vw;
+	z-index: 2;
+	justify-content: space-between;
+	align-items: center;
+	background-color: white;
+	border: 1px solid black;
+	border-radius: 1em;
+}
+
+#home .modals-play::before,
+#home .modals-play::after {
+	content: "";
+}
+
+#home .modals-play-closeicon {
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	font-size: 1.5em;
+	cursor: pointer;
+}
+
+#home .modals-play button {
+	width: 40%;
+	height: 70%;
+	font-size: 1.7em;
+	border-radius: 0.3em;
+}
+
+#home .modals-play-subtext {
+	margin-top: 0.3em;
+	font-size: 0.6em;
 }
