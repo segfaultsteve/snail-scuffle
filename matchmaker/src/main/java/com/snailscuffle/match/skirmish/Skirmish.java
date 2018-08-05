@@ -11,13 +11,13 @@ import com.snailscuffle.match.players.PlayerData;
 public class Skirmish {
 	
 	private static class BattlePlanPair {
-		private BattlePlan firstMoverBp;
-		private BattlePlan opponentBp;
+		private BattlePlan player1Bp;
+		private BattlePlan player2Bp;
 	}
 	
 	private final UUID id;
 	private int round;
-	private PlayerData player1;		// player1 has first-mover advantage: his battle plan comes first in each round's BattleConfig
+	private PlayerData player1;
 	private PlayerData player2;
 	private List<BattlePlanPair> battlePlans = new ArrayList<>();
 	
@@ -38,16 +38,7 @@ public class Skirmish {
 		boolean isPlayer1 = player.id.equals(player1.id);
 		boolean isPlayer2 = (player2 != null) && player.id.equals(player2.id);
 		if (!isPlayer1 && !isPlayer2) {
-			throw new NotAuthorizedException("Submitting player is not part of this match");
-		}
-		
-		boolean player2IsFirstMover = battlePlans.isEmpty() && isPlayer2;
-		if (player2IsFirstMover) {
-			PlayerData temp = player1;
-			player1 = player2;
-			player2 = temp;
-			isPlayer1 = !isPlayer1;
-			isPlayer2 = !isPlayer2;
+			throw new NotAuthorizedException("Submitting player is not part of this skirmish");
 		}
 		
 		BattlePlanPair thisRoundBps = null;
@@ -58,13 +49,13 @@ public class Skirmish {
 			thisRoundBps = battlePlans.get(round);
 		}
 		
-		if (isPlayer1 && thisRoundBps.firstMoverBp == null) {
-			thisRoundBps.firstMoverBp = bp;
-		} else if (isPlayer2 && thisRoundBps.opponentBp == null) {
-			thisRoundBps.opponentBp = bp;
+		if (isPlayer1 && thisRoundBps.player1Bp == null) {
+			thisRoundBps.player1Bp = bp;
+		} else if (isPlayer2 && thisRoundBps.player2Bp == null) {
+			thisRoundBps.player2Bp = bp;
 		}
 		
-		if (thisRoundBps.firstMoverBp != null && thisRoundBps.opponentBp != null) {
+		if (thisRoundBps.player1Bp != null && thisRoundBps.player2Bp != null) {
 			round++;
 		}
 	}
@@ -73,8 +64,8 @@ public class Skirmish {
 		List<BattlePlan> bps = new ArrayList<>();
 		for (int i = 0; i < round; i++) {
 			BattlePlanPair bpsForRound = battlePlans.get(i);
-			bps.add(bpsForRound.firstMoverBp);
-			bps.add(bpsForRound.opponentBp);
+			bps.add(bpsForRound.player1Bp);
+			bps.add(bpsForRound.player2Bp);
 		}
 		return bps;
 	}

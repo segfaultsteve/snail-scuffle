@@ -41,7 +41,7 @@ public class SkirmishMatcher {
 		return skirmish;
 	}
 	
-	public Skirmish getMatch(String skirmishId) {
+	public Skirmish getSkirmish(String skirmishId) {
 		return skirmishes.get(skirmishId);
 	}
 

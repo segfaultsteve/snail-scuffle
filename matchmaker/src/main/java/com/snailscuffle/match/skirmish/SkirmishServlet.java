@@ -32,16 +32,16 @@ public class SkirmishServlet extends HttpServlet {
 		response.addHeader("Cache-Control","no-store");
 		
 		try {
-			String matchId = tryExtractMatchId(request.getPathInfo());
-			Skirmish match = (matchId == null) ? null : skirmishEngine.getMatch(matchId);
-			if (matchId == null) {
+			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
+			Skirmish skirmish = (skirmishId == null) ? null : skirmishEngine.getSkirmish(skirmishId);
+			if (skirmishId == null) {
 				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-			} else if (match == null) {
+			} else if (skirmish == null) {
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			} else {
 				PlayerData player = (PlayerData) request.getSession().getAttribute(PlayerData.ATTRIBUTE_KEY);
 				String playerId = (player == null) ? "" : player.id;
-				JsonUtil.serialize(SkirmishResponse.forMatch(match, playerId), response.getWriter());
+				JsonUtil.serialize(SkirmishResponse.forSkirmish(skirmish, playerId), response.getWriter());
 			}
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
@@ -66,12 +66,12 @@ public class SkirmishServlet extends HttpServlet {
 				session.setAttribute(PlayerData.ATTRIBUTE_KEY, player);
 			}
 			
-			String matchId = tryExtractMatchId(request.getPathInfo());
-			if (matchId == null) {
+			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
+			if (skirmishId == null) {
 				skirmishEngine.tryMatchPlayer(player);
 				JsonUtil.serialize(SkirmishResponse.forPlayer(player), response.getWriter());
 			} else {
-				throwIfNotAuthorized(player, matchId);
+				throwIfNotAuthorized(player, skirmishId);
 				String battlePlanJson = HttpUtil.extractBody(request);
 				BattlePlan battlePlan = JsonUtil.deserialize(BattlePlan.class, battlePlanJson);
 				battlePlan.validate();
@@ -97,7 +97,7 @@ public class SkirmishServlet extends HttpServlet {
 		ServletUtil.markHandled(request);
 	}
 	
-	private static String tryExtractMatchId(String urlPathInfo) {
+	private static String tryExtractSkirmishId(String urlPathInfo) {
 		if (urlPathInfo == null || urlPathInfo.length() <= 1) {
 			return null;
 		} else {
@@ -105,8 +105,8 @@ public class SkirmishServlet extends HttpServlet {
 		}
 	}
 	
-	private static void throwIfNotAuthorized(PlayerData player, String matchId) throws NotAuthorizedException {
-		if (player.skirmish == null || !player.skirmish.getId().toString().equals(matchId)) {
+	private static void throwIfNotAuthorized(PlayerData player, String skirmishId) throws NotAuthorizedException {
+		if (player.skirmish == null || !player.skirmish.getId().toString().equals(skirmishId)) {
 			throw new NotAuthorizedException("Submitting player is not part of this skirmish");
 		}
 	}

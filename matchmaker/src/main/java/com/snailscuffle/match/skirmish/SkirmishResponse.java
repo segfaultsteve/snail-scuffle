@@ -37,8 +37,8 @@ public class SkirmishResponse implements Serializable {
 		return new SkirmishResponse(player.skirmish, player.id);
 	}
 	
-	public static SkirmishResponse forMatch(Skirmish match, String idOfRequestingPlayer) {
-		return new SkirmishResponse(match, idOfRequestingPlayer);
+	public static SkirmishResponse forSkirmish(Skirmish skirmish, String idOfRequestingPlayer) {
+		return new SkirmishResponse(skirmish, idOfRequestingPlayer);
 	}
 	
 }
