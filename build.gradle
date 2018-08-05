@@ -5,7 +5,6 @@ buildscript {
 
 	dependencies {
 		classpath 'com.eriwen:gradle-js-plugin:2.12.0'
-		classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.3'
 	}
 }
 
@@ -47,7 +46,6 @@ project(':common') {
 }
 
 project(':game') {
-	apply plugin: 'com.github.johnrengelman.shadow'
 	apply plugin: 'application'
 	apply plugin: 'com.eriwen.gradle.js'
 	
@@ -138,12 +136,26 @@ project(':game') {
 	processResources.dependsOn copyAssets
 }
 
+project(':matchmaker') {
+	apply plugin: 'application'
+
+	dependencies {
+		compile project(':common')
+	}
+
+	eclipse.project {
+		name = 'snail-scuffle-matchmaker'
+	}
+
+	mainClassName = 'com.snailscuffle.match.Main'
+}
+
 project(':simulator') {
-	apply plugin: 'com.github.johnrengelman.shadow'
 	apply plugin: 'application'
 	
 	dependencies {
-		compile project(':common')	
+		compile project(':common')
+		compile project(':game')
 		compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.11.2'
 	}
 

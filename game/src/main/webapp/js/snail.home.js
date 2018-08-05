@@ -24,7 +24,6 @@ var snail = (function (snail) {
 		
 		$playbutton.click(showPlayModal);
 		$playmodal.find('.modals-play-closeicon').click(hidePlayModal);
-		$modalbackground.click(hidePlayModal);
 		
 		hidePlayModal();
 	};

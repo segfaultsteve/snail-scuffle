@@ -20,6 +20,7 @@ import com.snailscuffle.common.battle.Shell;
 import com.snailscuffle.common.battle.Snail;
 import com.snailscuffle.common.battle.Weapon;
 import com.snailscuffle.common.util.JsonUtil;
+import com.snailscuffle.common.util.ServletUtil;
 import com.snailscuffle.game.battle.EquipmentInfo;
 
 public class InfoServlet extends HttpServlet {

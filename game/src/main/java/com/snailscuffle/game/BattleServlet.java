@@ -2,7 +2,6 @@ package com.snailscuffle.game;
 
 import java.io.IOException;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +15,7 @@ import com.snailscuffle.common.battle.BattleResult;
 import com.snailscuffle.common.battle.InvalidBattleException;
 import com.snailscuffle.common.util.HttpUtil;
 import com.snailscuffle.common.util.JsonUtil;
+import com.snailscuffle.common.util.ServletUtil;
 import com.snailscuffle.game.battle.Battle;
 
 public class BattleServlet extends HttpServlet {
@@ -23,7 +23,7 @@ public class BattleServlet extends HttpServlet {
 	private static final Logger logger = LoggerFactory.getLogger(BattleServlet.class);
 	
 	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		response.setContentType("application/json; charset=UTF-8");
 		try {
 			String json = HttpUtil.extractBody(request);
@@ -42,7 +42,7 @@ public class BattleServlet extends HttpServlet {
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			response.getWriter().print(ErrorResponse.unexpectedError().because(e.getMessage()));
+			response.getWriter().print(ErrorResponse.unexpectedError());
 		}
 		ServletUtil.markHandled(request);
 	}

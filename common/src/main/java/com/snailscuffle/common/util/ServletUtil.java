@@ -1,4 +1,4 @@
-package com.snailscuffle.game;
+package com.snailscuffle.common.util;
 
 import javax.servlet.http.HttpServletRequest;
 
