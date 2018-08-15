@@ -2,23 +2,27 @@ var snail = (function (snail, $) {
 	snail.data = {};
 	
 	snail.data.promiseSnailInfo = function () {
-		return $.get(snail.config.snailsPath).promise();
+		return $.getJSON(snail.config.snailsPath).promise();
 	};
 	
 	snail.data.promiseWeaponInfo = function () {
-		return $.get(snail.config.weaponsPath).promise();
+		return $.getJSON(snail.config.weaponsPath).promise();
 	};
 	
 	snail.data.promiseShellInfo = function () {
-		return $.get(snail.config.shellsPath).promise();
+		return $.getJSON(snail.config.shellsPath).promise();
 	};
 	
 	snail.data.promiseAccessoryInfo = function () {
-		return $.get(snail.config.accessoriesPath).promise();
+		return $.getJSON(snail.config.accessoriesPath).promise();
 	};
 	
 	snail.data.promiseItemInfo = function () {
-		return $.get(snail.config.itemsPath).promise();
+		return $.getJSON(snail.config.itemsPath).promise();
+	};
+	
+	snail.data.promiseServerInfo = function () {
+		return $.getJSON(snail.config.serversPath).promise();
 	};
 	
 	snail.data.saveLocal = function (key, value) {

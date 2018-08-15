@@ -5,7 +5,7 @@ var snail = (function (snail) {
 		shellsPath: '/info/shells',
 		accessoriesPath: '/info/accessories',
 		itemsPath: '/info/items',
-		testData: false
+		serversPath: '/info/servers'
 	};
 	
 	return snail;

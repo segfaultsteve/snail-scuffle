@@ -7,7 +7,6 @@ var snail = (function (snail) {
 	
 	// public methods
 	snail.model.battle.init = function () {
-		// TODO: replace this
 		playerHp = 100;
 		playerAp = 0;
 	};
