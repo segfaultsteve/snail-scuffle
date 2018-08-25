@@ -3,6 +3,7 @@ package com.snailscuffle.common.battle;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -13,20 +14,24 @@ public class BattleResultTest {
 	
 	@Before
 	public void setUp() {
-		BattleEvent event = BattleEvent.attack(1, 0, 20);
-		result = new BattleResult(new ArrayList<>(), 0);
-		result.sequenceOfEvents.add(event);
+		List<BattleEvent> round1 = new ArrayList<>();
+		round1.add(BattleEvent.attack(1, 0, 20));
+		
+		List<List<BattleEvent>> eventsByRound = new ArrayList<>();
+		eventsByRound.add(round1);
+		
+		result = new BattleResult(eventsByRound, 0);
 	}
 	
 	@Test
-	public void failValidationOnNullSequenceOfEvents() {
-		result.sequenceOfEvents = null;
+	public void failValidationOnNullEventsByRound() {
+		result.eventsByRound = null;
 		assertValidateThrowsInvalidBattleException(result);
 	}
 	
 	@Test
-	public void failValidationOnEmptySequenceOfEvents() {
-		result.sequenceOfEvents.clear();
+	public void failValidationOnEmptyEventsByRound() {
+		result.eventsByRound.clear();
 		assertValidateThrowsInvalidBattleException(result);
 	}
 	
@@ -40,7 +45,7 @@ public class BattleResultTest {
 	
 	@Test
 	public void failValidationOnInvalidBattleEvent() {
-		result.sequenceOfEvents.get(0).action = null;
+		result.eventsByRound.get(0).get(0).action = null;
 		assertValidateThrowsInvalidBattleException(result);
 	}
 	

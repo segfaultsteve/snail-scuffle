@@ -22,6 +22,7 @@ public class Battle {
 		
 		int periodEnd = PERIOD;
 		for (int bpIndex = 0; bpIndex < config.battlePlans.length && player1.isAlive() && player2.isAlive(); bpIndex += 2) {
+			recorder.nextRound();
 			player1.setBattlePlan(config.battlePlans[bpIndex]);
 			player2.setBattlePlan(config.battlePlans[bpIndex + 1]);
 			
@@ -66,7 +67,7 @@ public class Battle {
 			winnerIndex = -1;	// both players are still alive
 		}
 		
-		return new BattleResult(recorder.battleEvents(), winnerIndex);
+		return new BattleResult(recorder.eventsByRound(), winnerIndex);
 	}
 
 }

@@ -38,7 +38,7 @@ public class BattleResultMetaData {
 		int player2Health = 100;
 		
 		for(BattleResult result : battleResults) {
-			for(BattleEvent event : result.sequenceOfEvents) {
+			for(BattleEvent event : result.flattenEvents()) {
 				for(BattleEventEffect effect : event.effects) {
 					if (effect.playerIndex == 0 && effect.stat == Stat.HP) {
 						player1Health += effect.change;
@@ -57,7 +57,7 @@ public class BattleResultMetaData {
 		int timeToVictory = -1;
 		
 		for(BattleResult result : battleResults) {
-			int numberOfEventsInBattle = result.sequenceOfEvents.size() - 1;
+			int numberOfEventsInBattle = result.flattenEvents().size() - 1;
 			
 			if (result.winnerIndex < 0)
 				continue;
@@ -66,10 +66,10 @@ public class BattleResultMetaData {
 				// We're guaranteed for the battle to end as soon as one player runs out of health
 				// so we know that the time to win will be the time of either the last or second-to-last event
 				// (depending on the winner).
-				if (result.sequenceOfEvents.get(numberOfEventsInBattle).playerIndex == result.winnerIndex ) {
-					timeToVictory =  result.sequenceOfEvents.get(numberOfEventsInBattle).time;
+				if (result.flattenEvents().get(numberOfEventsInBattle).playerIndex == result.winnerIndex ) {
+					timeToVictory =  result.flattenEvents().get(numberOfEventsInBattle).time;
 				} else {
-					timeToVictory =  result.sequenceOfEvents.get(numberOfEventsInBattle - 1).time;
+					timeToVictory =  result.flattenEvents().get(numberOfEventsInBattle - 1).time;
 				}
 			}
 		}

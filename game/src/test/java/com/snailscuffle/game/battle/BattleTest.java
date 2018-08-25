@@ -3,7 +3,6 @@ package com.snailscuffle.game.battle;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -184,7 +183,7 @@ public class BattleTest {
 		
 		// shell should not have changed, so damage should be the same across all periods
 		double player1InitialDamage = 0;
-		for (BattleEvent event : result.sequenceOfEvents) {
+		for (BattleEvent event : result.flattenEvents()) {
 			BattleEventEffect effect = event.effects.get(0);
 			if (effect.playerIndex == 0 && effect.stat == Stat.HP) {
 				if (player1InitialDamage == 0) {
@@ -207,7 +206,7 @@ public class BattleTest {
 		BattleResult result = (new Battle(config)).getResult();
 		
 		int itemsUsed = 0;
-		for (BattleEvent event : result.sequenceOfEvents) {
+		for (BattleEvent event : result.flattenEvents()) {
 			if (event.playerIndex == 1 && event.itemUsed == Item.ATTACK) {
 				itemsUsed++;
 			}
@@ -221,7 +220,7 @@ public class BattleTest {
 		bp2.instructions = Arrays.asList(Instruction.useItem(boostToUse));
 		BattleConfig config = new BattleConfig(bp2, bp, bp, bp, bp, bp);
 		
-		BattleEvent firstEvent = (new Battle(config)).getResult().sequenceOfEvents.get(0);
+		BattleEvent firstEvent = (new Battle(config)).getResult().flattenEvents().get(0);
 		BattleEventEffect firstEventEffect = firstEvent.effects.get(0);
 		
 		assertEquals(firstEvent.action, Action.USE_ITEM);

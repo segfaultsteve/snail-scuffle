@@ -67,7 +67,7 @@ public class CombatantTest {
 		player2.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
-		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		BattleEvent secondEvent = recorder.flatEvents().get(1);
 		
 		// player 1 attacks player 2
 		assertEquals(0, firstEvent.playerIndex);
@@ -213,7 +213,7 @@ public class CombatantTest {
 		for (int i = 0; i < HIT_COUNT; i++) {
 			runBattleUntilNextEvent();
 		}
-		double damageWithout = -recorder.battleEvents().get(0).effects.get(0).change;
+		double damageWithout = -recorder.flatEvents().get(0).effects.get(0).change;
 		double hpRemaining = 100 - HIT_COUNT * damageWithout;
 		
 		bp.accessory = Accessory.ADRENALINE;
@@ -305,9 +305,9 @@ public class CombatantTest {
 		player2.setBattlePlan(bp);
 		
 		runBattleUntilNextEvent();
-		double damageDone = -recorder.battleEvents().get(0).effects.get(0).change;
-		double damageTaken = -recorder.battleEvents().get(0).effects.get(1).change;
-		int playerTakingDamage = recorder.battleEvents().get(0).effects.get(1).playerIndex;
+		double damageDone = -recorder.flatEvents().get(0).effects.get(0).change;
+		double damageTaken = -recorder.flatEvents().get(0).effects.get(1).change;
+		int playerTakingDamage = recorder.flatEvents().get(0).effects.get(1).playerIndex;
 		
 		double expectedDamageTaken = damageDone * THORNS_DAMAGE_MULTIPLIER;
 		assertEquals(expectedDamageTaken, damageTaken, REAL_TOLERANCE);
@@ -325,7 +325,7 @@ public class CombatantTest {
 			runBattleUntilNextEvent();
 			hits++;
 		}
-		double damageEachHit = -recorder.battleEvents().get(0).effects.get(0).change;
+		double damageEachHit = -recorder.flatEvents().get(0).effects.get(0).change;
 		
 		int hitsToKillPlayer2WithoutDefibrillator = (int) Math.ceil(100 / damageEachHit);
 		assertEquals(hitsToKillPlayer2WithoutDefibrillator + 1, hits);	// +1 for defibrillator
@@ -398,7 +398,7 @@ public class CombatantTest {
 		player1.update(0);		// should fire both boosts
 		
 		// use speed boost
-		BattleEvent firstEvent = recorder.battleEvents().get(0);
+		BattleEvent firstEvent = recorder.flatEvents().get(0);
 		assertEquals(Action.USE_ITEM, firstEvent.action);
 		assertEquals(Item.SPEED, firstEvent.itemUsed);
 		assertEquals(0, firstEvent.effects.get(0).playerIndex);
@@ -406,7 +406,7 @@ public class CombatantTest {
 		assertEquals(SPEED_BOOST_AP_INCREASE, firstEvent.effects.get(0).change, REAL_TOLERANCE);
 		
 		// use attack boost
-		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		BattleEvent secondEvent = recorder.flatEvents().get(1);
 		assertEquals(Action.USE_ITEM, secondEvent.action);
 		assertEquals(Item.ATTACK, secondEvent.itemUsed);
 		assertEquals(0, secondEvent.effects.get(0).playerIndex);
@@ -431,7 +431,7 @@ public class CombatantTest {
 		}
 		
 		List<Double> player2HpChanges = new ArrayList<>();
-		for (BattleEvent event : recorder.battleEvents()) {
+		for (BattleEvent event : recorder.flatEvents()) {
 			if (event.action == Action.ATTACK) {
 				assert(event.playerIndex == 0);
 				player2HpChanges.add(event.effects.get(0).change);
@@ -487,7 +487,7 @@ public class CombatantTest {
 		player2.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
-		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		BattleEvent secondEvent = recorder.flatEvents().get(1);
 		
 		// player 1 uses attack boost
 		assertEquals(0, firstEvent.playerIndex);
@@ -520,9 +520,9 @@ public class CombatantTest {
 	// trigger *all* of those events. The next call to this function will return the event(s)
 	// at the next recorded time.
 	private BattleEvent runBattleUntilNextEvent() {
-		int initialEventCount = recorder.battleEvents().size();
+		int initialEventCount = recorder.flatEvents().size();
 		
-		while(recorder.battleEvents().size() == initialEventCount) {
+		while(recorder.flatEvents().size() == initialEventCount) {
 			int p1Ticks = player1.ticksToNextAp();
 			int p2Ticks = player2.ticksToNextAp();
 			int increment = Math.min(p1Ticks, p2Ticks);
@@ -532,7 +532,7 @@ public class CombatantTest {
 			player2.update(increment);
 		}
 		
-		return recorder.battleEvents().get(initialEventCount);
+		return recorder.flatEvents().get(initialEventCount);
 	}
 	
 	private static double baseAttackOf(BattlePlan battlePlan) {
