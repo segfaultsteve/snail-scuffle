@@ -3,7 +3,7 @@ var snail = (function (snail, $) {
 	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let dataLayer, getSnails, getWeapons, getShells, getAccessories, getItems;
+	let ioLayer, getSnails, getWeapons, getShells, getAccessories, getItems;
 	let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
 	let selectedItems = [null, null];
 	let itemConditions = [null, null];
@@ -40,12 +40,12 @@ var snail = (function (snail, $) {
 		$.when(getSnails, getWeapons, getShells, getAccessories, getItems)
 		.then(function (snailsResponse, weaponsResponse, shellsResponse, accessoriesResponse, itemsResponse) {
 			const bpmodel = snail.model.battleplan;
-			bpmodel.setSnail(findByProperty(snailsResponse[0], 'name', bp.snail));
-			bpmodel.setWeapon(findByProperty(weaponsResponse[0], 'name', bp.weapon));
-			bpmodel.setShell(findByProperty(shellsResponse[0], 'name', bp.shell));
-			bpmodel.setAccessory(findByProperty(accessoriesResponse[0], 'name', bp.accessory));
-			bpmodel.setItem(0, findByProperty(itemsResponse[0], 'name', bp.item1));
-			bpmodel.setItem(1, findByProperty(itemsResponse[0], 'name', bp.item2));
+			bpmodel.setSnail(findByProperty(snailsResponse, 'name', bp.snail));
+			bpmodel.setWeapon(findByProperty(weaponsResponse, 'name', bp.weapon));
+			bpmodel.setShell(findByProperty(shellsResponse, 'name', bp.shell));
+			bpmodel.setAccessory(findByProperty(accessoriesResponse, 'name', bp.accessory));
+			bpmodel.setItem(0, findByProperty(itemsResponse, 'name', bp.item1));
+			bpmodel.setItem(1, findByProperty(itemsResponse, 'name', bp.item2));
 			bpmodel.setItemCondition(0, bp.item1Rule);
 			bpmodel.setItemCondition(1, bp.item2Rule);
 			bpmodel.setInstructions(bp.instructions);
@@ -53,13 +53,13 @@ var snail = (function (snail, $) {
 	};
 	
 	// public methods
-	snail.model.battleplan.init = function (data) {
-		dataLayer = data;
-		getSnails = dataLayer.promiseSnailInfo();
-		getWeapons = dataLayer.promiseWeaponInfo();
-		getShells = dataLayer.promiseShellInfo();
-		getAccessories = dataLayer.promiseAccessoryInfo();
-		getItems = dataLayer.promiseItemInfo();
+	snail.model.battleplan.init = function (io) {
+		ioLayer = io;
+		getSnails = ioLayer.promiseSnailInfo();
+		getWeapons = ioLayer.promiseWeaponInfo();
+		getShells = ioLayer.promiseShellInfo();
+		getAccessories = ioLayer.promiseAccessoryInfo();
+		getItems = ioLayer.promiseItemInfo();
 	};
 	
 	snail.model.battleplan.addBattlePlanUpdatedHandler = function (handler) {
@@ -215,7 +215,7 @@ var snail = (function (snail, $) {
 	
 	snail.model.battleplan.getPresetDisplayName = function (presetNumber) {
 		const key = presetKey(presetNumber);
-		const loadedObject = dataLayer.loadLocal(key);
+		const loadedObject = ioLayer.loadLocal(key);
 		return loadedObject ? loadedObject.displayName : null;
 	};
 	
@@ -225,12 +225,12 @@ var snail = (function (snail, $) {
 			displayName: displayName,
 			battlePlan: this.getBattlePlan()
 		};
-		dataLayer.saveLocal(key, value);
+		ioLayer.saveLocal(key, value);
 	};
 	
 	snail.model.battleplan.loadBattlePlan = function (presetNumber) {
 		const key = presetKey(presetNumber);
-		const loadedObject = dataLayer.loadLocal(key);
+		const loadedObject = ioLayer.loadLocal(key);
 		if (loadedObject) {
 			setBattlePlan(loadedObject.battlePlan);
 			return loadedObject.displayName;
@@ -241,7 +241,7 @@ var snail = (function (snail, $) {
 	
 	snail.model.battleplan.deleteBattlePlan = function (presetNumber) {
 		const key = presetKey(presetNumber);
-		dataLayer.deleteLocal(key);
+		ioLayer.deleteLocal(key);
 	};
 	
 	return snail;

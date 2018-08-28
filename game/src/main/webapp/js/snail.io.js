@@ -7,15 +7,16 @@ var snail = (function (snail, $) {
 	// private methods
 	const ajaxWithRetry = function (func, args) {
 		return func(args)
-			.then(failOnErrorStatus, retryFailedRequest(func, args))
-			.promise();
+			.then(failOnErrorStatus, retryFailedRequest(func, args));
 	};
 	
 	const failOnErrorStatus = function (data, textStatus, jqxhr) {
 		if (jqxhr.status == 200) {
 			return data;
 		} else {
-			return $.Deferred().reject(jqxhr);
+			return $.Deferred()
+				.reject(jqxhr)
+				.promise(jqxhr);
 		}
 	};
 	
@@ -23,7 +24,7 @@ var snail = (function (snail, $) {
 		return function () {
 			const retry = $.Deferred();
 			setTimeout(function () {
-				func(args).then(retry.resolve, retry.reject);
+				ajaxWithRetry(func, args).then(retry.resolve, retry.reject);
 			}, 1000)
 			return retry;
 		}
@@ -77,6 +78,21 @@ var snail = (function (snail, $) {
 					xhrFields: { withCredentials: true }
 				});
 			}).promise();
+	};
+	
+	snail.io.putBattlePlan = function (id, battlePlan) {
+		return servers
+			.then(function (servers) {
+				return ajaxWithRetry($.ajax, {
+					url: servers.matchmaker + '/skirmishes/' + id,
+					type: 'PUT',
+					data: JSON.stringify(battlePlan),
+					contentType: 'application/json; charset=utf-8',
+					dataType: 'json',
+					xhrFields: { withCredentials: true }
+				});
+			})
+			.promise();
 	};
 	
 	snail.io.saveLocal = function (key, value) {

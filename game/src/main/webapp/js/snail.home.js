@@ -30,12 +30,12 @@ var snail = (function (snail) {
 	const onSkirmishClicked = function () {
 		hidePlayModal();
 		showMatchingModal();
-		snail.model.startSkirmish();
+		snail.model.battle.startSkirmish();
 	}
 	
 	const onSkirmishCanceled = function () {
 		hideMatchingModal();
-		snail.model.cancelSkirmish();
+		snail.model.battle.cancelSkirmish();
 	}
 	
 	// public methods

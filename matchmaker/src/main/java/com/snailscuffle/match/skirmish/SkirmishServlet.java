@@ -69,7 +69,6 @@ public class SkirmishServlet extends HttpServlet {
 			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
 			if (skirmishId == null) {
 				skirmishEngine.tryMatchPlayer(player);
-				JsonUtil.serialize(SkirmishResponse.forPlayer(player), response.getWriter());
 			} else {
 				throwIfNotAuthorized(player, skirmishId);
 				String battlePlanJson = HttpUtil.extractBody(request);
@@ -77,6 +76,7 @@ public class SkirmishServlet extends HttpServlet {
 				battlePlan.validate();
 				player.tryAddBattlePlan(battlePlan);
 			}
+			JsonUtil.serialize(SkirmishResponse.forPlayer(player), response.getWriter());
 		} catch (NotAuthorizedException e) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().print(ErrorResponse.notAuthorized().because(e.getMessage()));

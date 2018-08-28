@@ -119,6 +119,9 @@ var snail = (function (snail, $) {
 		
 		$battleplan.find('.snails-button').click(onSnailButtonClicked);
 		bpmodel.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		$battleplan.find('.submit').click(function () {
+			snail.model.battle.submitBattlePlan(bpmodel.getBattlePlan());
+		});
 		
 		bpmodel.promiseSnails().done(function (snailList) {
 			snails = snailList;
