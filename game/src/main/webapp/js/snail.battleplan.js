@@ -10,7 +10,7 @@ var snail = (function (snail, $) {
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
 		const onSelectionChanged = function (selectedIndex, selectedItem) {
-			selectionChangedHandler(selectedItem)
+			selectionChangedHandler(selectedItem);
 		};
 		const button = snail.battleplan.menubutton.create($container, onSelectionChanged);
 		

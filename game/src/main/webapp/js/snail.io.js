@@ -59,8 +59,8 @@ var snail = (function (snail, $) {
 		return servers
 			.then(function (servers) {
 				return $.ajax({
-					url: servers.matchmaker + '/skirmishes',
 					type: 'PUT',
+					url: servers.matchmaker + snail.config.skirmishPath,
 					dataType: 'json',
 					xhrFields: { withCredentials: true }
 				});
@@ -72,8 +72,8 @@ var snail = (function (snail, $) {
 		return servers
 			.then(function (servers) {
 				return $.ajax({
-					url: servers.matchmaker + '/skirmishes/' + id,
 					type: 'GET',
+					url: servers.matchmaker + snail.config.skirmishPath + '/' + id,
 					dataType: 'json',
 					xhrFields: { withCredentials: true }
 				});
@@ -84,8 +84,8 @@ var snail = (function (snail, $) {
 		return servers
 			.then(function (servers) {
 				return ajaxWithRetry($.ajax, {
-					url: servers.matchmaker + '/skirmishes/' + id,
 					type: 'PUT',
+					url: servers.matchmaker + snail.config.skirmishPath + '/' + id,
 					data: JSON.stringify(battlePlan),
 					contentType: 'application/json; charset=utf-8',
 					dataType: 'json',
@@ -93,6 +93,20 @@ var snail = (function (snail, $) {
 				});
 			})
 			.promise();
+	};
+	
+	snail.io.postBattle = function (battlePlans) {
+		const battleConfig = {
+			battlePlans: battlePlans
+		};
+		
+		return ajaxWithRetry($.post, {
+			type: 'POST',
+			url: snail.config.battlePath,
+			data: JSON.stringify(battleConfig),
+			contentType: 'application/json; charset=utf-8',
+			dataType: 'json'
+		});
 	};
 	
 	snail.io.saveLocal = function (key, value) {

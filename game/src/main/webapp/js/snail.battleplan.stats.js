@@ -41,6 +41,12 @@ var snail = (function (snail) {
 		updateStat($playerSpeed, newSpeed);
 	};
 	
+	const onStartRound = function (battleData) {
+		$playerName.text(battleData.playerName);
+		$playerHp.text(battleData.playerHp);
+		$playerAp.text(battleData.playerAp);
+	};
+	
 	// public methods
 	snail.battleplan.stats.init = function ($container) {
 		// init code
@@ -56,13 +62,11 @@ var snail = (function (snail) {
 		$playerDefense.siblings().addBack().on('animationend', removeAnimationClasses);
 		$playerSpeed.siblings().addBack().on('animationend', removeAnimationClasses);
 		
-		snail.battleplan.stats.refresh();
-	};
-	
-	snail.battleplan.stats.refresh = function () {
-		$playerName.text(snail.model.getPlayerName());
-		$playerHp.text(snail.model.battle.getHp());
-		$playerAp.text(snail.model.battle.getAp());
+		snail.model.battle.addEventHandler(function (event, args) {
+			if (event === 'startBattle') {
+				onStartRound(args);
+			}
+		});
 	};
 	
 	return snail;
