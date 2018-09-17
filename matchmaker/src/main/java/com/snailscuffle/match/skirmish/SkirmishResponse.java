@@ -9,36 +9,28 @@ import com.snailscuffle.match.players.PlayerData;
 public class SkirmishResponse implements Serializable {
 	
 	public final String skirmishId;
-	public final String player1Name;
-	public final String player2Name;
-	public final int indexOfRequestingPlayer;
+	public final String playerName;
+	public final String opponentName;
 	public final List<BattlePlan> battlePlans;
 	
-	private SkirmishResponse(Skirmish skirmish, String idOfRequestingPlayer) {
+	public SkirmishResponse(PlayerData requestingPlayer) {
+		Skirmish skirmish = requestingPlayer.skirmish;
 		PlayerData player1 = skirmish.getPlayer1();
 		PlayerData player2 = skirmish.getPlayer2();
 		
 		skirmishId = skirmish.getId().toString();
-		player1Name = player1.name;
-		player2Name = (player2 == null) ? null : player2.name;
 		
-		if (idOfRequestingPlayer.equals(player1.id)) {
-			indexOfRequestingPlayer = 1;
-		} else if (player2 != null && idOfRequestingPlayer.equals(player2.id)) {
-			indexOfRequestingPlayer = 2;
+		if (requestingPlayer.id.equals(player1.id)) {
+			playerName = player1.name;
+			opponentName = (player2 == null) ? null : player2.name;
+		} else if (player2 != null && requestingPlayer.id.equals(player2.id)) {
+			playerName = player2.name;
+			opponentName = player1.name;
 		} else {
-			indexOfRequestingPlayer = 0;
+			throw new RuntimeException("Requesting player is not part of this battle");
 		}
 		
-		battlePlans = skirmish.getBattlePlans();
-	}
-	
-	public static SkirmishResponse forPlayer(PlayerData player) {
-		return new SkirmishResponse(player.skirmish, player.id);
-	}
-	
-	public static SkirmishResponse forSkirmish(Skirmish skirmish, String idOfRequestingPlayer) {
-		return new SkirmishResponse(skirmish, idOfRequestingPlayer);
+		battlePlans = skirmish.getBattlePlans(requestingPlayer.id);
 	}
 	
 }

@@ -63,7 +63,7 @@ var snail = (function (snail) {
 		$playerSpeed.siblings().addBack().on('animationend', removeAnimationClasses);
 		
 		snail.model.battle.addEventHandler(function (event, args) {
-			if (event === 'startBattle') {
+			if (event === 'startRound') {
 				onStartRound(args);
 			}
 		});

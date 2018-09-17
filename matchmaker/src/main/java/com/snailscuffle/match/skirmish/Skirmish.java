@@ -60,12 +60,17 @@ public class Skirmish {
 		}
 	}
 	
-	public List<BattlePlan> getBattlePlans() {
+	public List<BattlePlan> getBattlePlans(String idOfRequestingPlayer) {
 		List<BattlePlan> bps = new ArrayList<>();
 		for (int i = 0; i < round; i++) {
 			BattlePlanPair bpsForRound = battlePlans.get(i);
-			bps.add(bpsForRound.player1Bp);
-			bps.add(bpsForRound.player2Bp);
+			if (idOfRequestingPlayer.equals(player1.id)) {
+				bps.add(bpsForRound.player1Bp);
+				bps.add(bpsForRound.player2Bp);
+			} else {
+				bps.add(bpsForRound.player2Bp);
+				bps.add(bpsForRound.player1Bp);
+			}
 		}
 		return bps;
 	}

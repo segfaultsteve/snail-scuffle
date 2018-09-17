@@ -11,7 +11,9 @@ var snail = (function (snail, PIXI) {
 		$waitMessage.show();
 	};
 	
-	const startRound = function (battleData) {
+	const startRound = function (args) {
+		const battleData = args.battleData;
+		
 		if (battleData.playerName === 'Guest') {
 			battleData.playerName = 'You';
 		}

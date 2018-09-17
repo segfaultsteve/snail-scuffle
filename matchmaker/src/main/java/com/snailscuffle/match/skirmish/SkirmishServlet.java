@@ -33,15 +33,13 @@ public class SkirmishServlet extends HttpServlet {
 		
 		try {
 			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
-			Skirmish skirmish = (skirmishId == null) ? null : skirmishEngine.getSkirmish(skirmishId);
+			PlayerData player = (PlayerData) request.getSession().getAttribute(PlayerData.ATTRIBUTE_KEY);
 			if (skirmishId == null) {
 				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-			} else if (skirmish == null) {
-				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			} else if (player == null || !skirmishId.equals(player.skirmish.getId().toString())) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			} else {
-				PlayerData player = (PlayerData) request.getSession().getAttribute(PlayerData.ATTRIBUTE_KEY);
-				String playerId = (player == null) ? "" : player.id;
-				JsonUtil.serialize(SkirmishResponse.forSkirmish(skirmish, playerId), response.getWriter());
+				JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
 			}
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
@@ -76,7 +74,7 @@ public class SkirmishServlet extends HttpServlet {
 				battlePlan.validate();
 				player.tryAddBattlePlan(battlePlan);
 			}
-			JsonUtil.serialize(SkirmishResponse.forPlayer(player), response.getWriter());
+			JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
 		} catch (NotAuthorizedException e) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().print(ErrorResponse.notAuthorized().because(e.getMessage()));
