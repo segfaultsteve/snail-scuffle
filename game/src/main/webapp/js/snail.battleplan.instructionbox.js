@@ -59,7 +59,7 @@ var snail = (function (snail) {
 				const instruction = instructionList[i].getData();
 				instructionData.push(instruction);
 			}
-			snail.model.battleplan.setInstructions(instructionData)
+			snail.model.battleplan.playerBp.setInstructions(instructionData)
 		};
 		
 		// callbacks

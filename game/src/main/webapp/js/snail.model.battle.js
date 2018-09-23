@@ -19,7 +19,6 @@ var snail = (function (snail, $) {
 			opponentAp: 0,
 			opponentSpeed: 0
 		};
-		
 		return battleData;
 	};
 	
@@ -79,15 +78,12 @@ var snail = (function (snail, $) {
 	
 	const playNextRound = function (state) {
 		return function (battleResult) {
-			const battleData = runBattleUpToLastRound(state.skirmishResponse, battleResult);
-			
 			const args = {
-				battleData: $.extend({}, battleData),
-				battlePlans: state.battlePlans.slice(-2)
+				battleData: runBattleUpToLastRound(state.skirmishResponse, battleResult),
+				battlePlans: state.battlePlans.slice(-2),
+				events: battleResult.eventsByRound.slice(-1)
 			};
 			notifyEventHandlers('startRound', args);
-			
-			const thisRoundEvents = battleResult.eventsByRound.slice(-1);
 		};
 	};
 	

@@ -3,12 +3,7 @@ var snail = (function (snail, $) {
 	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let ioLayer, getSnails, getWeapons, getShells, getAccessories, getItems;
-	let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
-	let selectedItems = [null, null];
-	let itemConditions = [null, null];
-	let instructions = [];
-	let battlePlanUpdatedHandlers = [];
+	let ioLayer;
 	
 	// private methods
 	const findByProperty = function (equipInfoArray, propertyName, propertyValue) {
@@ -18,10 +13,6 @@ var snail = (function (snail, $) {
 			}
 		}
 		return null;
-	};
-	
-	const notifyBattlePlanUpdatedHandlers = function (updatedElement, newValue) {
-		battlePlanUpdatedHandlers.forEach(handler => handler(updatedElement, newValue));
 	};
 	
 	const createInstruction = function (type, itemToUse, apThreshold) {
@@ -36,77 +27,9 @@ var snail = (function (snail, $) {
 		return 'preset' + presetNumber;
 	};
 	
-	const setBattlePlan = function (bp) {
-		$.when(getSnails, getWeapons, getShells, getAccessories, getItems)
-		.then(function (snailsResponse, weaponsResponse, shellsResponse, accessoriesResponse, itemsResponse) {
-			const bpmodel = snail.model.battleplan;
-			bpmodel.setSnail(findByProperty(snailsResponse, 'name', bp.snail));
-			bpmodel.setWeapon(findByProperty(weaponsResponse, 'name', bp.weapon));
-			bpmodel.setShell(findByProperty(shellsResponse, 'name', bp.shell));
-			bpmodel.setAccessory(findByProperty(accessoriesResponse, 'name', bp.accessory));
-			bpmodel.setItem(0, findByProperty(itemsResponse, 'name', bp.item1));
-			bpmodel.setItem(1, findByProperty(itemsResponse, 'name', bp.item2));
-			bpmodel.setItemCondition(0, bp.item1Rule);
-			bpmodel.setItemCondition(1, bp.item2Rule);
-			bpmodel.setInstructions(bp.instructions);
-		});
-	};
-	
 	// public methods
 	snail.model.battleplan.init = function (io) {
 		ioLayer = io;
-		getSnails = ioLayer.promiseSnailInfo();
-		getWeapons = ioLayer.promiseWeaponInfo();
-		getShells = ioLayer.promiseShellInfo();
-		getAccessories = ioLayer.promiseAccessoryInfo();
-		getItems = ioLayer.promiseItemInfo();
-	};
-	
-	snail.model.battleplan.addBattlePlanUpdatedHandler = function (handler) {
-		battlePlanUpdatedHandlers.push(handler);
-	};
-	
-	snail.model.battleplan.promiseSnails = function () { return getSnails; };
-	snail.model.battleplan.promiseWeapons = function () { return getWeapons; };
-	snail.model.battleplan.promiseShells = function () { return getShells; };
-	snail.model.battleplan.promiseAccessories = function () { return getAccessories; };
-	snail.model.battleplan.promiseItems = function () { return getItems; };
-	
-	snail.model.battleplan.setSnail = function (newSnail) {
-		selectedSnail = newSnail;
-		if (selectedSnail.name === 'doug') {
-			getShells.then(function (shells) {
-				snail.model.battleplan.setShell(findByProperty(shells, 'name', 'none'));
-			});
-		}
-		notifyBattlePlanUpdatedHandlers('snail', selectedSnail);
-	};
-	
-	snail.model.battleplan.setWeapon = function (weapon) {
-		selectedWeapon = weapon;
-		notifyBattlePlanUpdatedHandlers('weapon', selectedWeapon);
-	};
-	
-	snail.model.battleplan.setShell = function (shell) {
-		if (selectedSnail && selectedSnail.name !== 'doug') {
-			selectedShell = shell;
-			notifyBattlePlanUpdatedHandlers('shell', selectedShell);
-		} else {
-			getShells.then(function (shells) {
-				selectedShell = findByProperty(shells, 'name', 'none');
-				notifyBattlePlanUpdatedHandlers('shell', selectedShell);
-			});
-		}
-	};
-	
-	snail.model.battleplan.setAccessory = function (accessory) {
-		selectedAccessory = accessory;
-		notifyBattlePlanUpdatedHandlers('accessory', selectedAccessory);
-	};
-	
-	snail.model.battleplan.setItem = function (index, item) {
-		selectedItems[index] = item;
-		notifyBattlePlanUpdatedHandlers('item' + (index + 1), selectedItems[index]);
 	};
 	
 	snail.model.battleplan.createHasCondition = function (player, stat, inequality, threshold) {
@@ -128,29 +51,6 @@ var snail = (function (snail, $) {
 		};
 	}
 	
-	snail.model.battleplan.setItemCondition = function (index, condition) {
-		if (selectedItems[index].name === 'none') {
-			itemConditions[index] = null;
-		} else {
-			itemConditions[index] = condition;
-			notifyBattlePlanUpdatedHandlers('item' + (index + 1) + 'Rule', itemConditions[index]);
-		}
-	};
-	
-	snail.model.battleplan.itemConditionsAreIdentical = function (cond1, cond2) {
-		if (cond1.hasCondition) {
-			const hc1 = cond1.hasCondition;
-			const hc2 = cond2.hasCondition;
-			return (hc1 && hc2
-							&& hc1.player === hc2.player
-							&& hc1.stat === hc2.stat
-							&& hc1.inequality === hc2.inequality
-							&& hc1.threshold === hc2.threshold);
-		} else {
-			return cond1.enemyUsesCondition === cond2.enemyUsesCondition;
-		}
-	};
-	
 	snail.model.battleplan.createAttackInstruction = function () {
 		return createInstruction('attack', null, null);
 	};
@@ -163,54 +63,11 @@ var snail = (function (snail, $) {
 		return createInstruction('wait', null, apThreshold);
 	};
 	
-	snail.model.battleplan.setInstructions = function (newInstructions) {
-		instructions = newInstructions;
-		notifyBattlePlanUpdatedHandlers('instructions', instructions);
-	};
-	
 	snail.model.battleplan.instructionsAreIdentical = function (inst1, inst2) {
 		return (inst1 && inst2
 						&& inst1.type && inst2.type && inst1.type === inst2.type
 						&& inst1.itemToUse === inst2.itemToUse
 						&& inst1.apThreshold === inst2.apThreshold);
-	};
-	
-	snail.model.battleplan.getBattlePlan = function () {
-		return {
-			snail: selectedSnail.name,
-			weapon: selectedWeapon.name,
-			shell: selectedShell.name,
-			accessory: selectedAccessory.name,
-			item1: selectedItems[0].name,
-			item2: selectedItems[1].name,
-			item1Rule: itemConditions[0],
-			item2Rule: itemConditions[1],
-			instructions: instructions
-		};
-	};
-	
-	snail.model.battleplan.getAttack = function () {
-		if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
-			return selectedSnail.attackModifier + selectedWeapon.attackModifier + selectedShell.attackModifier + selectedAccessory.attackModifier;
-		} else {
-			return 0;
-		}
-	};
-	
-	snail.model.battleplan.getDefense = function () {
-		if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
-			return selectedSnail.defenseModifier + selectedWeapon.defenseModifier + selectedShell.defenseModifier + selectedAccessory.defenseModifier;
-		} else {
-			return 0;
-		}
-	};
-	
-	snail.model.battleplan.getSpeed = function () {
-		if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
-			return selectedSnail.speedModifier + selectedWeapon.speedModifier + selectedShell.speedModifier + selectedAccessory.speedModifier;
-		} else {
-			return 0;
-		}
 	};
 	
 	snail.model.battleplan.getPresetDisplayName = function (presetNumber) {
@@ -223,7 +80,7 @@ var snail = (function (snail, $) {
 		const key = presetKey(presetNumber);
 		const value = {
 			displayName: displayName,
-			battlePlan: this.getBattlePlan()
+			battlePlan: snail.model.battleplan.playerBp.get()
 		};
 		ioLayer.saveLocal(key, value);
 	};
@@ -232,7 +89,7 @@ var snail = (function (snail, $) {
 		const key = presetKey(presetNumber);
 		const loadedObject = ioLayer.loadLocal(key);
 		if (loadedObject) {
-			setBattlePlan(loadedObject.battlePlan);
+			snail.model.battleplan.playerBp.set(loadedObject.battlePlan);
 			return loadedObject.displayName;
 		} else {
 			return null;
@@ -243,6 +100,157 @@ var snail = (function (snail, $) {
 		const key = presetKey(presetNumber);
 		ioLayer.deleteLocal(key);
 	};
+	
+	// battleplan object
+	snail.model.battleplan.create = function (bp) {
+		let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
+		let selectedItems = [null, null];
+		let itemConditions = [null, null];
+		let instructions = [];
+		let battlePlanUpdatedHandlers = [];
+		
+		const addBattlePlanUpdatedHandler = function (handler) {
+			battlePlanUpdatedHandlers.push(handler);
+		};
+		
+		const notifyBattlePlanUpdatedHandlers = function (updatedElement, newValue) {
+			battlePlanUpdatedHandlers.forEach(handler => handler(updatedElement, newValue));
+		};
+		
+		const getAttack = function () {
+			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
+				return selectedSnail.attackModifier + selectedWeapon.attackModifier + selectedShell.attackModifier + selectedAccessory.attackModifier;
+			} else {
+				return 0;
+			}
+		};
+
+		const getDefense = function () {
+			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
+				return selectedSnail.defenseModifier + selectedWeapon.defenseModifier + selectedShell.defenseModifier + selectedAccessory.defenseModifier;
+			} else {
+				return 0;
+			}
+		};
+
+		const getSpeed = function () {
+			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
+				return selectedSnail.speedModifier + selectedWeapon.speedModifier + selectedShell.speedModifier + selectedAccessory.speedModifier;
+			} else {
+				return 0;
+			}
+		};
+		
+		const get = function () {
+			return {
+				snail: selectedSnail.name,
+				weapon: selectedWeapon.name,
+				shell: selectedShell.name,
+				accessory: selectedAccessory.name,
+				item1: selectedItems[0].name,
+				item2: selectedItems[1].name,
+				item1Rule: itemConditions[0],
+				item2Rule: itemConditions[1],
+				instructions: instructions
+			};
+		};
+		
+		const setSnail = function (newSnail) {
+			selectedSnail = newSnail;
+			if (selectedSnail.name === 'doug') {
+				ioLayer.promiseShellInfo().then(function (shells) {
+					setShell(findByProperty(shells, 'name', 'none'));
+				});
+			}
+			notifyBattlePlanUpdatedHandlers('snail', selectedSnail);
+		};
+		
+		const setWeapon = function (weapon) {
+			selectedWeapon = weapon;
+			notifyBattlePlanUpdatedHandlers('weapon', selectedWeapon);
+		};
+
+		const setShell = function (shell) {
+			if (selectedSnail && selectedSnail.name !== 'doug') {
+				selectedShell = shell;
+				notifyBattlePlanUpdatedHandlers('shell', selectedShell);
+			} else {
+				ioLayer.promiseShellInfo().then(function (shells) {
+					selectedShell = findByProperty(shells, 'name', 'none');
+					notifyBattlePlanUpdatedHandlers('shell', selectedShell);
+				});
+			}
+		};
+
+		const setAccessory = function (accessory) {
+			selectedAccessory = accessory;
+			notifyBattlePlanUpdatedHandlers('accessory', selectedAccessory);
+		};
+
+		const setItem = function (index, item) {
+			selectedItems[index] = item;
+			notifyBattlePlanUpdatedHandlers('item' + (index + 1), selectedItems[index]);
+		};
+		
+		const setItemCondition = function (index, condition) {
+			if (selectedItems[index].name === 'none') {
+				itemConditions[index] = null;
+			} else {
+				itemConditions[index] = condition;
+				notifyBattlePlanUpdatedHandlers('item' + (index + 1) + 'Rule', itemConditions[index]);
+			}
+		};
+		
+		const setInstructions = function (newInstructions) {
+			instructions = newInstructions;
+			notifyBattlePlanUpdatedHandlers('instructions', instructions);
+		};
+		
+		const set = function (bp) {
+			$.when(
+				ioLayer.promiseSnailInfo(),
+				ioLayer.promiseWeaponInfo(),
+				ioLayer.promiseShellInfo(),
+				ioLayer.promiseAccessoryInfo(),
+				ioLayer.promiseItemInfo()
+			)
+			.then(function (snailsResponse, weaponsResponse, shellsResponse, accessoriesResponse, itemsResponse) {
+				setSnail(findByProperty(snailsResponse, 'name', bp.snail));
+				setWeapon(findByProperty(weaponsResponse, 'name', bp.weapon));
+				setShell(findByProperty(shellsResponse, 'name', bp.shell));
+				setAccessory(findByProperty(accessoriesResponse, 'name', bp.accessory));
+				setItem(0, findByProperty(itemsResponse, 'name', bp.item1));
+				setItem(1, findByProperty(itemsResponse, 'name', bp.item2));
+				setItemCondition(0, bp.item1Rule);
+				setItemCondition(1, bp.item2Rule);
+				setInstructions(bp.instructions);
+			});
+		};
+		
+		if (bp) {
+			set(bp);
+		}
+		
+		return {
+			addBattlePlanUpdatedHandler: addBattlePlanUpdatedHandler,
+			getAttack: getAttack,
+			getDefense: getDefense,
+			getSpeed: getSpeed,
+			get: get,
+			setSnail: setSnail,
+			setWeapon: setWeapon,
+			setShell: setShell,
+			setAccessory: setAccessory,
+			setItem: setItem,
+			setItemCondition: setItemCondition,
+			setInstructions: setInstructions,
+			set: set
+		};
+	};
+	
+	// public fields
+	snail.model.battleplan.playerBp = snail.model.battleplan.create();
+	snail.model.battleplan.opponentBp = snail.model.battleplan.create();
 	
 	return snail;
 }(snail || {}, jQuery));

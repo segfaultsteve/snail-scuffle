@@ -32,9 +32,9 @@ var snail = (function (snail) {
 	
 	// callbacks
 	const onBattlePlanUpdated = function () {
-		const newAttack = snail.model.battleplan.getAttack();
-		const newDefense = snail.model.battleplan.getDefense();
-		const newSpeed = snail.model.battleplan.getSpeed();
+		const newAttack = snail.model.battleplan.playerBp.getAttack();
+		const newDefense = snail.model.battleplan.playerBp.getDefense();
+		const newSpeed = snail.model.battleplan.playerBp.getSpeed();
 		
 		updateStat($playerAttack, newAttack);
 		updateStat($playerDefense, newDefense);
@@ -57,7 +57,7 @@ var snail = (function (snail) {
 		$playerDefense = $container.find('.info-playerstats-defense');
 		$playerSpeed = $container.find('.info-playerstats-speed');
 		
-		snail.model.battleplan.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		snail.model.battleplan.playerBp.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
 		$playerAttack.siblings().addBack().on('animationend', removeAnimationClasses);
 		$playerDefense.siblings().addBack().on('animationend', removeAnimationClasses);
 		$playerSpeed.siblings().addBack().on('animationend', removeAnimationClasses);
