@@ -7,17 +7,17 @@ var snail = (function (snail, $) {
 	let eventHandlers = [];
 	
 	// private methods
-	const newBattleData = function (playerName, opponentName) {
+	const newBattleData = function (playerName, enemyName) {
 		const battleData = {
 			time: 0,
 			playerName: playerName,
 			playerHp: 100,
 			playerAp: 0,
 			playerSpeed: 0,
-			opponentName: opponentName,
-			opponentHp: 100,
-			opponentAp: 0,
-			opponentSpeed: 0
+			enemyName: enemyName,
+			enemyHp: 100,
+			enemyAp: 0,
+			enemySpeed: 0
 		};
 		return battleData;
 	};
@@ -71,7 +71,8 @@ var snail = (function (snail, $) {
 	
 	const saveBattlePlansToModel = function (bps) {
 		snail.model.battleplan.playerBp.set(bps.slice(-2)[0]);
-		snail.model.battleplan.opponentBp.set(bps.slice(-2)[1]);
+		snail.model.battleplan.enemyBp.set(bps.slice(-2)[1]);
+		return bps;
 	};
 	
 	const postBattlePlansToGameServer = function (state) {
@@ -111,7 +112,7 @@ var snail = (function (snail, $) {
 					if (effect.playerIndex === 0) {
 						battleData.playerHp += effect.change;
 					} else {
-						battleData.opponentHp += effect.change;
+						battleData.enemyHp += effect.change;
 					}
 				}
 			}
@@ -121,8 +122,8 @@ var snail = (function (snail, $) {
 		
 		if (battleData.playerHp < 0) {
 			battleData.playerHp = 0;
-		} else if (battleData.opponentHp < 0) {
-			battleData.opponentHp = 0;
+		} else if (battleData.enemyHp < 0) {
+			battleData.enemyHp = 0;
 		}
 	};
 	

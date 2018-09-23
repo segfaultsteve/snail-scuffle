@@ -20,7 +20,7 @@
 }
 
 #battle .hud-player,
-#battle .hud-opponent {
+#battle .hud-enemy {
 	position: absolute;
 	padding: 1em;
 	min-width: 7em;
@@ -34,13 +34,13 @@
 	bottom: 2em;
 }
 
-#battle .hud-opponent {
+#battle .hud-enemy {
 	top: 2em;
 	left: 3em;
 }
 
 #battle .hud-player-name,
-#battle .hud-opponent-name {
+#battle .hud-enemy-name {
 	font-size: 1.3em;
 	margin-bottom: 0.3em;
 }

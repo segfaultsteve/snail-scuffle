@@ -250,7 +250,7 @@ var snail = (function (snail, $) {
 	
 	// public fields
 	snail.model.battleplan.playerBp = snail.model.battleplan.create();
-	snail.model.battleplan.opponentBp = snail.model.battleplan.create();
+	snail.model.battleplan.enemyBp = snail.model.battleplan.create();
 	
 	return snail;
 }(snail || {}, jQuery));

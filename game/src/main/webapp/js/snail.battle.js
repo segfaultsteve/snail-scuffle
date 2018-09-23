@@ -18,16 +18,16 @@ var snail = (function (snail, PIXI) {
 			battleData.playerName = 'You';
 		}
 		
-		if (battleData.opponentName === 'Guest') {
-			battleData.opponentName = 'Opponent';
+		if (battleData.enemyName === 'Guest') {
+			battleData.enemyName = 'Enemy';
 		}
 		
 		hudData.playerName.text(battleData.playerName);
-		hudData.opponentName.text(battleData.opponentName);
+		hudData.enemyName.text(battleData.enemyName);
 		hudData.playerHp.text(battleData.playerHp);
 		hudData.playerAp.text(battleData.playerAp);
-		hudData.opponentHp.text(battleData.opponentHp);
-		hudData.opponentAp.text(battleData.opponentAp);
+		hudData.enemyHp.text(battleData.enemyHp);
+		hudData.enemyAp.text(battleData.enemyAp);
 		
 		$waitMessage.hide();
 		$hud.show();
@@ -62,9 +62,9 @@ var snail = (function (snail, PIXI) {
 			playerName: $container.find('.hud-player-name'),
 			playerHp: $container.find('.hud-player-hp'),
 			playerAp: $container.find('.hud-player-ap'),
-			opponentName: $container.find('.hud-opponent-name'),
-			opponentHp: $container.find('.hud-opponent-hp'),
-			opponentAp: $container.find('.hud-opponent-ap')
+			enemyName: $container.find('.hud-enemy-name'),
+			enemyHp: $container.find('.hud-enemy-hp'),
+			enemyAp: $container.find('.hud-enemy-ap')
 		};
 		
 		snail.model.battle.addEventHandler(onBattleEvent);

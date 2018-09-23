@@ -2,7 +2,7 @@ var snail = (function (snail, $) {
 	snail.io = {};
 	
 	// private variables
-	let servers;
+	let servers, snailInfo, weaponInfo, shellInfo, accessoryInfo, itemInfo;
 	
 	// private methods
 	const ajaxWithRetry = function (func, args) {
@@ -33,26 +33,31 @@ var snail = (function (snail, $) {
 	// public methods
 	snail.io.init = function () {
 		servers = ajaxWithRetry($.getJSON, snail.config.serversPath);
+		snailInfo = ajaxWithRetry($.getJSON, snail.config.snailsPath);
+		weaponInfo = ajaxWithRetry($.getJSON, snail.config.weaponsPath);
+		shellInfo = ajaxWithRetry($.getJSON, snail.config.shellsPath);
+		accessoryInfo = ajaxWithRetry($.getJSON, snail.config.accessoriesPath);
+		itemInfo = ajaxWithRetry($.getJSON, snail.config.itemsPath);
 	};
 	
 	snail.io.promiseSnailInfo = function () {
-		return ajaxWithRetry($.getJSON, snail.config.snailsPath);
+		return snailInfo;
 	};
 	
 	snail.io.promiseWeaponInfo = function () {
-		return ajaxWithRetry($.getJSON, snail.config.weaponsPath);
+		return weaponInfo;
 	};
 	
 	snail.io.promiseShellInfo = function () {
-		return ajaxWithRetry($.getJSON, snail.config.shellsPath);
+		return shellInfo;
 	};
 	
 	snail.io.promiseAccessoryInfo = function () {
-		return ajaxWithRetry($.getJSON, snail.config.accessoriesPath);
+		return accessoryInfo;
 	};
 	
 	snail.io.promiseItemInfo = function () {
-		return ajaxWithRetry($.getJSON, snail.config.itemsPath);
+		return itemInfo;
 	};
 	
 	snail.io.putSkirmish = function () {
