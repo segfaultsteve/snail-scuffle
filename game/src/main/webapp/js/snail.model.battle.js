@@ -69,6 +69,11 @@ var snail = (function (snail, $) {
 			});
 	};
 	
+	const saveBattlePlansToModel = function (bps) {
+		snail.model.battleplan.playerBp.set(bps.slice(-2)[0]);
+		snail.model.battleplan.opponentBp.set(bps.slice(-2)[1]);
+	};
+	
 	const postBattlePlansToGameServer = function (state) {
 		return function (bps) {
 			state.battlePlans = bps;
@@ -80,7 +85,6 @@ var snail = (function (snail, $) {
 		return function (battleResult) {
 			const args = {
 				battleData: runBattleUpToLastRound(state.skirmishResponse, battleResult),
-				battlePlans: state.battlePlans.slice(-2),
 				events: battleResult.eventsByRound.slice(-1)
 			};
 			notifyEventHandlers('startRound', args);
@@ -164,6 +168,7 @@ var snail = (function (snail, $) {
 		skirmishId
 			.then(putBattlePlanToMatchmaker(bp))
 			.then(getBattlePlansForAllRounds(state))
+			.then(saveBattlePlansToModel)
 			.then(postBattlePlansToGameServer(state))
 			.then(playNextRound(state));
 	};
