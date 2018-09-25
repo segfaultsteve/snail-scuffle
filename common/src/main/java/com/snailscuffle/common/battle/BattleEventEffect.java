@@ -9,7 +9,7 @@ public class BattleEventEffect implements Serializable {
 	public double change;
 	
 	@SuppressWarnings("unused")
-	private BattleEventEffect() {}	// needed for serialization via jackson-jr
+	private BattleEventEffect() {}	// needed for serialization via jackson
 	
 	public BattleEventEffect(int playerIndex, Stat stat, double change) {
 		this.playerIndex = playerIndex;

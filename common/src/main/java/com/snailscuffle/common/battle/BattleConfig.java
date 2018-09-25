@@ -7,7 +7,7 @@ public class BattleConfig implements Serializable {
 	public BattlePlan[] battlePlans;
 	
 	@SuppressWarnings("unused")
-	private BattleConfig() {}		// needed for serialization via jackson-jr
+	private BattleConfig() {}		// needed for serialization via jackson
 	
 	public BattleConfig(BattlePlan... battlePlans) {
 		this.battlePlans = battlePlans;

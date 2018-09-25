@@ -35,6 +35,7 @@ public class Battle {
 				}
 				increment = nextIncrement(player1, player2);
 			}
+			recorder.recordEndOfRound(periodEnd, player1, player2);
 			periodEnd += PERIOD;
 		}
 	}
@@ -67,7 +68,7 @@ public class Battle {
 			winnerIndex = -1;	// both players are still alive
 		}
 		
-		return new BattleResult(recorder.eventsByRound(), winnerIndex);
+		return new BattleResult(recorder.eventsByRound(), recorder.endOfRoundStats(), winnerIndex);
 	}
 
 }

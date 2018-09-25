@@ -20,7 +20,10 @@ public class BattleResultTest {
 		List<List<BattleEvent>> eventsByRound = new ArrayList<>();
 		eventsByRound.add(round1);
 		
-		result = new BattleResult(eventsByRound, 0);
+		List<BattleSnapshot> endOfRoundStats = new ArrayList<>();
+		endOfRoundStats.add(new BattleSnapshot(1, 1, 1, 1, 1));
+		
+		result = new BattleResult(eventsByRound, endOfRoundStats, 0);
 	}
 	
 	@Test
@@ -32,6 +35,24 @@ public class BattleResultTest {
 	@Test
 	public void failValidationOnEmptyEventsByRound() {
 		result.eventsByRound.clear();
+		assertValidateThrowsInvalidBattleException(result);
+	}
+	
+	@Test
+	public void failValidationOnNullEndOfRoundStats() {
+		result.endOfRoundStats = null;
+		assertValidateThrowsInvalidBattleException(result);
+	}
+	
+	@Test
+	public void failValidationOnEmptyEndOfRoundStats() {
+		result.endOfRoundStats.clear();
+		assertValidateThrowsInvalidBattleException(result);
+	}
+	
+	@Test
+	public void failValidationOnInconsistentNumberOfRounds() {
+		result.endOfRoundStats.add(new BattleSnapshot(1, 1, 1, 1, 1));
 		assertValidateThrowsInvalidBattleException(result);
 	}
 	

@@ -71,6 +71,14 @@ class Combatant {
 		return (nextAp - ap.get()) * SCALE / speedStat() + 1;		// +1 to round up after integer division
 	}
 	
+	int getHp() {
+		return hp.get();
+	}
+	
+	int getAp() {
+		return ap.get();
+	}
+	
 	void update(int deltaTicks) {
 		ap.add(deltaTicks * speedStat() / SCALE);
 		decrementBoostTimers(activeBoosts, deltaTicks);
@@ -220,7 +228,7 @@ class Combatant {
 		return defense;
 	}
 	
-	private int speedStat() {
+	int speedStat() {
 		return SCALE * (battlePlan.snail.speed
 				+ battlePlan.weapon.speed
 				+ battlePlan.shell.speed
