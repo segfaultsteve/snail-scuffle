@@ -115,7 +115,7 @@ var snail = (function (snail, $) {
 			let $preset = $battleplan.find('.preset' + (i + 1));
 			snail.battleplan.presetbutton.init($preset, i + 1);
 		}
-		snail.battleplan.stats.init($battleplan.find('.info-playerstats'));
+		snail.battleplan.stats.init($battleplan.find('.info'));
 		
 		$battleplan.find('.snails-button').click(onSnailButtonClicked);
 		playerBp.addBattlePlanUpdatedHandler(onBattlePlanUpdated);

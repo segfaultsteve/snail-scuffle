@@ -13,24 +13,19 @@ var snail = (function (snail, PIXI) {
 	
 	const startRound = function (args) {
 		const battleData = args.battleData;
-		
-		if (battleData.playerName === 'Guest') {
-			battleData.playerName = 'You';
-		}
-		
-		if (battleData.enemyName === 'Guest') {
-			battleData.enemyName = 'Enemy';
-		}
-		
 		hudData.playerName.text(battleData.playerName);
-		hudData.enemyName.text(battleData.enemyName);
 		hudData.playerHp.text(battleData.playerHp);
 		hudData.playerAp.text(battleData.playerAp);
+		hudData.enemyName.text(battleData.enemyName);
 		hudData.enemyHp.text(battleData.enemyHp);
 		hudData.enemyAp.text(battleData.enemyAp);
 		
 		$waitMessage.hide();
 		$hud.show();
+		
+		setTimeout(function () {
+			snail.model.battle.finishRound();
+		}, 5000);
 	};
 	
 	// callbacks
@@ -39,12 +34,12 @@ var snail = (function (snail, PIXI) {
 			case 'battlePlanSubmitted':
 				showWaitMessage();
 				break;
-			case 'startRound':
+			case 'nextRound':
 				startRound(args);
 				break;
 		}
 	};
-
+	
 	// public methods
 	snail.battle.init = function ($container) {
 		const canvas = $container.find('#battleCanvas')[0];

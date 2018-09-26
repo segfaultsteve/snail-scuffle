@@ -8,16 +8,16 @@ var snail = (function(snail, $) {
 	
 	const onBattleEvent = function (event) {
 		switch (event) {
-			case 'startBattle':
+			case 'battleStarted':
 				snail.routing.switchTo('battleplan');
 				break;
 			case 'battlePlanSubmitted':
 				snail.routing.switchTo('battle');
 				break;
-			case 'endRound':
+			case 'roundComplete':
 				snail.routing.switchTo('battleplan');
 				break;
-			case 'endBattle':
+			case 'battleComplete':
 				snail.routing.switchTo('home');
 				break;
 		}

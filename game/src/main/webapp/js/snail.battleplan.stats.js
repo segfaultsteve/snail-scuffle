@@ -4,6 +4,7 @@ var snail = (function (snail) {
 	
 	// private variables
 	let $playerName, $playerHp, $playerAp, $playerAttack, $playerDefense, $playerSpeed;
+	let $enemyName, $enemyHp, $enemyAp, $enemyAttack, $enemyDefense, $enemySpeed;
 	
 	// private methods
 	const updateStat = function ($stat, newValue) {
@@ -31,20 +32,24 @@ var snail = (function (snail) {
 	};
 	
 	// callbacks
-	const onBattlePlanUpdated = function () {
-		const newAttack = snail.model.battleplan.playerBp.getAttack();
-		const newDefense = snail.model.battleplan.playerBp.getDefense();
-		const newSpeed = snail.model.battleplan.playerBp.getSpeed();
-		
-		updateStat($playerAttack, newAttack);
-		updateStat($playerDefense, newDefense);
-		updateStat($playerSpeed, newSpeed);
+	const onBattleStarted = function (battleData) {
+		$playerName.text(battleData.playerName);
+		$enemyName.text(battleData.enemyName);
 	};
 	
-	const onStartRound = function (battleData) {
-		$playerName.text(battleData.playerName);
+	const onBattlePlanUpdated = function (bp, $attack, $defense, $speed) {
+		return function () {
+			updateStat($attack, bp.getAttack());
+			updateStat($defense, bp.getDefense());
+			updateStat($speed, bp.getSpeed());
+		}
+	};
+	
+	const onRoundComplete = function (battleData) {
 		$playerHp.text(battleData.playerHp);
 		$playerAp.text(battleData.playerAp);
+		$enemyHp.text(battleData.enemyHp);
+		$enemyAp.text(battleData.enemyAp);
 	};
 	
 	// public methods
@@ -57,14 +62,33 @@ var snail = (function (snail) {
 		$playerDefense = $container.find('.info-playerstats-defense');
 		$playerSpeed = $container.find('.info-playerstats-speed');
 		
-		snail.model.battleplan.playerBp.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		$enemyName = $container.find('.info-enemystats-name');
+		$enemyHp = $container.find('.info-enemystats-hp');
+		$enemyAp = $container.find('.info-enemystats-ap');
+		$enemyAttack = $container.find('.info-enemystats-attack');
+		$enemyDefense = $container.find('.info-enemystats-defense');
+		$enemySpeed = $container.find('.info-enemystats-speed');
+		
+		snail.model.battleplan.playerBp.addBattlePlanUpdatedHandler(
+			onBattlePlanUpdated(snail.model.battleplan.playerBp, $playerAttack, $playerDefense, $playerSpeed)
+		);
+		
+		snail.model.battleplan.enemyBp.addBattlePlanUpdatedHandler(
+			onBattlePlanUpdated(snail.model.battleplan.enemyBp, $enemyAttack, $enemyDefense, $enemySpeed)
+		);
+		
 		$playerAttack.siblings().addBack().on('animationend', removeAnimationClasses);
 		$playerDefense.siblings().addBack().on('animationend', removeAnimationClasses);
 		$playerSpeed.siblings().addBack().on('animationend', removeAnimationClasses);
 		
 		snail.model.battle.addEventHandler(function (event, args) {
-			if (event === 'startRound') {
-				onStartRound(args);
+			switch (event) {
+				case 'battleStarted':
+					onBattleStarted(args);
+					break;
+				case 'roundComplete':
+					onRoundComplete(args);
+					break;
 			}
 		});
 	};

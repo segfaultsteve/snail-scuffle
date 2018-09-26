@@ -3,11 +3,22 @@ var snail = (function (snail, $) {
 	snail.model.battle = snail.model.battle || {};
 	
 	// private variables
-	let ioLayer, skirmishId, round, skirmishPollInterval;
+	let ioLayer, skirmishId, round, skirmishPollInterval, endOfCurrentRoundBattleData;
 	let eventHandlers = [];
 	
 	// private methods
-	const newBattleData = function (playerName, enemyName) {
+	const newBattleData = function (skirmishResponse, stats) {
+		let playerName = skirmishResponse.playerName;
+		let enemyName = skirmishResponse.opponentName;
+		
+		if (playerName === 'Guest') {
+			playerName = 'You';
+		}
+		
+		if (enemyName === 'Guest') {
+			enemyName = 'Enemy';
+		}
+		
 		const battleData = {
 			time: 0,
 			playerName: playerName,
@@ -17,6 +28,20 @@ var snail = (function (snail, $) {
 			enemyHp: 100,
 			enemyAp: 0
 		};
+		
+		const roundToNearestTenth = function (num) {
+			return (Math.round(num * 10)) / 10;
+		};
+		
+		if (stats && round > 0) {
+			const lastRound = stats[round-1];
+			battleData.time = lastRound.time;
+			battleData.playerHp = roundToNearestTenth(lastRound.player1Hp);
+			battleData.playerAp = roundToNearestTenth(lastRound.player1Ap);
+			battleData.enemyHp = roundToNearestTenth(lastRound.player2Hp);
+			battleData.enemyAp = roundToNearestTenth(lastRound.player2Ap);
+		}
+		
 		return battleData;
 	};
 	
@@ -34,8 +59,8 @@ var snail = (function (snail, $) {
 	};
 	
 	const signalStartOfBattle = function (skirmishResponse) {
-		const battleData = newBattleData(skirmishResponse.playerName, skirmishResponse.opponentName);
-		notifyEventHandlers('startBattle', battleData);
+		const battleData = newBattleData(skirmishResponse);
+		notifyEventHandlers('battleStarted', battleData);
 	};
 	
 	const putBattlePlanToMatchmaker = function (battlePlan) {
@@ -83,21 +108,14 @@ var snail = (function (snail, $) {
 	
 	const playNextRound = function (state) {
 		return function (battleResult) {
-			const battleData = newBattleData(state.skirmishResponse.playerName, state.skirmishResponse.opponentName);
-			if (round > 0) {
-				const lastRound = battleResult.endOfRoundStats[round-1];
-				battleData.time = lastRound.time;
-				battleData.playerHp = lastRound.player1Hp;
-				battleData.playerAp = lastRound.player1Ap;
-				battleData.enemyHp = lastRound.player2Hp;
-				battleData.enemyAp = lastRound.player2Ap;
-			}
-			
 			const args = {
-				battleData: battleData,
+				battleData: newBattleData(state.skirmishResponse, battleResult.endOfRoundStats),
 				events: battleResult.eventsByRound.slice(-1)
 			};
-			notifyEventHandlers('startRound', args);
+			notifyEventHandlers('nextRound', args);
+			
+			round += 1;
+			endOfCurrentRoundBattleData = newBattleData(state.skirmishResponse, battleResult.endOfRoundStats);
 		};
 	};
 	
@@ -147,6 +165,10 @@ var snail = (function (snail, $) {
 			.then(saveBattlePlansToModel)
 			.then(postBattlePlansToGameServer)
 			.then(playNextRound(state));
+	};
+	
+	snail.model.battle.finishRound = function () {
+		notifyEventHandlers('roundComplete', endOfCurrentRoundBattleData);
 	};
 	
 	return snail;
