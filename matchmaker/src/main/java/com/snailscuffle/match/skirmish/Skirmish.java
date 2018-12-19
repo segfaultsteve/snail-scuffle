@@ -75,4 +75,17 @@ public class Skirmish {
 		return bps;
 	}
 	
+	public boolean playerHasSubmittedBattlePlan(PlayerData player) throws NotAuthorizedException {
+		boolean isPlayer1 = player.id.equals(player1.id);
+		boolean isPlayer2 = (player2 != null) && player.id.equals(player2.id);
+		if (!isPlayer1 && !isPlayer2) {
+			throw new NotAuthorizedException("Submitting player is not part of this skirmish");
+		}
+		
+		boolean player1HasSubmitted = (battlePlans.size() > round && battlePlans.get(round).player1Bp != null);
+		boolean player2HasSubmitted = (battlePlans.size() > round && battlePlans.get(round).player2Bp != null);
+		
+		return (isPlayer1 && player1HasSubmitted) || (isPlayer2 && player2HasSubmitted);
+	}
+	
 }

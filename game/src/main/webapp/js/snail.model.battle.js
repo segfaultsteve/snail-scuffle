@@ -108,9 +108,10 @@ var snail = (function (snail, $) {
 	
 	const playNextRound = function (state) {
 		return function (battleResult) {
+			round = battleResult.endOfRoundStats.length - 1;
 			const args = {
 				battleData: newBattleData(state.skirmishResponse, battleResult.endOfRoundStats),
-				events: battleResult.eventsByRound.slice(-1)
+				events: battleResult.eventsByRound.slice(-1)[0]
 			};
 			notifyEventHandlers('nextRound', args);
 			
@@ -169,6 +170,10 @@ var snail = (function (snail, $) {
 	
 	snail.model.battle.finishRound = function () {
 		notifyEventHandlers('roundComplete', endOfCurrentRoundBattleData);
+	};
+	
+	snail.model.battle.finishBattle = function () {
+		notifyEventHandlers('battleComplete', endOfCurrentRoundBattleData);
 	};
 	
 	return snail;

@@ -55,5 +55,10 @@ var snail = (function (snail) {
 		hidePlayModal();
 	};
 	
+	snail.home.reset = function () {
+		hidePlayModal();
+		hideMatchingModal();
+	};
+	
 	return snail;
 }(snail || {}));

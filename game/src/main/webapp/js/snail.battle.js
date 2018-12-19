@@ -3,7 +3,8 @@ var snail = (function (snail, PIXI) {
 	
 	// private variables
 	const WIDTH = 1000, HEIGHT = 500;
-	let pixiApp, $waitMessage, $hud, hudData;
+	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, hudData, running, time, eventIndex;
+	let events = [];
 	
 	// private methods
 	const showWaitMessage = function () {
@@ -12,20 +13,71 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const startRound = function (args) {
-		const battleData = args.battleData;
-		hudData.playerName.text(battleData.playerName);
-		hudData.playerHp.text(battleData.playerHp);
-		hudData.playerAp.text(battleData.playerAp);
-		hudData.enemyName.text(battleData.enemyName);
-		hudData.enemyHp.text(battleData.enemyHp);
-		hudData.enemyAp.text(battleData.enemyAp);
+		battleData = args.battleData;
+		updateHud();
 		
 		$waitMessage.hide();
+		$resultMessage.hide();
 		$hud.show();
 		
-		setTimeout(function () {
-			snail.model.battle.finishRound();
-		}, 5000);
+		events = args.events;
+		eventIndex = 0;
+		running = true;
+	};
+	
+	const updateHud = function () {
+		hudData.playerName.text(battleData.playerName);
+		hudData.playerHp.text(formatNumber(battleData.playerHp));
+		hudData.playerAp.text(formatNumber(battleData.playerAp));
+		hudData.enemyName.text(battleData.enemyName);
+		hudData.enemyHp.text(formatNumber(battleData.enemyHp));
+		hudData.enemyAp.text(formatNumber(battleData.enemyAp));
+	};
+	
+	const formatNumber = function (num) {
+		return Math.max(Math.round(100*num)/100, 0);
+	};
+	
+	const animationLoop = function (delta) {
+		if (running) {
+			let prev = Math.floor(time/6000);
+			time += delta*16;
+			let curr = Math.floor(time/6000);
+			
+			if (curr > prev) {
+				running = false;
+				snail.model.battle.finishRound();
+			}
+			
+			if (eventIndex < events.length && time > events[eventIndex].time) {
+				applyEvent(events[eventIndex]);
+				eventIndex++;
+			}
+			
+			if (battleData.enemyHp <= 0) {
+					running = false;
+					$resultMessage.find('.result-text').text("You Won!");
+					$resultMessage.show();
+				} else if (battleData.playerHp <= 0) {
+					running = false;
+					$resultMessage.find('.result-text').text("You Lost!");
+					$resultMessage.show();
+				}
+		}
+	};
+	
+	const applyEvent = function (battleEvent) {
+		for (let i = 0; i < battleEvent.effects.length; i++) {
+			let effect = battleEvent.effects[i];
+			if (effect.stat === "hp") {
+				if (effect.playerIndex == 0) {
+					battleData.playerHp += effect.change;
+				} else {
+					battleData.enemyHp += effect.change;
+				}
+			}
+		}
+		updateHud();
 	};
 	
 	// callbacks
@@ -49,9 +101,14 @@ var snail = (function (snail, PIXI) {
 			height: HEIGHT,
 			backgroundColor: 0xffffff
 		});
+		pixiApp.ticker.add(animationLoop);
 		
-		$waitMessage = $container.find('.waitmessage');
 		$hud = $container.find('.hud');
+		$waitMessage = $container.find('.waitmessage');
+		$resultMessage = $container.find('.result');
+		$resultMessage.find('.result-okbutton').click(function () {
+			snail.model.battle.finishBattle();
+		});
 		
 		hudData = {
 			playerName: $container.find('.hud-player-name'),
@@ -61,6 +118,10 @@ var snail = (function (snail, PIXI) {
 			enemyHp: $container.find('.hud-enemy-hp'),
 			enemyAp: $container.find('.hud-enemy-ap')
 		};
+		
+		running = false;
+		time = 0;
+		eventIndex = 0;
 		
 		snail.model.battle.addEventHandler(onBattleEvent);
 	};

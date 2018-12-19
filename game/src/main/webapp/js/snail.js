@@ -18,6 +18,7 @@ var snail = (function(snail, $) {
 				snail.routing.switchTo('battleplan');
 				break;
 			case 'battleComplete':
+				snail.home.reset();
 				snail.routing.switchTo('home');
 				break;
 		}

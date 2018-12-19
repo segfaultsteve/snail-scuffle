@@ -12,8 +12,9 @@ public class SkirmishResponse implements Serializable {
 	public final String playerName;
 	public final String opponentName;
 	public final List<BattlePlan> battlePlans;
+	public final boolean battlePlanAlreadySubmitted;
 	
-	public SkirmishResponse(PlayerData requestingPlayer) {
+	public SkirmishResponse(PlayerData requestingPlayer, boolean battlePlanAlreadySubmitted) {
 		Skirmish skirmish = requestingPlayer.skirmish;
 		PlayerData player1 = skirmish.getPlayer1();
 		PlayerData player2 = skirmish.getPlayer2();
@@ -31,6 +32,7 @@ public class SkirmishResponse implements Serializable {
 		}
 		
 		battlePlans = skirmish.getBattlePlans(requestingPlayer.id);
+		this.battlePlanAlreadySubmitted = battlePlanAlreadySubmitted;
 	}
 	
 }

@@ -39,7 +39,7 @@ public class SkirmishServlet extends HttpServlet {
 			} else if (player == null || !skirmishId.equals(player.skirmish.getId().toString())) {
 				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			} else {
-				JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
+				JsonUtil.serialize(new SkirmishResponse(player, player.hasSubmittedBattlePlan()), response.getWriter());
 			}
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
@@ -65,6 +65,7 @@ public class SkirmishServlet extends HttpServlet {
 			}
 			
 			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
+			boolean alreadySubmittedBattlePlan = false;
 			if (skirmishId == null) {
 				skirmishEngine.tryMatchPlayer(player);
 			} else {
@@ -72,9 +73,12 @@ public class SkirmishServlet extends HttpServlet {
 				String battlePlanJson = HttpUtil.extractBody(request);
 				BattlePlan battlePlan = JsonUtil.deserialize(BattlePlan.class, battlePlanJson);
 				battlePlan.validate();
-				player.tryAddBattlePlan(battlePlan);
+				alreadySubmittedBattlePlan = player.hasSubmittedBattlePlan();
+				if (!alreadySubmittedBattlePlan) {
+					player.tryAddBattlePlan(battlePlan);
+				}
 			}
-			JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
+			JsonUtil.serialize(new SkirmishResponse(player, alreadySubmittedBattlePlan), response.getWriter());
 		} catch (NotAuthorizedException e) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().print(ErrorResponse.notAuthorized().because(e.getMessage()));
