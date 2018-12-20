@@ -9,6 +9,7 @@ var snail = (function (snail, PIXI) {
 	// private methods
 	const showWaitMessage = function () {
 		$hud.hide();
+		$resultMessage.hide();
 		$waitMessage.show();
 	};
 	
@@ -46,6 +47,7 @@ var snail = (function (snail, PIXI) {
 			
 			if (curr > prev) {
 				running = false;
+				time = Math.floor(time/6000);
 				snail.model.battle.finishRound();
 			}
 			
@@ -80,9 +82,18 @@ var snail = (function (snail, PIXI) {
 		updateHud();
 	};
 	
+	const reset = function () {
+		running = false;
+		time = 0;
+		eventIndex = 0;
+	};
+	
 	// callbacks
 	const onBattleEvent = function (event, args) {
 		switch (event) {
+			case 'battleStarted':
+				reset();
+				break;
 			case 'battlePlanSubmitted':
 				showWaitMessage();
 				break;
@@ -119,9 +130,7 @@ var snail = (function (snail, PIXI) {
 			enemyAp: $container.find('.hud-enemy-ap')
 		};
 		
-		running = false;
-		time = 0;
-		eventIndex = 0;
+		reset();
 		
 		snail.model.battle.addEventHandler(onBattleEvent);
 	};

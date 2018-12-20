@@ -51,23 +51,33 @@ public class SkirmishServlet extends HttpServlet {
 	}
 	
 	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		response.setContentType("application/json; charset=UTF-8");
+		
+		try {
+			PlayerData player = GetOrCreatePlayerData(request);
+			skirmishEngine.tryMatchPlayer(player);
+			JsonUtil.serialize(new SkirmishResponse(player, false), response.getWriter());
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().print(ErrorResponse.unexpectedError());
+		}
+		
+		ServletUtil.markHandled(request);
+	}
+	
+	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		response.setContentType("application/json; charset=UTF-8");
 		
 		try {
-			HttpSession session = request.getSession();
-			PlayerData player = (PlayerData) session.getAttribute(PlayerData.ATTRIBUTE_KEY);
-			if (player == null) {
-				// TODO: client sends screen name in body of PUT if signed in; check for it here to
-				// make sure client doesn't think it's signed in (i.e., used to be, but timed out)
-				player = PlayerData.createGuestPlayer(session.getId());
-				session.setAttribute(PlayerData.ATTRIBUTE_KEY, player);
-			}
+			PlayerData player = GetOrCreatePlayerData(request);
 			
 			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
 			boolean alreadySubmittedBattlePlan = false;
 			if (skirmishId == null) {
-				skirmishEngine.tryMatchPlayer(player);
+				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			} else {
 				throwIfNotAuthorized(player, skirmishId);
 				String battlePlanJson = HttpUtil.extractBody(request);
@@ -97,6 +107,18 @@ public class SkirmishServlet extends HttpServlet {
 		}
 		
 		ServletUtil.markHandled(request);
+	}
+	
+	private static PlayerData GetOrCreatePlayerData(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		PlayerData player = (PlayerData) session.getAttribute(PlayerData.ATTRIBUTE_KEY);
+		if (player == null) {
+			// TODO: client sends screen name in body of PUT if signed in; check for it here to
+			// make sure client doesn't think it's signed in (i.e., used to be, but timed out)
+			player = PlayerData.createGuestPlayer(session.getId());
+			session.setAttribute(PlayerData.ATTRIBUTE_KEY, player);
+		}
+		return player;
 	}
 	
 	private static String tryExtractSkirmishId(String urlPathInfo) {

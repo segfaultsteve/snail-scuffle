@@ -60,11 +60,11 @@ var snail = (function (snail, $) {
 		return itemInfo;
 	};
 	
-	snail.io.putSkirmish = function () {
+	snail.io.postSkirmish = function () {
 		return servers
 			.then(function (servers) {
 				return $.ajax({
-					type: 'PUT',
+					type: 'POST',
 					url: servers.matchmaker + snail.config.skirmishPath,
 					dataType: 'json',
 					xhrFields: { withCredentials: true }

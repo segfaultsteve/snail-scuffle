@@ -3,7 +3,7 @@ var snail = (function (snail, $) {
 	snail.model.battle = snail.model.battle || {};
 	
 	// private variables
-	let ioLayer, skirmishId, round, skirmishPollInterval, endOfCurrentRoundBattleData;
+	let ioLayer, skirmishId, skirmishPollInterval, round, endOfCurrentRoundBattleData;
 	let eventHandlers = [];
 	
 	// private methods
@@ -137,7 +137,7 @@ var snail = (function (snail, $) {
 		round = 0;
 		skirmishId = $.Deferred();
 		
-		ioLayer.putSkirmish()
+		ioLayer.postSkirmish()
 			.done(function (skirmishResponse) {
 				skirmishId.resolve(skirmishResponse.skirmishId);
 				if (skirmishResponse.opponentName) {

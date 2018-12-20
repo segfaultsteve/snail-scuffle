@@ -31,10 +31,18 @@ var snail = (function (snail) {
 		e.target.classList.remove('stat-increased', 'stat-decreased');
 	};
 	
+	const updateHpAndAp = function (battleData) {
+		$playerHp.text(battleData.playerHp);
+		$playerAp.text(battleData.playerAp);
+		$enemyHp.text(battleData.enemyHp);
+		$enemyAp.text(battleData.enemyAp);
+	};
+	
 	// callbacks
 	const onBattleStarted = function (battleData) {
 		$playerName.text(battleData.playerName);
 		$enemyName.text(battleData.enemyName);
+		updateHpAndAp(battleData);
 	};
 	
 	const onBattlePlanUpdated = function (bp, $attack, $defense, $speed) {
@@ -46,10 +54,7 @@ var snail = (function (snail) {
 	};
 	
 	const onRoundComplete = function (battleData) {
-		$playerHp.text(battleData.playerHp);
-		$playerAp.text(battleData.playerAp);
-		$enemyHp.text(battleData.enemyHp);
-		$enemyAp.text(battleData.enemyAp);
+		updateHpAndAp(battleData);
 	};
 	
 	// public methods

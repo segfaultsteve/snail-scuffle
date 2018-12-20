@@ -11,10 +11,8 @@ public class SkirmishMatcher {
 	private List<PlayerData> loggedInPlayersAwaitingMatches = new ArrayList<>();
 	
 	public void tryMatchPlayer(PlayerData player) {
-		if (player.skirmish == null) {
-			List<PlayerData> potentialOpponents = (player.type == PlayerType.GUEST) ? guestsAwaitingMatches : loggedInPlayersAwaitingMatches;
-			tryMatchPlayer(player, potentialOpponents);
-		}
+		List<PlayerData> potentialOpponents = (player.type == PlayerType.GUEST) ? guestsAwaitingMatches : loggedInPlayersAwaitingMatches;
+		tryMatchPlayer(player, potentialOpponents);
 	}
 	
 	private static void tryMatchPlayer(PlayerData player, List<PlayerData> waitingPlayers) {
