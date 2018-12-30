@@ -59,15 +59,12 @@ public class Battle {
 	}
 
 	public BattleResult getResult() {
-		int winnerIndex = 0;
+		int winnerIndex = -1;
 		if (!player2.isAlive()) {
 			winnerIndex = 0;
 		} else if (!player1.isAlive()) {
 			winnerIndex = 1;
-		} else {
-			winnerIndex = -1;	// both players are still alive
 		}
-		
 		return new BattleResult(recorder.eventsByRound(), recorder.endOfRoundStats(), winnerIndex);
 	}
 

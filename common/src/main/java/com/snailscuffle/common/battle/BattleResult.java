@@ -8,7 +8,7 @@ public class BattleResult implements Serializable {
 	
 	public List<List<BattleEvent>> eventsByRound;
 	public List<BattleSnapshot> endOfRoundStats;
-	public int winnerIndex;		// 0 or 1; see BattleEvent for convention
+	public int winnerIndex;		// 0 or 1 if determined (see BattleEvent for convention), or -1 if there is not yet a winner
 	
 	@SuppressWarnings("unused")
 	private BattleResult() {}	// needed for serialization via jackson
@@ -38,8 +38,8 @@ public class BattleResult implements Serializable {
 			throw new InvalidBattleException("Expected exactly one end-of-round summary for each round");
 		}
 		
-		if (winnerIndex < 0 || winnerIndex > 1) {
-			throw new InvalidBattleException("Invalid winner index; must be 0 (player 1) or 1 (player 2)");
+		if (winnerIndex < -1 || winnerIndex > 1) {
+			throw new InvalidBattleException("Invalid winner index; must be 0 (player 1), 1 (player 2), or -1 (no winner yet)");
 		}
 	}
 	

@@ -58,7 +58,7 @@ public class BattleResultTest {
 	
 	@Test
 	public void failValidationOnInvalidWinnerIndex() {
-		result.winnerIndex = -1;
+		result.winnerIndex = -2;
 		assertValidateThrowsInvalidBattleException(result);
 		result.winnerIndex = 2;
 		assertValidateThrowsInvalidBattleException(result);
