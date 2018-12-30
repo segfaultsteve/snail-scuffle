@@ -39,7 +39,7 @@ public class SkirmishServlet extends HttpServlet {
 			} else if (player == null || !skirmishId.equals(player.skirmish.getId().toString())) {
 				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			} else {
-				JsonUtil.serialize(new SkirmishResponse(player, player.hasSubmittedBattlePlan()), response.getWriter());
+				JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
 			}
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
@@ -57,7 +57,7 @@ public class SkirmishServlet extends HttpServlet {
 		try {
 			PlayerData player = GetOrCreatePlayerData(request);
 			skirmishEngine.tryMatchPlayer(player);
-			JsonUtil.serialize(new SkirmishResponse(player, false), response.getWriter());
+			JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -75,7 +75,6 @@ public class SkirmishServlet extends HttpServlet {
 			PlayerData player = GetOrCreatePlayerData(request);
 			
 			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
-			boolean alreadySubmittedBattlePlan = false;
 			if (skirmishId == null) {
 				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			} else {
@@ -83,12 +82,11 @@ public class SkirmishServlet extends HttpServlet {
 				String battlePlanJson = HttpUtil.extractBody(request);
 				BattlePlan battlePlan = JsonUtil.deserialize(BattlePlan.class, battlePlanJson);
 				battlePlan.validate();
-				alreadySubmittedBattlePlan = player.hasSubmittedBattlePlan();
-				if (!alreadySubmittedBattlePlan) {
+				if (!player.hasSubmittedBattlePlan()) {
 					player.tryAddBattlePlan(battlePlan);
 				}
 			}
-			JsonUtil.serialize(new SkirmishResponse(player, alreadySubmittedBattlePlan), response.getWriter());
+			JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
 		} catch (NotAuthorizedException e) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().print(ErrorResponse.notAuthorized().because(e.getMessage()));
