@@ -3,7 +3,7 @@ var snail = (function (snail, PIXI) {
 	
 	// private variables
 	const WIDTH = 1000, HEIGHT = 500;
-	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, hudData, running, time, eventIndex;
+	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, hudData, running, time, round, eventIndex;
 	let events = [];
 	
 	// private methods
@@ -14,6 +14,7 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const startRound = function (args) {
+		round = args.round;
 		battleData = args.battleData;
 		updateHud();
 		
@@ -28,11 +29,19 @@ var snail = (function (snail, PIXI) {
 	
 	const updateHud = function () {
 		hudData.playerName.text(battleData.playerName);
-		hudData.playerHp.text(formatNumber(battleData.playerHp));
+		hudData.playerHp.text(formatHp(battleData.playerHp));
 		hudData.playerAp.text(formatNumber(battleData.playerAp));
 		hudData.enemyName.text(battleData.enemyName);
-		hudData.enemyHp.text(formatNumber(battleData.enemyHp));
+		hudData.enemyHp.text(formatHp(battleData.enemyHp));
 		hudData.enemyAp.text(formatNumber(battleData.enemyAp));
+	};
+	
+	const formatHp = function (hp) {
+		if (hp > 1 || hp < 0) {
+			return formatNumber(hp);
+		} else {
+			return "< 1";
+		}
 	};
 	
 	const formatNumber = function (num) {
@@ -41,30 +50,25 @@ var snail = (function (snail, PIXI) {
 	
 	const animationLoop = function (delta) {
 		if (running) {
-			let prev = Math.floor(time/6000);
-			time += delta*16;
-			let curr = Math.floor(time/6000);
-			
-			if (curr > prev) {
-				running = false;
-				time = Math.floor(time/6000);
-				snail.model.battle.finishRound();
-			}
-			
 			if (eventIndex < events.length && time > events[eventIndex].time) {
 				applyEvent(events[eventIndex]);
 				eventIndex++;
+			} else {
+				time += delta*16;
 			}
 			
-			if (battleData.enemyHp <= 0) {
-					running = false;
-					$resultMessage.find('.result-text').text("You Won!");
-					$resultMessage.show();
-				} else if (battleData.playerHp <= 0) {
-					running = false;
-					$resultMessage.find('.result-text').text("You Lost!");
-					$resultMessage.show();
-				}
+			if (battleData.enemyHp <= 0 && eventIndex == events.length) {
+				running = false;
+				$resultMessage.find('.result-text').text("You Won!");
+				$resultMessage.show();
+			} else if (battleData.playerHp <= 0 && eventIndex == events.length) {
+				running = false;
+				$resultMessage.find('.result-text').text("You Lost!");
+				$resultMessage.show();
+			} else if (time > 6000*(round + 1)) {
+				running = false;
+				snail.model.battle.finishRound();
+			}
 		}
 	};
 	
