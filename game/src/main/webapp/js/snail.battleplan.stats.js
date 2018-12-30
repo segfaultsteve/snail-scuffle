@@ -32,10 +32,22 @@ var snail = (function (snail) {
 	};
 	
 	const updateHpAndAp = function (battleData) {
-		$playerHp.text(battleData.playerHp);
-		$playerAp.text(battleData.playerAp);
-		$enemyHp.text(battleData.enemyHp);
-		$enemyAp.text(battleData.enemyAp);
+		$playerHp.text(formatHp(battleData.playerHp));
+		$playerAp.text(formatNumber(battleData.playerAp));
+		$enemyHp.text(formatHp(battleData.enemyHp));
+		$enemyAp.text(formatNumber(battleData.enemyAp));
+	};
+	
+	const formatHp = function (hp) {
+		if (hp > 1 || hp < 0) {
+			return formatNumber(hp);
+		} else {
+			return '< 1';
+		}
+	};
+	
+	const formatNumber = function (num) {
+		return Math.max(Math.round(100*num)/100, 0);
 	};
 	
 	// callbacks
@@ -43,6 +55,9 @@ var snail = (function (snail) {
 		$playerName.text(battleData.playerName);
 		$enemyName.text(battleData.enemyName);
 		updateHpAndAp(battleData);
+		$enemyAttack.text('?');
+		$enemyDefense.text('?');
+		$enemySpeed.text('?');
 	};
 	
 	const onBattlePlanUpdated = function (bp, $attack, $defense, $speed) {

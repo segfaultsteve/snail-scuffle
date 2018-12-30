@@ -29,17 +29,13 @@ var snail = (function (snail, $) {
 			enemyAp: 0
 		};
 		
-		const roundToNearestTenth = function (num) {
-			return (Math.round(num * 10)) / 10;
-		};
-		
 		if (stats && round > 0) {
 			const lastRound = stats[round-1];
 			battleData.time = lastRound.time;
-			battleData.playerHp = roundToNearestTenth(lastRound.player1Hp);
-			battleData.playerAp = roundToNearestTenth(lastRound.player1Ap);
-			battleData.enemyHp = roundToNearestTenth(lastRound.player2Hp);
-			battleData.enemyAp = roundToNearestTenth(lastRound.player2Ap);
+			battleData.playerHp = lastRound.player1Hp;
+			battleData.playerAp = lastRound.player1Ap;
+			battleData.enemyHp = lastRound.player2Hp;
+			battleData.enemyAp = lastRound.player2Ap;
 		}
 		
 		return battleData;
@@ -110,6 +106,7 @@ var snail = (function (snail, $) {
 		return function (battleResult) {
 			round = battleResult.endOfRoundStats.length - 1;
 			const args = {
+				round: round,
 				battleData: newBattleData(state.skirmishResponse, battleResult.endOfRoundStats),
 				events: battleResult.eventsByRound.slice(-1)[0]
 			};
