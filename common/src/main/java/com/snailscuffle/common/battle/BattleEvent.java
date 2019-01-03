@@ -36,6 +36,16 @@ public class BattleEvent implements Serializable {
 		return event;
 	}
 	
+	public static BattleEvent resuscitate(int timestamp, int playerIndex) {
+		BattleEvent event = new BattleEvent();
+		event.time = timestamp;
+		event.playerIndex = playerIndex;
+		event.action = Action.RESUSCITATE;
+		event.effects = new ArrayList<>();
+		event.effects.add(new BattleEventEffect(playerIndex, Stat.HP, 1));
+		return event;
+	}
+	
 	private BattleEvent() {}
 	
 	public void validate() {

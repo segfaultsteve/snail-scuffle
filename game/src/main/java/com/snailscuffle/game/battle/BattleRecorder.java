@@ -13,40 +13,48 @@ class BattleRecorder {
 	
 	private Battle battle;
 	private List<List<BattleEvent>> events = new ArrayList<>();
-	private List<BattleEvent> currentRound;
+	private List<BattleEvent> currentRound = new ArrayList<>();
 	private List<BattleSnapshot> endOfRoundStats = new ArrayList<>();
+	private boolean newRound;
 	
 	BattleRecorder(Battle toRecord) {
 		battle = toRecord;
+		events.add(currentRound);
 	}
 	
 	void recordAttack(Combatant attacker, double damage) {
-		if (currentRound == null) {
-			nextRound();
-		}
+		checkForNewRound();
 		int time = battle.currentTime();
 		int attackerIndex = battle.playerIndexOf(attacker);
 		currentRound.add(BattleEvent.attack(time, attackerIndex, damage));
 	}
 	
 	void recordUseItem(Combatant player, Item type, Stat stat, double change) {
-		if (currentRound == null) {
-			nextRound();
-		}
+		checkForNewRound();
 		int time = battle.currentTime();
 		int playerIndex = battle.playerIndexOf(player);
 		currentRound.add(BattleEvent.useItem(time, playerIndex, type, stat, change));
+	}
+	
+	void recordUseDefibrillator(Combatant player) {
+		checkForNewRound();
+		int time = battle.currentTime();
+		int playerIndex = battle.playerIndexOf(player);
+		currentRound.add(BattleEvent.resuscitate(time, playerIndex));
+	}
+	
+	private void checkForNewRound() {
+		if (newRound) {
+			currentRound = new ArrayList<>();
+			events.add(currentRound);
+			newRound = false;
+		}
 	}
 	
 	void addEffectToLastEvent(Combatant player, Stat stat, double change) {
 		int playerIndex = battle.playerIndexOf(player);
 		BattleEvent lastEvent = currentRound.get(currentRound.size() - 1);
 		lastEvent.effects.add(new BattleEventEffect(playerIndex, stat, change));
-	}
-	
-	void nextRound() {
-		currentRound = new ArrayList<>();
-		events.add(currentRound);
 	}
 	
 	void recordEndOfRound(int time, Combatant player1, Combatant player2) {
@@ -63,6 +71,8 @@ class BattleRecorder {
 		player2Ap += 1.0 * ticksToEndOfRound * player2.speedStat() / (Combatant.SCALE * Combatant.SCALE);
 		
 		endOfRoundStats.add(new BattleSnapshot(time, player1Hp, player1Ap, player2Hp, player2Ap));
+		
+		newRound = true;
 	}
 	
 	List<List<BattleEvent>> eventsByRound() {

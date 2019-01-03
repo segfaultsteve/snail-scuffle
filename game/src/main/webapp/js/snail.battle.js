@@ -37,7 +37,7 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const formatHp = function (hp) {
-		if (hp > 1 || hp < 0) {
+		if (hp > 0.99999 || hp < 0.00001) {
 			return formatNumber(hp);
 		} else {
 			return '< 1';

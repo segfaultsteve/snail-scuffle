@@ -178,10 +178,10 @@ public class BattleTest {
 		bp2.weapon = Weapon.LASER;
 		bp2.shell = Shell.STEEL;
 		
-		BattleConfig config = new BattleConfig(bp, bp, bp2, bp, bp, bp);	// player 1 makes two changes at second period
+		BattleConfig config = new BattleConfig(bp, bp, bp2, bp);	// player 1 makes two changes at second period
 		BattleResult result = (new Battle(config)).getResult();
 		
-		// shell should not have changed, so damage should be the same across all periods
+		// shell should not have changed, so damage should be the same across both periods
 		double player1InitialDamage = 0;
 		for (BattleEvent event : result.flattenEvents()) {
 			BattleEventEffect effect = event.effects.get(0);

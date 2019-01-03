@@ -250,7 +250,7 @@ public class CombatantTest {
 	
 	@Test
 	public void saltedShellIncreasesAttackInLaterPeriods() {
-		final int BATTLE_DURATION_IN_PERIODS = 4;
+		final int BATTLE_DURATION_IN_PERIODS = 3;
 		
 		player1.setBattlePlan(bp);
 		player2.setBattlePlan(bp);

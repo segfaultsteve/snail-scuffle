@@ -128,6 +128,7 @@ class Combatant {
 	
 	private void attackOpponent() {
 		int damage = SCALE * DAMAGE_MULTIPLIER * attackStat() / opponent.defenseStat();
+		damage = Math.min(damage, opponent.getHp());
 		recorder.recordAttack(this, 1.0 * damage / SCALE);
 		opponent.takeDamage(damage, true);
 	}
@@ -140,6 +141,7 @@ class Combatant {
 			recorder.addEffectToLastEvent(opponent, Stat.HP, -1.0 * damageToAttacker / SCALE);
 			opponent.takeDamage(damageToAttacker, false);
 		} else if (hp.get() <= 0 && battlePlan.accessory == Accessory.DEFIBRILLATOR && !defibrillatorHasActivated) {
+			recorder.recordUseDefibrillator(this);
 			hp.set(SCALE);		// 1 HP
 			defibrillatorHasActivated = true;
 		}
