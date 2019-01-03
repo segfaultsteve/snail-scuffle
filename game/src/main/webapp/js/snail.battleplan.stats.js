@@ -42,11 +42,7 @@ var snail = (function (snail) {
 		if (hp > 1 || hp < 0) {
 			return formatNumber(hp);
 		} else {
-<<<<<<< HEAD
 			return '< 1';
-=======
-			return "< 1";
->>>>>>> 26160365122692e4b3e51a696ebbead161171880
 		}
 	};
 	
