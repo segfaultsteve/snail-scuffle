@@ -16,13 +16,13 @@ var snail = (function (snail, PIXI) {
 	const startRound = function (args) {
 		round = args.round;
 		battleData = args.battleData;
-		updateHud();
+		events = args.events;
 		
+		updateHud();
 		$waitMessage.hide();
 		$resultMessage.hide();
 		$hud.show();
 		
-		events = args.events;
 		eventIndex = 0;
 		running = true;
 	};
@@ -40,7 +40,7 @@ var snail = (function (snail, PIXI) {
 		if (hp > 1 || hp < 0) {
 			return formatNumber(hp);
 		} else {
-			return "< 1";
+			return '< 1';
 		}
 	};
 	
@@ -59,11 +59,11 @@ var snail = (function (snail, PIXI) {
 			
 			if (battleData.enemyHp <= 0 && eventIndex == events.length) {
 				running = false;
-				$resultMessage.find('.result-text').text("You Won!");
+				$resultMessage.find('.result-text').text('You Won!');
 				$resultMessage.show();
 			} else if (battleData.playerHp <= 0 && eventIndex == events.length) {
 				running = false;
-				$resultMessage.find('.result-text').text("You Lost!");
+				$resultMessage.find('.result-text').text('You Lost!');
 				$resultMessage.show();
 			} else if (time > 6000*(round + 1)) {
 				running = false;
@@ -75,7 +75,7 @@ var snail = (function (snail, PIXI) {
 	const applyEvent = function (battleEvent) {
 		for (let i = 0; i < battleEvent.effects.length; i++) {
 			let effect = battleEvent.effects[i];
-			if (effect.stat === "hp") {
+			if (effect.stat === 'hp') {
 				if (effect.playerIndex == 0) {
 					battleData.playerHp += effect.change;
 				} else {
