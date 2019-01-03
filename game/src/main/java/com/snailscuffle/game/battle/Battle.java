@@ -20,6 +20,9 @@ public class Battle {
 		player1.setOpponent(player2);
 		player2.setOpponent(player1);
 		
+		Combatant firstMover = (config.firstMover == 0) ? player1 : player2;
+		Combatant secondMover = (config.firstMover == 0) ? player2 : player1;
+		
 		int periodEnd = PERIOD;
 		for (int bpIndex = 0; bpIndex < config.battlePlans.length && player1.isAlive() && player2.isAlive(); bpIndex += 2) {
 			recorder.nextRound();
@@ -29,9 +32,9 @@ public class Battle {
 			int increment = 0;
 			while (time + increment < periodEnd && player1.isAlive() && player2.isAlive()) {
 				time += increment;
-				player1.update(increment);
-				if (player2.isAlive()) {
-					player2.update(increment);
+				firstMover.update(increment);
+				if (secondMover.isAlive()) {
+					secondMover.update(increment);
 				}
 				increment = nextIncrement(player1, player2);
 			}

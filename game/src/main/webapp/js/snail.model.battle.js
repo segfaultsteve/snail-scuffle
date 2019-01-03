@@ -65,41 +65,41 @@ var snail = (function (snail, $) {
 		};
 	};
 	
-	const saveSkirmishResponse = function (state) {
+	const getDataForNextRound = function (skirmishResponse) {
+		const response = $.Deferred();
+		if (skirmishResponse.battlePlans.length > 2*round) {
+			response.resolve(skirmishResponse);
+		} else {
+			skirmishPollInterval = setInterval(pollMatchmakerForBattlePlans, 2000, skirmishResponse.skirmishId, response);
+		}
+		return response;
+	};
+	
+	const pollMatchmakerForBattlePlans = function (skirmishId, deferredSkirmishResponse) {
+		ioLayer.getSkirmish(skirmishId)
+			.done(function (skirmishResponse) {
+				if (skirmishResponse.battlePlans.length > 2*round) {
+					clearInterval(skirmishPollInterval);
+					deferredSkirmishResponse.resolve(skirmishResponse);
+				}
+			});
+	};
+	
+	const saveSkirmishResponseToState = function (state) {
 		return function (skirmishResponse) {
 			state.skirmishResponse = skirmishResponse;
 			return skirmishResponse;
 		};
 	}
 	
-	const getBattlePlansForAllRounds = function (skirmishResponse) {
-		const bps = $.Deferred();
-		if (skirmishResponse.battlePlans.length > 2*round) {
-			bps.resolve(skirmishResponse.battlePlans);
-		} else {
-			skirmishPollInterval = setInterval(pollMatchmakerForBattlePlans, 2000, skirmishResponse.skirmishId, bps);
-		}
-		return bps;
+	const saveBattlePlansToModel = function (skirmishResponse) {
+		snail.model.battleplan.playerBp.set(skirmishResponse.battlePlans.slice(-2)[0]);
+		snail.model.battleplan.enemyBp.set(skirmishResponse.battlePlans.slice(-2)[1]);
+		return skirmishResponse;
 	};
 	
-	const pollMatchmakerForBattlePlans = function (skirmishId, deferredBattlePlans) {
-		ioLayer.getSkirmish(skirmishId)
-			.done(function (skirmishResponse) {
-				if (skirmishResponse.battlePlans.length > 2*round) {
-					clearInterval(skirmishPollInterval);
-					deferredBattlePlans.resolve(skirmishResponse.battlePlans);
-				}
-			});
-	};
-	
-	const saveBattlePlansToModel = function (bps) {
-		snail.model.battleplan.playerBp.set(bps.slice(-2)[0]);
-		snail.model.battleplan.enemyBp.set(bps.slice(-2)[1]);
-		return bps;
-	};
-	
-	const postBattlePlansToGameServer = function (bps) {
-		return ioLayer.postBattle(bps);
+	const postBattlePlansToGameServer = function (skirmishResponse) {
+		return ioLayer.postBattle(skirmishResponse.battlePlans, skirmishResponse.firstMover);
 	};
 	
 	const playNextRound = function (state) {
@@ -158,8 +158,8 @@ var snail = (function (snail, $) {
 		
 		skirmishId
 			.then(putBattlePlanToMatchmaker(bp))
-			.then(saveSkirmishResponse(state))
-			.then(getBattlePlansForAllRounds)
+			.then(getDataForNextRound)
+			.then(saveSkirmishResponseToState(state))
 			.then(saveBattlePlansToModel)
 			.then(postBattlePlansToGameServer)
 			.then(playNextRound(state));

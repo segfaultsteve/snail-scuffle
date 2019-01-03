@@ -100,9 +100,10 @@ var snail = (function (snail, $) {
 			.promise();
 	};
 	
-	snail.io.postBattle = function (battlePlans) {
+	snail.io.postBattle = function (battlePlans, firstMover) {
 		const battleConfig = {
-			battlePlans: battlePlans
+			battlePlans: battlePlans,
+			firstMover: firstMover
 		};
 		
 		return ajaxWithRetry($.post, {
