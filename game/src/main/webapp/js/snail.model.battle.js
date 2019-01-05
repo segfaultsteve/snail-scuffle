@@ -21,21 +21,20 @@ var snail = (function (snail, $) {
 		
 		const battleData = {
 			time: 0,
-			playerName: playerName,
-			playerHp: 100,
-			playerAp: 0,
-			enemyName: enemyName,
-			enemyHp: 100,
-			enemyAp: 0
+			names: [playerName, enemyName],
+			hp: [100, 100],
+			ap: [0, 0],
+			endOfRound: 0
 		};
 		
-		if (stats && round > 0) {
-			const lastRound = stats[round-1];
-			battleData.time = lastRound.time;
-			battleData.playerHp = lastRound.player1Hp;
-			battleData.playerAp = lastRound.player1Ap;
-			battleData.enemyHp = lastRound.player2Hp;
-			battleData.enemyAp = lastRound.player2Ap;
+		if (stats) {
+			battleData.endOfRound = stats[0].time * (round+1);
+			if (round > 0) {
+				const lastRound = stats[round-1];
+				battleData.time = lastRound.time;
+				battleData.hp = [lastRound.player1Hp, lastRound.player2Hp];
+				battleData.ap = [lastRound.player1Ap, lastRound.player2Ap];
+			}
 		}
 		
 		return battleData;
@@ -104,9 +103,7 @@ var snail = (function (snail, $) {
 	
 	const playNextRound = function (state) {
 		return function (battleResult) {
-			round = battleResult.endOfRoundStats.length - 1;
 			const args = {
-				round: round,
 				battleData: newBattleData(state.skirmishResponse, battleResult.endOfRoundStats),
 				events: battleResult.eventsByRound.slice(-1)[0]
 			};

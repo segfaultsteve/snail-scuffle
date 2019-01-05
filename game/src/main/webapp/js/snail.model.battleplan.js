@@ -141,6 +141,14 @@ var snail = (function (snail, $) {
 			}
 		};
 		
+		const getWeaponApCost = function () {
+			if (selectedWeapon) {
+				return selectedWeapon.other.apCost;
+			} else {
+				return 0;
+			}
+		};
+		
 		const get = function () {
 			return {
 				snail: selectedSnail.name,
@@ -236,6 +244,7 @@ var snail = (function (snail, $) {
 			getAttack: getAttack,
 			getDefense: getDefense,
 			getSpeed: getSpeed,
+			getWeaponApCost: getWeaponApCost,
 			get: get,
 			setSnail: setSnail,
 			setWeapon: setWeapon,

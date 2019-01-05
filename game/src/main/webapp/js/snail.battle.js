@@ -3,7 +3,7 @@ var snail = (function (snail, PIXI) {
 	
 	// private variables
 	const WIDTH = 1000, HEIGHT = 500;
-	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, hudData, running, time, round, eventIndex;
+	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, speeds, hudData, running, eventIndex;
 	let events = [];
 	
 	// private methods
@@ -14,9 +14,9 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const startRound = function (args) {
-		round = args.round;
 		battleData = args.battleData;
 		events = args.events;
+		speeds = [snail.model.battleplan.playerBp.getSpeed(), snail.model.battleplan.enemyBp.getSpeed()];
 		
 		updateHud();
 		$waitMessage.hide();
@@ -28,44 +28,49 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const updateHud = function () {
-		hudData.playerName.text(battleData.playerName);
-		hudData.playerHp.text(formatHp(battleData.playerHp));
-		hudData.playerAp.text(formatNumber(battleData.playerAp));
-		hudData.enemyName.text(battleData.enemyName);
-		hudData.enemyHp.text(formatHp(battleData.enemyHp));
-		hudData.enemyAp.text(formatNumber(battleData.enemyAp));
+		hudData.playerName.text(battleData.names[0]);
+		hudData.enemyName.text(battleData.names[1]);
+		hudData.playerHp.text(formatHp(battleData.hp[0]));
+		hudData.enemyHp.text(formatHp(battleData.hp[1]));
+		hudData.playerAp.text(formatAp(battleData.ap[0]));
+		hudData.enemyAp.text(formatAp(battleData.ap[1]));
 	};
 	
 	const formatHp = function (hp) {
 		if (hp > 0.99999 || hp < 0.00001) {
-			return formatNumber(hp);
+			return Math.max(Math.round(10*hp)/10, 0);
 		} else {
 			return '< 1';
 		}
 	};
 	
-	const formatNumber = function (num) {
-		return Math.max(Math.round(100*num)/100, 0);
+	const formatAp = function (ap) {
+		return Math.max(Math.floor(ap), 0);
 	};
 	
 	const animationLoop = function (delta) {
 		if (running) {
-			if (eventIndex < events.length && time > events[eventIndex].time) {
+			if (eventIndex < events.length && battleData.time > events[eventIndex].time) {
 				applyEvent(events[eventIndex]);
 				eventIndex++;
 			} else {
-				time += delta*16;
+				const deltaTicks = 8*delta;
+				battleData.time += deltaTicks;
+				for (let i = 0; i < 2; i++) {
+					battleData.ap[i] += speeds[i] * deltaTicks / 1000;
+				}
+				updateHud();
 			}
 			
-			if (battleData.enemyHp <= 0 && eventIndex == events.length) {
+			if (battleData.hp[1] <= 0 && eventIndex == events.length) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Won!');
 				$resultMessage.show();
-			} else if (battleData.playerHp <= 0 && eventIndex == events.length) {
+			} else if (battleData.hp[0] <= 0 && eventIndex == events.length) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Lost!');
 				$resultMessage.show();
-			} else if (time > 6000*(round + 1)) {
+			} else if (battleData.time > battleData.endOfRound) {
 				running = false;
 				snail.model.battle.finishRound();
 			}
@@ -74,21 +79,22 @@ var snail = (function (snail, PIXI) {
 	
 	const applyEvent = function (battleEvent) {
 		for (let i = 0; i < battleEvent.effects.length; i++) {
-			let effect = battleEvent.effects[i];
+			const effect = battleEvent.effects[i];
 			if (effect.stat === 'hp') {
-				if (effect.playerIndex == 0) {
-					battleData.playerHp += effect.change;
-				} else {
-					battleData.enemyHp += effect.change;
-				}
+				battleData.hp[effect.playerIndex] += effect.change;
 			}
 		}
+		
+		if (battleEvent.action === 'attack') {
+			const bp = (battleEvent.playerIndex === 0) ? snail.model.battleplan.playerBp : snail.model.battleplan.enemyBp;
+			battleData.ap[battleEvent.playerIndex] -= bp.getWeaponApCost();
+		}
+		
 		updateHud();
 	};
 	
 	const reset = function () {
 		running = false;
-		time = 0;
 		eventIndex = 0;
 	};
 	

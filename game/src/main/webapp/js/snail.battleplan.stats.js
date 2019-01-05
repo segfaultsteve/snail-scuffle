@@ -32,10 +32,10 @@ var snail = (function (snail) {
 	};
 	
 	const updateHpAndAp = function (battleData) {
-		$playerHp.text(formatHp(battleData.playerHp));
-		$playerAp.text(formatNumber(battleData.playerAp));
-		$enemyHp.text(formatHp(battleData.enemyHp));
-		$enemyAp.text(formatNumber(battleData.enemyAp));
+		$playerHp.text(formatHp(battleData.hp[0]));
+		$playerAp.text(formatNumber(battleData.ap[0]));
+		$enemyHp.text(formatHp(battleData.hp[1]));
+		$enemyAp.text(formatNumber(battleData.ap[1]));
 	};
 	
 	const formatHp = function (hp) {
@@ -52,8 +52,8 @@ var snail = (function (snail) {
 	
 	// callbacks
 	const onBattleStarted = function (battleData) {
-		$playerName.text(battleData.playerName);
-		$enemyName.text(battleData.enemyName);
+		$playerName.text(battleData.names[0]);
+		$enemyName.text(battleData.names[1]);
 		updateHpAndAp(battleData);
 		$enemyAttack.text('?');
 		$enemyDefense.text('?');
