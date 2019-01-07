@@ -2,7 +2,7 @@ var snail = (function (snail, PIXI) {
 	snail.battle = snail.battle || {};
 	
 	// private variables
-	const WIDTH = 1000, HEIGHT = 500;
+	const WIDTH = 1000, HEIGHT = 500, TOLERANCE = 1e-5;
 	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, speeds, hudData, running, eventIndex;
 	let events = [];
 	
@@ -62,11 +62,11 @@ var snail = (function (snail, PIXI) {
 				updateHud();
 			}
 			
-			if (battleData.hp[1] <= 0 && eventIndex == events.length) {
+			if (battleData.hp[1] <= TOLERANCE && eventIndex == events.length) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Won!');
 				$resultMessage.show();
-			} else if (battleData.hp[0] <= 0 && eventIndex == events.length) {
+			} else if (battleData.hp[0] <= TOLERANCE && eventIndex == events.length) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Lost!');
 				$resultMessage.show();
@@ -78,16 +78,18 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const applyEvent = function (battleEvent) {
+		if (battleEvent.action === 'attack') {
+			const bp = (battleEvent.playerIndex === 0) ? snail.model.battleplan.playerBp : snail.model.battleplan.enemyBp;
+			battleData.ap[battleEvent.playerIndex] -= bp.getWeaponApCost();
+		}
+		
 		for (let i = 0; i < battleEvent.effects.length; i++) {
 			const effect = battleEvent.effects[i];
 			if (effect.stat === 'hp') {
 				battleData.hp[effect.playerIndex] += effect.change;
+			} else if (effect.stat === 'ap') {
+				battleData.ap[effect.playerIndex] += effect.change;
 			}
-		}
-		
-		if (battleEvent.action === 'attack') {
-			const bp = (battleEvent.playerIndex === 0) ? snail.model.battleplan.playerBp : snail.model.battleplan.enemyBp;
-			battleData.ap[battleEvent.playerIndex] -= bp.getWeaponApCost();
 		}
 		
 		updateHud();
