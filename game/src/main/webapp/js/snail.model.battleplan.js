@@ -149,6 +149,10 @@ var snail = (function (snail, $) {
 			}
 		};
 		
+		const getItems = function () {
+			return selectedItems.filter(i => i !== null);
+		};
+		
 		const get = function () {
 			return {
 				snail: selectedSnail.name,
@@ -245,6 +249,7 @@ var snail = (function (snail, $) {
 			getDefense: getDefense,
 			getSpeed: getSpeed,
 			getWeaponApCost: getWeaponApCost,
+			getItems: getItems,
 			get: get,
 			setSnail: setSnail,
 			setWeapon: setWeapon,

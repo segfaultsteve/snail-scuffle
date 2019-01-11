@@ -12,6 +12,7 @@ var snail = (function (snail, $) {
 			wait: 'wait'
 		};
 		let $this, thisInstruction, instructionUpdatedHandler, instructionRemovedHandler, instructionType;
+		let availableItems = [];
 		
 		// private methods
 		const setState = function (newState) {
@@ -25,7 +26,9 @@ var snail = (function (snail, $) {
 		};
 		
 		const resetTypeSpecificElements = function () {
-			$this.find('.instruction-item').val('attack');
+			if (availableItems.length > 0) {
+				$this.find('.instruction-item').val(availableItems[0]);
+			}
 			$this.find('.instruction-waitcondition-ap').val('');
 		};
 		
@@ -83,6 +86,21 @@ var snail = (function (snail, $) {
 			instructionUpdatedHandler(thisInstruction);
 		};
 		
+		const setAvailableItems = function (itemNames) {
+			availableItems = itemNames.sort();
+			
+			$this.find('.instruction-item option').hide();
+			for (let i = 0; i < availableItems.length; i++) {
+				$this.find('.instruction-item option[value=' + availableItems[i] + ']').show();
+			}
+			
+			if (availableItems.length > 0) {
+				$this.find('.instruction-type option[value=use]').show();
+			} else {
+				$this.find('.instruction-type option[value=use]').hide();
+			}
+		};
+		
 		const remove = function () {
 			$this.remove();
 		};
@@ -105,6 +123,7 @@ var snail = (function (snail, $) {
 			onInstructionRemoved: function (handler) { instructionRemovedHandler = handler },
 			getData: getData,
 			setData: setData,
+			setAvailableItems: setAvailableItems,
 			remove: remove
 		};
 		return thisInstruction;

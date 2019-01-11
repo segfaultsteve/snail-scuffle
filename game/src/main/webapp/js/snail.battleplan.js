@@ -71,9 +71,11 @@ var snail = (function (snail, $) {
 				break;
 			case 'item1':
 				item1Button.setSelectedOption(newValue.displayName);
+				instructionBox.refreshItemDropdowns();
 				break;
 			case 'item2':
 				item2Button.setSelectedOption(newValue.displayName);
+				instructionBox.refreshItemDropdowns();
 				break;
 			case 'item1Rule':
 				item1Button.setCondition(newValue);
