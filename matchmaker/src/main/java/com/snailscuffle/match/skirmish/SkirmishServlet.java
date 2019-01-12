@@ -107,11 +107,29 @@ public class SkirmishServlet extends HttpServlet {
 		ServletUtil.markHandled(request);
 	}
 	
+	@Override
+	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		response.setContentType("application/json; charset=UTF-8");
+		
+		try {
+			PlayerData player = (PlayerData) request.getSession().getAttribute(PlayerData.ATTRIBUTE_KEY);
+			if (player != null) {
+				skirmishEngine.removePlayer(player);
+			}
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			response.getWriter().print(ErrorResponse.unexpectedError());
+		}
+		
+		ServletUtil.markHandled(request);
+	}
+	
 	private static PlayerData GetOrCreatePlayerData(HttpServletRequest request) {
 		HttpSession session = request.getSession();
 		PlayerData player = (PlayerData) session.getAttribute(PlayerData.ATTRIBUTE_KEY);
 		if (player == null) {
-			// TODO: client sends screen name in body of PUT if signed in; check for it here to
+			// TODO: client sends screen name in body of request if signed in; check for it here to
 			// make sure client doesn't think it's signed in (i.e., used to be, but timed out)
 			player = PlayerData.createGuestPlayer(session.getId());
 			session.setAttribute(PlayerData.ATTRIBUTE_KEY, player);

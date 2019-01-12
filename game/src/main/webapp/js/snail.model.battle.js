@@ -144,8 +144,7 @@ var snail = (function (snail, $) {
 	
 	snail.model.battle.cancelSkirmish = function () {
 		clearInterval(skirmishPollInterval);
-		// TODO: create 'cancel' endpoint on server (maybe DELETE handler?),
-		// then send ajax here
+		ioLayer.deleteSkirmish();
 	};
 	
 	snail.model.battle.submitBattlePlan = function (bp) {

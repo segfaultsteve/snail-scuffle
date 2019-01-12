@@ -27,5 +27,12 @@ public class SkirmishMatcher {
 			}
 		}
 	}
+	
+	public void removePlayer(PlayerData player) {
+		List<PlayerData> waitingPlayers = (player.type == PlayerType.GUEST) ? guestsAwaitingMatches : loggedInPlayersAwaitingMatches;
+		synchronized(waitingPlayers) {
+			waitingPlayers.removeIf(p -> p.id.equals(player.id));
+		}
+	}
 
 }

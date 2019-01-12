@@ -85,6 +85,18 @@ var snail = (function (snail, $) {
 			}).promise();
 	};
 	
+	snail.io.deleteSkirmish = function () {
+		return servers
+			.then(function (servers) {
+				return $.ajax({
+					type: 'DELETE',
+					url: servers.matchmaker + snail.config.skirmishPath,
+					dataType: 'json',
+					xhrFields: { withCredentials: true }
+				});
+			}).promise();
+	};
+	
 	snail.io.putBattlePlan = function (id, battlePlan) {
 		return servers
 			.then(function (servers) {
