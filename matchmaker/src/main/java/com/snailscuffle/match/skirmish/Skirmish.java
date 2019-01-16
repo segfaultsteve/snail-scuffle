@@ -20,6 +20,7 @@ public class Skirmish {
 	private PlayerData player1;
 	private PlayerData player2;
 	private List<BattlePlanPair> battlePlans = new ArrayList<>();
+	private int forfeit;	// 1 if player 1 has forfeited, 2 if player 2 has forfeited, 0 otherwise
 	
 	public Skirmish(PlayerData player) {
 		id = UUID.randomUUID();
@@ -86,6 +87,24 @@ public class Skirmish {
 		boolean player2HasSubmitted = (battlePlans.size() > round && battlePlans.get(round).player2Bp != null);
 		
 		return (isPlayer1 && player1HasSubmitted) || (isPlayer2 && player2HasSubmitted);
+	}
+	
+	public void forfeit(PlayerData player) {
+		if (player.id.equals(player1.id)) {
+			forfeit = 1;
+		} else if (player2 != null && player.id.equals(player2.id)) {
+			forfeit = 2;
+		}
+	}
+	
+	public boolean opponentHasForfeited(PlayerData player) {
+		if (player.id.equals(player1.id)) {
+			return forfeit == 2;
+		} else if (player2 != null && player.id.equals(player2.id)) {
+			return forfeit == 1;
+		} else {
+			return false;
+		}
 	}
 	
 }

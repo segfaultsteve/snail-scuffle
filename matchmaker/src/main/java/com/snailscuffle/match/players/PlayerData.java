@@ -36,4 +36,10 @@ public class PlayerData {
 		return skirmish.playerHasSubmittedBattlePlan(this);
 	}
 	
+	public void forfeit() {
+		if (skirmish != null) {
+			skirmish.forfeit(this);
+		}
+	}
+	
 }

@@ -66,7 +66,7 @@ var snail = (function (snail, $) {
 	
 	const getDataForNextRound = function (skirmishResponse) {
 		const response = $.Deferred();
-		if (skirmishResponse.battlePlans.length > 2*round) {
+		if (skirmishResponse.opponentHasForfeited || skirmishResponse.battlePlans.length > 2*round) {
 			response.resolve(skirmishResponse);
 		} else {
 			skirmishPollInterval = setInterval(pollMatchmakerForBattlePlans, 2000, skirmishResponse.skirmishId, response);
@@ -77,11 +77,20 @@ var snail = (function (snail, $) {
 	const pollMatchmakerForBattlePlans = function (skirmishId, deferredSkirmishResponse) {
 		ioLayer.getSkirmish(skirmishId)
 			.done(function (skirmishResponse) {
-				if (skirmishResponse.battlePlans.length > 2*round) {
+				if (skirmishResponse.opponentHasForfeited || skirmishResponse.battlePlans.length > 2*round) {
 					clearInterval(skirmishPollInterval);
 					deferredSkirmishResponse.resolve(skirmishResponse);
 				}
 			});
+	};
+	
+	const checkForForfeit = function (skirmishResponse) {
+		if (skirmishResponse.opponentHasForfeited) {
+			notifyEventHandlers('opponentHasForfeited');
+			return $.Deferred().reject();
+		} else {
+			return skirmishResponse;
+		}
 	};
 	
 	const saveSkirmishResponseToState = function (state) {
@@ -155,6 +164,7 @@ var snail = (function (snail, $) {
 		skirmishId
 			.then(putBattlePlanToMatchmaker(bp))
 			.then(getDataForNextRound)
+			.then(checkForForfeit)
 			.then(saveSkirmishResponseToState(state))
 			.then(saveBattlePlansToModel)
 			.then(postBattlePlansToGameServer)

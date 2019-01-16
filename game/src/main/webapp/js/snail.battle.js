@@ -3,14 +3,22 @@ var snail = (function (snail, PIXI) {
 	
 	// private variables
 	const WIDTH = 1000, HEIGHT = 500, TOLERANCE = 1e-5;
-	let pixiApp, $hud, $waitMessage, $resultMessage, battleData, speeds, hudData, running, eventIndex;
+	let pixiApp, $hud, $waitMessage, $opponentForfeitedMessage, $resultMessage, battleData, speeds, hudData, running, eventIndex;
 	let events = [];
 	
 	// private methods
 	const showWaitMessage = function () {
 		$hud.hide();
+		$opponentForfeitedMessage.hide();
 		$resultMessage.hide();
 		$waitMessage.show();
+	};
+	
+	const showOpponentForfeitedMessage = function () {
+		$hud.hide();
+		$resultMessage.hide();
+		$waitMessage.hide();
+		$opponentForfeitedMessage.show();
 	};
 	
 	const startRound = function (args) {
@@ -20,6 +28,7 @@ var snail = (function (snail, PIXI) {
 		
 		updateHud();
 		$waitMessage.hide();
+		$opponentForfeitedMessage.hide();
 		$resultMessage.hide();
 		$hud.show();
 		
@@ -112,6 +121,9 @@ var snail = (function (snail, PIXI) {
 			case 'nextRound':
 				startRound(args);
 				break;
+			case 'opponentHasForfeited':
+				showOpponentForfeitedMessage();
+				break;
 		}
 	};
 	
@@ -128,6 +140,10 @@ var snail = (function (snail, PIXI) {
 		
 		$hud = $container.find('.hud');
 		$waitMessage = $container.find('.waitmessage');
+		$opponentForfeitedMessage = $container.find('.opponentforfeitedmessage');
+		$opponentForfeitedMessage.find('.opponentforfeitedmessage-okbutton').click(function () {
+			snail.model.battle.finishBattle();
+		});
 		$resultMessage = $container.find('.result');
 		$resultMessage.find('.result-okbutton').click(function () {
 			snail.model.battle.finishBattle();

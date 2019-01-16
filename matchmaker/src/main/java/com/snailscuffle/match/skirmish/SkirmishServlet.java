@@ -23,7 +23,7 @@ public class SkirmishServlet extends HttpServlet {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SkirmishServlet.class);
 	
-	private SkirmishMatcher skirmishEngine = new SkirmishMatcher();
+	private SkirmishMatcher skirmishMatcher = new SkirmishMatcher();
 	
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -56,7 +56,7 @@ public class SkirmishServlet extends HttpServlet {
 		
 		try {
 			PlayerData player = GetOrCreatePlayerData(request);
-			skirmishEngine.tryMatchPlayer(player);
+			skirmishMatcher.tryMatchPlayer(player);
 			JsonUtil.serialize(new SkirmishResponse(player), response.getWriter());
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
@@ -114,7 +114,7 @@ public class SkirmishServlet extends HttpServlet {
 		try {
 			PlayerData player = (PlayerData) request.getSession().getAttribute(PlayerData.ATTRIBUTE_KEY);
 			if (player != null) {
-				skirmishEngine.removePlayer(player);
+				skirmishMatcher.removePlayer(player);
 			}
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
