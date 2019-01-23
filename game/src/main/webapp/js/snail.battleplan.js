@@ -4,7 +4,7 @@ var snail = (function (snail, $) {
 	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, playerBp;
+	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, playerBp, previousPlayerBp;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
@@ -72,6 +72,14 @@ var snail = (function (snail, $) {
 		}
 	};
 	
+	const reset = function () {
+		previousPlayerBp = null;
+		enableSnailButtons();
+		weaponButton.enable();
+		shellButton.enable();
+		accessoryButton.enable();
+	};
+	
 	// callbacks
 	const onBattlePlanUpdated = function (updatedElement, newValue) {
 		switch (updatedElement) {
@@ -113,12 +121,52 @@ var snail = (function (snail, $) {
 		setSnail(displayName);
 	};
 	
+	const onWeaponSelected = function (weapon) {
+		if (previousPlayerBp) {
+			if (weapon.name === previousPlayerBp.weapon) {
+				shellButton.enable();
+				accessoryButton.enable();
+			} else {
+				shellButton.disable();
+				accessoryButton.disable();
+			}
+		}
+		playerBp.setWeapon(weapon);
+	};
+	
+	const onShellSelected = function (shell) {
+		if (previousPlayerBp) {
+			if (shell.name === previousPlayerBp.shell) {
+				weaponButton.enable();
+				accessoryButton.enable();
+			} else {
+				weaponButton.disable();
+				accessoryButton.disable();
+			}
+		}
+		playerBp.setShell(shell);
+	};
+	
+	const onAccessorySelected = function (accessory) {
+		if (previousPlayerBp) {
+			if (accessory.name === previousPlayerBp.accessory) {
+				weaponButton.enable();
+				shellButton.enable();
+			} else {
+				weaponButton.disable();
+				shellButton.disable();
+			}
+		}
+		playerBp.setAccessory(accessory);
+	};
+	
 	const onBattleEvent = function (event) {
 		switch (event) {
 			case 'battleStarted':
-				enableSnailButtons();
+				reset();
 				break;
 			case 'nextRound':
+				previousPlayerBp = playerBp.get();
 				disableSnailButtons();
 				break;
 		}
@@ -135,9 +183,9 @@ var snail = (function (snail, $) {
 			todd: $battleplan.find('.snails-todd'),
 			doug: $battleplan.find('.snails-doug')
 		};
-		weaponButton = createMenuButton($battleplan.find('.equip-weapon'), snail.io.promiseWeaponInfo(), 0, playerBp.setWeapon);
-		shellButton = createMenuButton($battleplan.find('.equip-shell'), snail.io.promiseShellInfo(), 'last', playerBp.setShell);
-		accessoryButton = createMenuButton($battleplan.find('.equip-accessory'), snail.io.promiseAccessoryInfo(), 'last', playerBp.setAccessory);
+		weaponButton = createMenuButton($battleplan.find('.equip-weapon'), snail.io.promiseWeaponInfo(), 0, onWeaponSelected);
+		shellButton = createMenuButton($battleplan.find('.equip-shell'), snail.io.promiseShellInfo(), 'last', onShellSelected);
+		accessoryButton = createMenuButton($battleplan.find('.equip-accessory'), snail.io.promiseAccessoryInfo(), 'last', onAccessorySelected);
 		item1Button = createItemButton($battleplan.find('.equip-item1'), snail.io.promiseItemInfo(), 0);
 		item2Button = createItemButton($battleplan.find('.equip-item2'), snail.io.promiseItemInfo(), 1);
 		instructionBox = snail.battleplan.instructionbox;
