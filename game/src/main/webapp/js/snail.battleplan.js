@@ -54,6 +54,24 @@ var snail = (function (snail, $) {
 		}
 	};
 	
+	const enableSnailButtons = function () {
+		for (let snail in snailButtons) {
+			const $button = snailButtons[snail];
+			$button.removeClass('disabled-button');
+			$button.off('click', onSnailButtonClicked).on('click', onSnailButtonClicked);
+		}
+	};
+	
+	const disableSnailButtons = function() {
+		for (let snail in snailButtons) {
+			const $button = snailButtons[snail];
+			if (!$button.hasClass('selected-snail')) {
+				$button.addClass('disabled-button');
+			}
+			$button.off('click', onSnailButtonClicked);
+		}
+	};
+	
 	// callbacks
 	const onBattlePlanUpdated = function (updatedElement, newValue) {
 		switch (updatedElement) {
@@ -95,6 +113,17 @@ var snail = (function (snail, $) {
 		setSnail(displayName);
 	};
 	
+	const onBattleEvent = function (event) {
+		switch (event) {
+			case 'battleStarted':
+				enableSnailButtons();
+				break;
+			case 'nextRound':
+				disableSnailButtons();
+				break;
+		}
+	};
+	
 	// public methods
 	snail.battleplan.init = function ($container) {
 		$battleplan = $container;
@@ -119,11 +148,12 @@ var snail = (function (snail, $) {
 		}
 		snail.battleplan.stats.init($battleplan.find('.info'));
 		
-		$battleplan.find('.snails-button').click(onSnailButtonClicked);
-		playerBp.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
 		$battleplan.find('.submit').click(function () {
 			snail.model.battle.submitBattlePlan(playerBp.get());
 		});
+		
+		playerBp.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		snail.model.battle.addEventHandler(onBattleEvent);
 		
 		snail.io.promiseSnailInfo().done(function (snailList) {
 			snails = snailList;
