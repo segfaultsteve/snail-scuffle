@@ -26,6 +26,11 @@ button::-moz-focus-inner {
 	border: 0;
 }
 
+button.disabled-button {
+	color: #aaa;
+	cursor: default;
+}
+
 #components {
 	display: none;
 }

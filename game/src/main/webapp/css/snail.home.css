@@ -7,10 +7,6 @@
 	height: 1em;
 }
 
-#home .disabled-button {
-	color: #aaa;
-}
-
 #home .hidden {
 	display: none !important;
 }
