@@ -278,11 +278,19 @@ class Combatant {
 		return defense;
 	}
 	
-	private int speedStat() {
+	int speedStat() {
 		return SCALE * (battlePlan.snail.speed
 				+ battlePlan.weapon.speed
 				+ battlePlan.shell.speed
 				+ battlePlan.accessory.speed);
+	}
+	
+	int getHp() {
+		return hp.get();
+	}
+	
+	int getAp() {
+		return ap.get();
 	}
 	
 	private double boostFactor(Item type) {

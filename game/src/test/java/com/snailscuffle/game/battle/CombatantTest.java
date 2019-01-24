@@ -434,7 +434,7 @@ public class CombatantTest {
 		runBattleUntilNextEvent();
 		
 		// player 2 used stun
-		BattleEvent firstEvent = recorder.battleEvents().get(0);
+		BattleEvent firstEvent = recorder.eventsByRound().get(0).get(0);
 		assertEquals(Action.USE_ITEM, firstEvent.action);
 		assertEquals(Item.STUN, firstEvent.itemUsed);
 		assertEquals(1, firstEvent.effects.get(0).playerIndex);
@@ -443,14 +443,14 @@ public class CombatantTest {
 		runBattleUntilNextEvent();
 		
         // because player 1 was stunned, player 2 got to attack first
-		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		BattleEvent secondEvent = recorder.eventsByRound().get(0).get(1);
 		assertEquals(Action.ATTACK, secondEvent.action);
 		assertEquals(1, secondEvent.playerIndex);
 		
 		runBattleUntilNextEvent();
 		
 		// after the stun duration elapses, player 1 can attack
-		BattleEvent thirdEvent = recorder.battleEvents().get(2);
+		BattleEvent thirdEvent = recorder.eventsByRound().get(0).get(2);
 		assertEquals(Action.ATTACK, thirdEvent.action);
 		assertEquals(0, thirdEvent.playerIndex);		
 	}
