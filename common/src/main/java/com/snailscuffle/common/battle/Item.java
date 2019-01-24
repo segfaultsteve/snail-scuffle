@@ -22,4 +22,4 @@ public enum Item {
 	public String toString() {
 		return this.name().toLowerCase();	// serialize as lowercase
 	}
-}
+} 
