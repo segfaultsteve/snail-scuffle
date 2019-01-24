@@ -144,6 +144,7 @@ project(':simulator') {
 	
 	dependencies {
 		compile project(':common')	
+		compile project(':game')
 		compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.11.2'
 	}
 
