@@ -12,7 +12,7 @@ public class HasCondition implements Serializable {
 	public int threshold;
 	
 	@SuppressWarnings("unused")
-	private HasCondition() {}		// needed for serialization via jackson-jr
+	private HasCondition() {}		// needed for serialization via jackson
 	
 	public HasCondition(HasCondition other) {
 		player = other.player;

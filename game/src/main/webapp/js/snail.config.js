@@ -5,7 +5,9 @@ var snail = (function (snail) {
 		shellsPath: '/info/shells',
 		accessoriesPath: '/info/accessories',
 		itemsPath: '/info/items',
-		testData: false
+		serversPath: '/info/servers',
+		battlePath: '/battle',
+		skirmishPath: '/skirmishes'
 	};
 	
 	return snail;

@@ -5,17 +5,25 @@
 		<link rel=stylesheet type="text/css" href="css/snail.css"/>
 		<link rel=stylesheet type="text/css" href="css/snail.home.css"/>
 		<link rel=stylesheet type="text/css" href="css/snail.battleplan.css"/>
+		<link rel=stylesheet type="text/css" href="css/snail.battle.css"/>
 		<script
 			  src="https://code.jquery.com/jquery-3.3.1.min.js"
 			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
 			  crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.0.0-alpha.3/pixi.min.js"></script>
 		<script>
-			if (!window.jQuery) document.write('<script src="js/external/jquery-3.3.1.min.js"><\\/script>');
+			if (!window.jQuery) {
+				document.write('<script src="js/external/jquery-3.3.1.min.js"><\\/script>');
+			}
+			if (!window.PIXI) {
+				document.write('<script src="js/external/pixi.min.js"><\\/script>');
+			}
 		</script>
 	</head>
 	<body>
 		<main id="home" class="page">${htmlFiles["home.html"]}</main>
 		<main id="battleplan" class="page">${htmlFiles["battleplan.html"]}</main>
+		<main id="battle" class="page">${htmlFiles["battle.html"]}</main>
 		<section id="components">
 			<div class="components-menubutton">${htmlFiles["battleplan.menubutton.html"]}</div>
 			<div class="components-menubutton-item">${htmlFiles["battleplan.menubutton.item.html"]}</div>

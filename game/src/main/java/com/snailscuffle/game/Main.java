@@ -11,6 +11,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class Main {
 		context.setBaseResource(Resource.newResource(findWebRoot()));
 		context.addServlet(DefaultServlet.class, "/");
 		context.addServlet(BattleServlet.class, "/battle");
-		context.addServlet(InfoServlet.class, "/info/*");
+		context.addServlet(new ServletHolder(new InfoServlet(settings)), "/info/*");
 		
 		server.addConnector(connector);
 		server.setHandler(context);

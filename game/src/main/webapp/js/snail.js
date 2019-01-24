@@ -1,23 +1,41 @@
 var snail = (function(snail, $) {
 	// private variables
 	const pages = {
-		$home: $('#home'),
-		$battleplan: $('#battleplan')
+		home: $('#home'),
+		battleplan: $('#battleplan'),
+		battle: $('#battle')
+	};
+	
+	const onBattleEvent = function (event) {
+		switch (event) {
+			case 'battleStarted':
+				snail.routing.switchTo('battleplan');
+				break;
+			case 'battlePlanSubmitted':
+				snail.routing.switchTo('battle');
+				break;
+			case 'roundComplete':
+				snail.routing.switchTo('battleplan');
+				break;
+			case 'battleComplete':
+				snail.home.reset();
+				snail.routing.switchTo('home');
+				break;
+		}
 	};
 	
 	// public methods
 	snail.init = function () {
-		for (let key in pages) {
-			pages[key].hide();
-		}
+		snail.routing.init(pages);
+		snail.io.init();
+		snail.model.init(snail.io);
+		snail.home.init(pages.home);
+		snail.battleplan.init(pages.battleplan);
+		snail.battle.init(pages.battle);
 		
-		snail.model.init();
-		snail.model.battleplan.init(snail.data);
-		snail.model.battle.init();
-		snail.home.init(pages.$home);
-		snail.battleplan.init(pages.$battleplan);
+		snail.model.battle.addEventHandler(onBattleEvent);
 		
-		pages.$home.show();
+		snail.routing.switchTo('home');
 	};
 	
 	return snail;

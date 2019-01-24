@@ -11,6 +11,7 @@ var snail = (function (snail) {
 			collapsing: 'collapsing'
 		};
 		let instructionList = [];
+		let equippedItems = [];
 		let $expandicon, $collapseicon, $instructions, $addbox, $defaultattack;
 		
 		// private methods
@@ -59,12 +60,13 @@ var snail = (function (snail) {
 				const instruction = instructionList[i].getData();
 				instructionData.push(instruction);
 			}
-			snail.model.battleplan.setInstructions(instructionData)
+			snail.model.battleplan.playerBp.setInstructions(instructionData);
 		};
 		
 		// callbacks
 		const onAddInstruction = function () {
 			const newInstruction = snail.battleplan.instruction.create($instructions, onInstructionUpdated, onInstructionRemoved);
+			newInstruction.setAvailableItems(equippedItems);
 			instructionList.push(newInstruction);
 			updateModel();
 		};
@@ -99,6 +101,20 @@ var snail = (function (snail) {
 					instruction.onInstructionRemoved(onInstructionRemoved);
 				}
 				updateModel();
+			}
+		};
+		
+		snail.battleplan.instructionbox.refreshItemDropdowns = function () {
+			equippedItems = snail.model.battleplan.playerBp.getItems().map(i => i.name).filter(i => i !== 'none');
+			for (let i = 0; i < instructionList.length; i++) {
+				const data = instructionList[i].getData();
+				if (data.type === 'use' && !equippedItems.includes(data.itemToUse)) {
+					instructionList[i].remove();
+					instructionList.splice(i, 1);
+					i--;
+				} else {
+					instructionList[i].setAvailableItems(equippedItems);
+				}
 			}
 		};
 		

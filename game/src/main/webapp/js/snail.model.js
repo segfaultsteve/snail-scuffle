@@ -5,8 +5,11 @@ var snail = (function (snail) {
 	let playerName;
 	
 	// public methods
-	snail.model.init = function () {
-		playerName = 'player1';		// TODO: replace this
+	snail.model.init = function (io) {
+		playerName = 'Guest';
+		
+		snail.model.battle.init(io);
+		snail.model.battleplan.init(io);
 	};
 	
 	snail.model.getPlayerName = function () {

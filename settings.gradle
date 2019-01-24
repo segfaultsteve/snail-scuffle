@@ -1,1 +1,1 @@
-include 'common', 'game', 'simulator'
+include 'common', 'game', 'matchmaker', 'simulator'

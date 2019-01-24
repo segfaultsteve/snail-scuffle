@@ -20,6 +20,9 @@ public class Battle {
 		player1.setOpponent(player2);
 		player2.setOpponent(player1);
 		
+		Combatant firstMover = (config.firstMover == 0) ? player1 : player2;
+		Combatant secondMover = (config.firstMover == 0) ? player2 : player1;
+		
 		int periodEnd = PERIOD;
 		for (int bpIndex = 0; bpIndex < config.battlePlans.length && player1.isAlive() && player2.isAlive(); bpIndex += 2) {
 			player1.setBattlePlan(config.battlePlans[bpIndex]);
@@ -28,12 +31,13 @@ public class Battle {
 			int increment = 0;
 			while (time + increment < periodEnd && player1.isAlive() && player2.isAlive()) {
 				time += increment;
-				player1.update(increment);
-				if (player2.isAlive()) {
-					player2.update(increment);
+				firstMover.update(increment);
+				if (secondMover.isAlive()) {
+					secondMover.update(increment);
 				}
 				increment = nextIncrement(player1, player2);
 			}
+			recorder.recordEndOfRound(periodEnd, player1, player2);
 			periodEnd += PERIOD;
 		}
 	}
@@ -57,16 +61,13 @@ public class Battle {
 	}
 
 	public BattleResult getResult() {
-		int winnerIndex = 0;
+		int winnerIndex = -1;
 		if (!player2.isAlive()) {
 			winnerIndex = 0;
 		} else if (!player1.isAlive()) {
 			winnerIndex = 1;
-		} else {
-			winnerIndex = -1;	// both players are still alive
 		}
-		
-		return new BattleResult(recorder.battleEvents(), winnerIndex);
+		return new BattleResult(recorder.eventsByRound(), recorder.endOfRoundStats(), winnerIndex);
 	}
 
 }

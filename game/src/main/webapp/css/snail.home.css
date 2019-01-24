@@ -7,10 +7,6 @@
 	height: 1em;
 }
 
-#home .disabled-button {
-	color: #aaa;
-}
-
 #home .hidden {
 	display: none !important;
 }
@@ -87,8 +83,9 @@
 	position: fixed;
 	width: 40vw;
 	height: 35vh;
-	top: 30vh;
-	left: 30vw;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 	z-index: 2;
 	justify-content: space-between;
 	align-items: center;
@@ -120,4 +117,33 @@
 #home .modals-play-subtext {
 	margin-top: 0.3em;
 	font-size: 0.6em;
+}
+
+#home .modals-matching {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 2;
+	padding: 3em 4em 2em 4em;
+	background-color: white;
+	border: 1px solid black;
+	border-radius: 1em;
+	text-align: center;
+}
+
+#home .modals-matching-closeicon {
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	font-size: 1.5em;
+	cursor: pointer;
+}
+
+#home .modals-matching-cancel {
+	display: block;
+	margin: auto;
+	margin-top: 2em;
+	padding: 1em 2em;
+	border-radius: 0.3em;
 }

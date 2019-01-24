@@ -115,7 +115,7 @@ var snail = (function(snail, $) {
 		const enable = function () {
 			if ($button.hasClass('disabled-button')) {
 				$button.removeClass('disabled-button');
-				$button.click(onButtonClicked);
+				$button.off('click', onButtonClicked).on('click', onButtonClicked);
 			}
 		};
 		
