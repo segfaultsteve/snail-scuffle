@@ -5,7 +5,8 @@ public enum Stat {
 	AP,
 	ATTACK,
 	DEFENSE,
-	SPEED;
+	SPEED,
+	NONE;
 	
 	@Override
 	public String toString() {

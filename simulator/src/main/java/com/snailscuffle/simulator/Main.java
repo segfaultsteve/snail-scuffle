@@ -14,7 +14,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import com.snailscuffle.common.battle.*;
 import com.snailscuffle.common.util.JsonUtil;
-import com.snailscuffle.game.battle.*;
+import com.snailscuffle.game.battle.Battle;
+
 
 class Main {
 

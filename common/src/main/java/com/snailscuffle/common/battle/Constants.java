@@ -44,6 +44,18 @@ public class Constants {
 	public static final int LASER_ATTACK = 9;
 	public static final int LASER_AP_COST = 18;
 	
+	public static final String LEAKY_RADIOACTIVE_WATERGUN_DISPLAY_NAME = "Irriadiated Water Gun";
+	// Need to add descriptions to explain the effect
+	public static final int LEAKY_RADIOACTIVE_WATERGUN_SELF_DAMAGE = 3;
+	public static final int LEAKY_RADIOACTIVE_WATERGUN_ATTACK = 9;
+	public static final int LEAKY_RADIOACTIVE_WATERGUN_AP_COST = 13;
+	
+	public static final String ENEMY_TEAR_COLLECTOR_DISPLAY_NAME = "Enemy Tear Collector";
+	// Need to add descriptions to explain the effect
+	public static final int ENEMY_TEAR_COLLECTOR_SELF_HEAL = 5;
+	public static final int ENEMY_TEAR_COLLECTOR_ATTACK = 4;
+	public static final int ENEMY_TEAR_COLLECTOR_AP_COST = 13;
+	
 	// shells
 	public static final String ALUMINUM_DISPLAY_NAME = "Aluminum";
 	public static final int ALUMINUM_DEFENSE = 3;
@@ -92,19 +104,29 @@ public class Constants {
 	public static final String NO_ACCESSORY_DISPLAY_NAME = "No Accessory";
 	
 	// items
-	public static final String ATTACK_BOOST_DISPLAY_NAME = "Attack Boost";
-	public static final String ATTACK_BOOST_DESCRIPTION = "Temporarily increases Attack by 40%";
 	public static final double ATTACK_BOOST_MULTIPLIER = 1.4;
+	public static final String ATTACK_BOOST_DISPLAY_NAME = "Attack Boost";
+	public static final String ATTACK_BOOST_DESCRIPTION = "Temporarily increases Attack by " + (ATTACK_BOOST_MULTIPLIER - 1) * 100 + "%";		
 	public static final int ATTACK_BOOST_DURATION = 5000;
 	
-	public static final String DEFENSE_BOOST_DISPLAY_NAME = "Defense Boost";
-	public static final String DEFENSE_BOOST_DESCRIPTION = "Temporarily increases Defense by 40%";
 	public static final double DEFENSE_BOOST_MULTIPLIER = 1.4;
+	public static final String DEFENSE_BOOST_DISPLAY_NAME = "Defense Boost";
+	public static final String DEFENSE_BOOST_DESCRIPTION = "Temporarily increases Defense by " + (DEFENSE_BOOST_MULTIPLIER - 1) * 100 + "%";	
 	public static final int DEFENSE_BOOST_DURATION = 5000;
 	
 	public static final String SPEED_BOOST_DISPLAY_NAME = "Speed Boost";
 	public static final String SPEED_BOOST_DESCRIPTION = "Increases AP by 20";
 	public static final int SPEED_BOOST_AP_INCREASE = 20;
+	
+	public static final String STUN_DISPLAY_NAME = "Stun";
+	public static final String STUN_DESCRIPTION = "Stuns the opponent for a small amount of time."
+												+ "The opponent will not be able to attack, defend, use an item, or accumulate AP for the duration of the stun.";
+	public static final int STUN_DURATION = 2000;
+	
+	public static final int HEAL_AMOUNT = 45;
+	public static final String HEAL_DISPLAY_NAME = "Heal";	
+	public static final String HEAL_DESCRIPTION = "Instantly heal yourself for " + HEAL_AMOUNT + " HP.";
+	
 	
 	public static final String NO_ITEM_DISPLAY_NAME = "No Item";
 

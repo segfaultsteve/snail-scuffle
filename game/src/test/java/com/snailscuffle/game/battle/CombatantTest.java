@@ -4,6 +4,7 @@ import static com.snailscuffle.common.battle.Constants.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -416,6 +417,44 @@ public class CombatantTest {
 		assertEquals(firstEvent.time, secondEvent.time);
 	}
 	
+	
+	// Player 1 should always attack first given that player 2 has not used any speed modifiers.
+	// This test runs a scenario where player 2 uses the stun item just before player 1 would have
+	// attacked to ensure that the stun item is working correctly.
+	@Test
+	public void stunItemIncapacitatesOpponent() {
+		player1.setBattlePlan(bp);
+		
+		bp.item1 = Item.STUN;
+		bp.instructions = Arrays.asList(
+				Instruction.waitUntilApIs(ROCKET_AP_COST - 1),
+				Instruction.useItem(Item.STUN)); // stun just before player1 attacks
+		player2.setBattlePlan(bp);
+		
+		runBattleUntilNextEvent();
+		
+		// player 2 used stun
+		BattleEvent firstEvent = recorder.battleEvents().get(0);
+		assertEquals(Action.USE_ITEM, firstEvent.action);
+		assertEquals(Item.STUN, firstEvent.itemUsed);
+		assertEquals(1, firstEvent.effects.get(0).playerIndex);
+		assertEquals(Stat.NONE, firstEvent.effects.get(0).stat);
+		
+		runBattleUntilNextEvent();
+		
+        // because player 1 was stunned, player 2 got to attack first
+		BattleEvent secondEvent = recorder.battleEvents().get(1);
+		assertEquals(Action.ATTACK, secondEvent.action);
+		assertEquals(1, secondEvent.playerIndex);
+		
+		runBattleUntilNextEvent();
+		
+		// after the stun duration elapses, player 1 can attack
+		BattleEvent thirdEvent = recorder.battleEvents().get(2);
+		assertEquals(Action.ATTACK, thirdEvent.action);
+		assertEquals(0, thirdEvent.playerIndex);		
+	}
+	
 	@Test
 	public void playerHasConditionTriggersCorrectly() {
 		final int HP_THRESHOLD = 50;
@@ -514,7 +553,7 @@ public class CombatantTest {
 			runBattleUntilNextEvent();		// crashed before bug fix
 		}
 	}
-	
+
 	// NOTE: If multiple events fall on the same tick (e.g., players with identical battle
 	// plans attack, or a player uses an item and attacks), then calling this method will
 	// trigger *all* of those events. The next call to this function will return the event(s)

@@ -11,6 +11,7 @@ import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.ItemRule;
 import com.snailscuffle.common.battle.Player;
 import com.snailscuffle.common.battle.Stat;
+import com.snailscuffle.common.battle.Weapon;
 
 class Combatant {
 	
@@ -19,6 +20,16 @@ class Combatant {
 		private int ticksRemaining;
 		
 		private ActiveBoost(Item type, int duration) {
+			this.type = type;
+			ticksRemaining = duration;
+		}
+	}
+	
+	private static class OpponentAppliedEffect {
+		private Item type;
+		private int ticksRemaining;
+		
+		private OpponentAppliedEffect(Item type, int duration) {
 			this.type = type;
 			ticksRemaining = duration;
 		}
@@ -46,6 +57,7 @@ class Combatant {
 	private MeteredStat ap;		// = AP * SCALE
 	private int currentInstruction;
 	private final List<ActiveBoost> activeBoosts = new ArrayList<>();
+	private final List<OpponentAppliedEffect> opponentAppliedEffects = new ArrayList<>();
 	private int itemsUsed;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 	private boolean defibrillatorHasActivated = false;
@@ -71,9 +83,18 @@ class Combatant {
 		return (nextAp - ap.get()) * SCALE / speedStat() + 1;		// +1 to round up after integer division
 	}
 	
-	void update(int deltaTicks) {
-		ap.add(deltaTicks * speedStat() / SCALE);
+	void update(int deltaTicks) {		
+		
+		boolean isStunned = determineIfStunned(opponentAppliedEffects);
+		if (isStunned) {
+			decrementBoostTimers(activeBoosts, deltaTicks);
+			decrementOpponentAppliedEffectTimers(opponentAppliedEffects, deltaTicks);
+			return;
+		}
+		
+		ap.add(deltaTicks * speedStat() / SCALE);		
 		decrementBoostTimers(activeBoosts, deltaTicks);
+		decrementOpponentAppliedEffectTimers(opponentAppliedEffects, deltaTicks);
 		
 		boolean continueTurn = true;
 		while (continueTurn) {
@@ -102,15 +123,29 @@ class Combatant {
 		return instruction;
 	}
 	
+	private boolean determineIfStunned(List<OpponentAppliedEffect> opponentAppliedEffects2) {
+		for (OpponentAppliedEffect effect : opponentAppliedEffects) {
+			if (effect.type == Item.STUN)
+				return true;
+		}	
+		return false;
+	}
+	
 	private static void decrementBoostTimers(List<ActiveBoost> boosts, int ticks) {
 		boosts.forEach(b -> b.ticksRemaining -= ticks);
 		boosts.removeIf(b -> b.ticksRemaining <= 0);
+	}
+	
+	private static void decrementOpponentAppliedEffectTimers(List<OpponentAppliedEffect> effects, int ticks) {
+		effects.forEach(b -> b.ticksRemaining -= ticks);
+		effects.removeIf(b -> b.ticksRemaining <= 0);
 	}
 	
 	private boolean tryAttack() {
 		int attackCost = battlePlan.weapon.apCost * SCALE;
 		if (ap.get() >= attackCost) {
 			attackOpponent();
+			applyWeaponEffects(battlePlan.weapon);
 			ap.subtract(attackCost);
 			currentInstruction++;
 			return true;
@@ -122,6 +157,7 @@ class Combatant {
 		int damage = SCALE * DAMAGE_MULTIPLIER * attackStat() / opponent.defenseStat();
 		recorder.recordAttack(this, 1.0 * damage / SCALE);
 		opponent.takeDamage(damage, true);
+		applyWeaponEffects(battlePlan.weapon);
 	}
 	
 	private void takeDamage(int damage, boolean applyThorns) {
@@ -170,6 +206,15 @@ class Combatant {
 			recorder.recordUseItem(this, Item.SPEED, Stat.AP, SPEED_BOOST_AP_INCREASE);
 			break;
 			
+		case STUN:
+			opponent.opponentAppliedEffects.add(new OpponentAppliedEffect(Item.STUN, STUN_DURATION));
+			recorder.recordUseItem(this, Item.STUN, Stat.NONE, 0);
+			break;
+			
+		case HEAL:
+			hp.add(HEAL_AMOUNT);
+			recorder.recordUseItem(this, Item.HEAL, Stat.HP, HEAL_AMOUNT);
+			
 		case NONE:
 			return;
 			
@@ -178,6 +223,19 @@ class Combatant {
 		}
 		itemsUsed++;
 		opponent.onOpponentUsedItem(item);
+	}
+	
+	private void applyWeaponEffects(Weapon weapon) {
+		switch (weapon) {
+		case LEAKY_RADIOACTIVE_WATERGUN:
+			this.takeDamage(LEAKY_RADIOACTIVE_WATERGUN_SELF_DAMAGE, false);
+			recorder.addEffectToLastEvent(this, Stat.HP, -1.0 * LEAKY_RADIOACTIVE_WATERGUN_SELF_DAMAGE);
+			break;
+		case ENEMY_TEAR_COLLECTOR:
+			this.hp.add(ENEMY_TEAR_COLLECTOR_SELF_HEAL);
+			recorder.addEffectToLastEvent(this, Stat.HP, (double)ENEMY_TEAR_COLLECTOR_SELF_HEAL);
+			break;
+		}
 	}
 	
 	private boolean tryWait(int threshold) {
