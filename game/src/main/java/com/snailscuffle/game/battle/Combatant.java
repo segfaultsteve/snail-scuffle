@@ -15,6 +15,11 @@ import com.snailscuffle.common.battle.Weapon;
 
 class Combatant {
 	
+	private enum ItemSlot {
+		ITEM_1,
+		ITEM_2
+	}
+	
 	private static class ActiveBoost {
 		private Item type;
 		private int ticksRemaining;
@@ -176,18 +181,25 @@ class Combatant {
 	private boolean tryUseItem(Item item) {
 		if (itemsUsed < MAX_ITEMS_PER_BATTLE) {
 			if (battlePlan.item1 == item) {
-				applyItem(battlePlan.item1);
-				battlePlan.item1 = null;
+				applyItem(ItemSlot.ITEM_1);
 			} else if (battlePlan.item2 == item) {
-				applyItem(battlePlan.item2);
-				battlePlan.item2 = null;
+				applyItem(ItemSlot.ITEM_2);
 			}
 		}
 		currentInstruction++;
 		return true;	// using an item has zero "cost"; always continue to next instruction
 	}
 	
-	private void applyItem(Item item) {
+	private void applyItem(ItemSlot itemSlot) {
+		Item item = null;
+		if (itemSlot == ItemSlot.ITEM_1) {
+			item = battlePlan.item1;
+			battlePlan.item1 = null;	// null this here to avoid infinite recursion below
+		} else {
+			item = battlePlan.item2;
+			battlePlan.item2 = null;
+		}
+		
 		switch (item) {
 		case ATTACK:
 			int initialAttack = attackStat();
@@ -234,6 +246,8 @@ class Combatant {
 		case ENEMY_TEAR_COLLECTOR:
 			this.hp.add(ENEMY_TEAR_COLLECTOR_SELF_HEAL);
 			recorder.addEffectToLastEvent(this, Stat.HP, (double)ENEMY_TEAR_COLLECTOR_SELF_HEAL);
+			break;
+		default:
 			break;
 		}
 	}
@@ -313,13 +327,10 @@ class Combatant {
 	private void onOpponentUsedItem(Item item) {
 		if (itemsUsed < MAX_ITEMS_PER_BATTLE) {
 			if (battlePlan.item1 != null && usesConditionIsSatisfied(battlePlan.item1Rule, item)) {
-				applyItem(battlePlan.item1);
-				battlePlan.item1 = null;
+				applyItem(ItemSlot.ITEM_1);
 			}
-
 			if (battlePlan.item2 != null && usesConditionIsSatisfied(battlePlan.item2Rule, item)) {
-				applyItem(battlePlan.item2);
-				battlePlan.item2 = null;
+				applyItem(ItemSlot.ITEM_2);
 			}
 		}
 	}
@@ -342,13 +353,10 @@ class Combatant {
 	
 	private void checkItemRuleHasConditions(Player subject, double subjectHp, double subjectAp) {
 		if (battlePlan.item1 != null && hasConditionIsSatisfied(battlePlan.item1Rule, subject, subjectHp, subjectAp)) {
-			applyItem(battlePlan.item1);
-			battlePlan.item1 = null;
+			applyItem(ItemSlot.ITEM_1);
 		}
-		
 		if (battlePlan.item2 != null && hasConditionIsSatisfied(battlePlan.item2Rule, subject, subjectHp, subjectAp)) {
-			applyItem(battlePlan.item2);
-			battlePlan.item2 = null;
+			applyItem(ItemSlot.ITEM_2);
 		}
 	}
 	
