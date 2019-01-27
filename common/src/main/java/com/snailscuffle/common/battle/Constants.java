@@ -44,18 +44,6 @@ public class Constants {
 	public static final int LASER_ATTACK = 9;
 	public static final int LASER_AP_COST = 18;
 	
-	public static final String LEAKY_RADIOACTIVE_WATERGUN_DISPLAY_NAME = "Irriadiated Water Gun";
-	// Need to add descriptions to explain the effect
-	public static final int LEAKY_RADIOACTIVE_WATERGUN_SELF_DAMAGE = 3;
-	public static final int LEAKY_RADIOACTIVE_WATERGUN_ATTACK = 9;
-	public static final int LEAKY_RADIOACTIVE_WATERGUN_AP_COST = 13;
-	
-	public static final String ENEMY_TEAR_COLLECTOR_DISPLAY_NAME = "Enemy Tear Collector";
-	// Need to add descriptions to explain the effect
-	public static final int ENEMY_TEAR_COLLECTOR_SELF_HEAL = 5;
-	public static final int ENEMY_TEAR_COLLECTOR_ATTACK = 4;
-	public static final int ENEMY_TEAR_COLLECTOR_AP_COST = 13;
-	
 	// shells
 	public static final String ALUMINUM_DISPLAY_NAME = "Aluminum";
 	public static final int ALUMINUM_DEFENSE = 3;

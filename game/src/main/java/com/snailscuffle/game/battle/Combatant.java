@@ -11,7 +11,6 @@ import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.ItemRule;
 import com.snailscuffle.common.battle.Player;
 import com.snailscuffle.common.battle.Stat;
-import com.snailscuffle.common.battle.Weapon;
 
 class Combatant {
 	
@@ -150,7 +149,6 @@ class Combatant {
 		int attackCost = battlePlan.weapon.apCost * SCALE;
 		if (ap.get() >= attackCost) {
 			attackOpponent();
-			applyWeaponEffects(battlePlan.weapon);
 			ap.subtract(attackCost);
 			currentInstruction++;
 			return true;
@@ -162,7 +160,6 @@ class Combatant {
 		int damage = SCALE * DAMAGE_MULTIPLIER * attackStat() / opponent.defenseStat();
 		recorder.recordAttack(this, 1.0 * damage / SCALE);
 		opponent.takeDamage(damage, true);
-		applyWeaponEffects(battlePlan.weapon);
 	}
 	
 	private void takeDamage(int damage, boolean applyThorns) {
@@ -235,21 +232,6 @@ class Combatant {
 		}
 		itemsUsed++;
 		opponent.onOpponentUsedItem(item);
-	}
-	
-	private void applyWeaponEffects(Weapon weapon) {
-		switch (weapon) {
-		case LEAKY_RADIOACTIVE_WATERGUN:
-			this.takeDamage(LEAKY_RADIOACTIVE_WATERGUN_SELF_DAMAGE, false);
-			recorder.addEffectToLastEvent(this, Stat.HP, -1.0 * LEAKY_RADIOACTIVE_WATERGUN_SELF_DAMAGE);
-			break;
-		case ENEMY_TEAR_COLLECTOR:
-			this.hp.add(ENEMY_TEAR_COLLECTOR_SELF_HEAL);
-			recorder.addEffectToLastEvent(this, Stat.HP, (double)ENEMY_TEAR_COLLECTOR_SELF_HEAL);
-			break;
-		default:
-			break;
-		}
 	}
 	
 	private boolean tryWait(int threshold) {
