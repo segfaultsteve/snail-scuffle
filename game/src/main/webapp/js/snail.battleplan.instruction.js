@@ -108,6 +108,12 @@ var snail = (function (snail, $) {
 		// init code
 		$container.append(componentHtml);
 		$this = $container.find('.instruction:last');
+		snail.io.promiseItemInfo().done(function (items) {
+			const $items = $this.find('.instruction-item');
+			items
+				.map(i => '<option value="' + i.name + '">' + i.displayName + '</option>')
+				.forEach(i => $items.append(i));
+		});
 		$this.find('.instruction-type').change(onTypeChanged);
 		$this.find('.instruction-item').change(onItemChanged);
 		$this.find('.instruction-waitcondition-ap').change(onApThresholdChanged);
