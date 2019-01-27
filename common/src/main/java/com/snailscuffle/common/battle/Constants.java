@@ -110,9 +110,9 @@ public class Constants {
 	public static final String STUN_DESCRIPTION = "Temporarily prevents enemy from attacking, defending, using an item, or accumulating AP";
 	public static final int STUN_DURATION = 2000;
 	
-	public static final int HEAL_AMOUNT = 45;
+	public static final int HEAL_HP_INCREASE = 15;
 	public static final String HEAL_DISPLAY_NAME = "Heal";	
-	public static final String HEAL_DESCRIPTION = "Increases HP by " + HEAL_AMOUNT;
+	public static final String HEAL_DESCRIPTION = "Increases HP by " + HEAL_HP_INCREASE;
 	
 	
 	public static final String NO_ITEM_DISPLAY_NAME = "No Item";

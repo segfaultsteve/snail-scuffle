@@ -221,8 +221,8 @@ class Combatant {
 			break;
 			
 		case HEAL:
-			hp.add(HEAL_AMOUNT);
-			recorder.recordUseItem(this, Item.HEAL, Stat.HP, HEAL_AMOUNT);
+			hp.add(SCALE * HEAL_HP_INCREASE);
+			recorder.recordUseItem(this, Item.HEAL, Stat.HP, HEAL_HP_INCREASE);
 			
 		case NONE:
 			return;
