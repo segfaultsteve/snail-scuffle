@@ -108,10 +108,15 @@ var snail = (function (snail, $) {
 		let itemConditions = [null, null];
 		let instructions = [];
 		let battlePlanUpdatedHandlers = [];
+		let itemUsedHandlers = [];
 		
 		const addBattlePlanUpdatedHandler = function (handler) {
 			battlePlanUpdatedHandlers.push(handler);
 		};
+		
+		const addItemUsedHandler = function (handler) {
+			itemUsedHandlers.push(handler);
+		}
 		
 		const notifyBattlePlanUpdatedHandlers = function (updatedElement, newValue) {
 			battlePlanUpdatedHandlers.forEach(handler => handler(updatedElement, newValue));
@@ -239,12 +244,26 @@ var snail = (function (snail, $) {
 			});
 		};
 		
+		const registerItemUsed = function (itemName) {
+			ioLayer.promiseItemInfo().done(function (items) {
+				for (let i = 0; i < selectedItems.length; i++) {
+					if (selectedItems[i] && selectedItems[i].name === itemName) {
+						setItem(i, findByProperty(items, 'name', 'none'));
+						setItemCondition(i, null);
+						itemUsedHandlers.forEach(handler => handler(i));
+						break;
+					}
+				}
+			});
+		};
+		
 		if (bp) {
 			set(bp);
 		}
 		
 		return {
 			addBattlePlanUpdatedHandler: addBattlePlanUpdatedHandler,
+			addItemUsedHandler: addItemUsedHandler,
 			getAttack: getAttack,
 			getDefense: getDefense,
 			getSpeed: getSpeed,
@@ -258,7 +277,8 @@ var snail = (function (snail, $) {
 			setItem: setItem,
 			setItemCondition: setItemCondition,
 			setInstructions: setInstructions,
-			set: set
+			set: set,
+			registerItemUsed: registerItemUsed
 		};
 	};
 	

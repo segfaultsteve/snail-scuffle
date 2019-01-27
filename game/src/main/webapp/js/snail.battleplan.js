@@ -115,6 +115,14 @@ var snail = (function (snail, $) {
 		}
 	};
 	
+	const onItemUsed = function (index) {
+		if (index === 0) {
+			item1Button.disable();
+		} else {
+			item2Button.disable();
+		}
+	};
+	
 	const onSnailButtonClicked = function (e) {
 		const $button = $(e.target).closest('.snails-button');
 		const displayName = $button.find('.snails-button-name').text();
@@ -201,6 +209,7 @@ var snail = (function (snail, $) {
 		});
 		
 		playerBp.addBattlePlanUpdatedHandler(onBattlePlanUpdated);
+		playerBp.addItemUsedHandler(onItemUsed);
 		snail.model.battle.addEventHandler(onBattleEvent);
 		
 		snail.io.promiseSnailInfo().done(function (snailList) {

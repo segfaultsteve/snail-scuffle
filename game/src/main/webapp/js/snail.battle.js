@@ -87,9 +87,11 @@ var snail = (function (snail, PIXI) {
 	};
 	
 	const applyEvent = function (battleEvent) {
+		const bp = (battleEvent.playerIndex === 0) ? snail.model.battleplan.playerBp : snail.model.battleplan.enemyBp;
 		if (battleEvent.action === 'attack') {
-			const bp = (battleEvent.playerIndex === 0) ? snail.model.battleplan.playerBp : snail.model.battleplan.enemyBp;
 			battleData.ap[battleEvent.playerIndex] -= bp.getWeaponApCost();
+		} else if (battleEvent.action === 'use_item') {
+			bp.registerItemUsed(battleEvent.itemUsed);
 		}
 		
 		for (let i = 0; i < battleEvent.effects.length; i++) {

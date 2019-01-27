@@ -127,6 +127,12 @@ var snail = (function (snail) {
 		
 		$addbox.on('click', '.instructionbox-addbox-addicon, .instructionbox-addbox-text', onAddInstruction);
 		
+		snail.model.battle.addEventHandler(function (event) {
+			if (event === 'battleStarted' || event === 'roundComplete') {
+				clearInstructions();
+			}
+		});
+		
 		endCollapse();
 	};
 	

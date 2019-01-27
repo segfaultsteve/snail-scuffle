@@ -65,6 +65,11 @@ var snail = (function (snail, $) {
 			onItemConditionChanged(condition);
 		};
 		
+		const disable = function () {
+			setState(states.noCondition);
+			menubutton.disable();
+		};
+		
 		// callbacks
 		const onMenubuttonSelectionChanged = function (index, selection) {
 			if (index === options.length - 1) {
@@ -157,7 +162,8 @@ var snail = (function (snail, $) {
 			getSelectedOption: getSelectedOption,
 			setSelectedOption: setSelectedOption,
 			setSelectedIndex: setSelectedIndex,
-			setCondition: setCondition
+			setCondition: setCondition,
+			disable: disable
 		};
 	};
 	
