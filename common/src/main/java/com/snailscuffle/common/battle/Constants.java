@@ -106,12 +106,12 @@ public class Constants {
 	// items
 	public static final double ATTACK_BOOST_MULTIPLIER = 1.4;
 	public static final String ATTACK_BOOST_DISPLAY_NAME = "Attack Boost";
-	public static final String ATTACK_BOOST_DESCRIPTION = "Temporarily increases Attack by " + (ATTACK_BOOST_MULTIPLIER - 1) * 100 + "%";		
+	public static final String ATTACK_BOOST_DESCRIPTION = "Temporarily increases Attack by " + Math.round((ATTACK_BOOST_MULTIPLIER - 1) * 100) + "%";		
 	public static final int ATTACK_BOOST_DURATION = 5000;
 	
 	public static final double DEFENSE_BOOST_MULTIPLIER = 1.4;
 	public static final String DEFENSE_BOOST_DISPLAY_NAME = "Defense Boost";
-	public static final String DEFENSE_BOOST_DESCRIPTION = "Temporarily increases Defense by " + (DEFENSE_BOOST_MULTIPLIER - 1) * 100 + "%";	
+	public static final String DEFENSE_BOOST_DESCRIPTION = "Temporarily increases Defense by " + Math.round((DEFENSE_BOOST_MULTIPLIER - 1) * 100) + "%";	
 	public static final int DEFENSE_BOOST_DURATION = 5000;
 	
 	public static final String SPEED_BOOST_DISPLAY_NAME = "Speed Boost";
@@ -119,13 +119,12 @@ public class Constants {
 	public static final int SPEED_BOOST_AP_INCREASE = 20;
 	
 	public static final String STUN_DISPLAY_NAME = "Stun";
-	public static final String STUN_DESCRIPTION = "Stuns the opponent for a small amount of time."
-												+ "The opponent will not be able to attack, defend, use an item, or accumulate AP for the duration of the stun.";
+	public static final String STUN_DESCRIPTION = "Temporarily prevents enemy from attacking, defending, using an item, or accumulating AP";
 	public static final int STUN_DURATION = 2000;
 	
 	public static final int HEAL_AMOUNT = 45;
 	public static final String HEAL_DISPLAY_NAME = "Heal";	
-	public static final String HEAL_DESCRIPTION = "Instantly heal yourself for " + HEAL_AMOUNT + " HP.";
+	public static final String HEAL_DESCRIPTION = "Increases HP by " + HEAL_AMOUNT;
 	
 	
 	public static final String NO_ITEM_DISPLAY_NAME = "No Item";
