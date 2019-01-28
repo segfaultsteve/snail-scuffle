@@ -48,6 +48,13 @@ public class InfoServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("application/json; charset=UTF-8");
+		
+		if (request.getPathInfo() == null) {
+			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			ServletUtil.markHandled(request);
+			return;
+		}
+		
 		try {
 			switch (request.getPathInfo()) {
 			case SNAILS_PATH:
@@ -77,6 +84,7 @@ public class InfoServlet extends HttpServlet {
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().print(ErrorResponse.unexpectedError().because(e.getMessage()));
 		}
+		
 		ServletUtil.markHandled(request);
 	}
 
