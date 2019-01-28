@@ -378,14 +378,6 @@ class Combatant {
 			validatedPlan.accessory = newPlan.accessory;
 		}
 		
-		// forbid equipping more items than player can use this period
-		if (itemsToAllow < 2) {
-			validatedPlan.item2 = null;
-		}
-		if (itemsToAllow < 1) {
-			validatedPlan.item1 = null;
-		}
-		
 		return validatedPlan;
 	}
 
