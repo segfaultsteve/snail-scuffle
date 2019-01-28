@@ -10,14 +10,11 @@ public class BattleEvent implements Serializable {
 	public int playerIndex;		// 0 refers to the player who submitted the first battle plan in BattleConfig.battlePlans; 1 refers to the other player
 	public Action action;
 	public Item itemUsed;		// null unless action is Action.USE_ITEM
-	public List<BattleEventEffect> effects;
+	public List<BattleEventEffect> effects = new ArrayList<>();
 	
 	public static BattleEvent attack(int timestamp, int attackerIndex, double damage) {
-		BattleEvent event = new BattleEvent();
-		event.time = timestamp;
-		event.playerIndex = attackerIndex;
+		BattleEvent event = new BattleEvent(timestamp, attackerIndex);
 		event.action = Action.ATTACK;
-		event.effects = new ArrayList<>();
 		
 		int targetIndex = (attackerIndex == 0) ? 1 : 0;
 		event.effects.add(new BattleEventEffect(targetIndex, Stat.HP, -1.0 * damage));
@@ -26,27 +23,36 @@ public class BattleEvent implements Serializable {
 	}
 	
 	public static BattleEvent useItem(int timestamp, int playerIndex, Item item, Stat stat, double change) {
-		BattleEvent event = new BattleEvent();
-		event.time = timestamp;
-		event.playerIndex = playerIndex;
+		BattleEvent event = new BattleEvent(timestamp, playerIndex);
 		event.action = Action.USE_ITEM;
 		event.itemUsed = item;
-		event.effects = new ArrayList<>();
-		event.effects.add(new BattleEventEffect(playerIndex, stat, change));
+		if (item != Item.STUN) {
+			event.effects.add(new BattleEventEffect(playerIndex, stat, change));
+		}
+		return event;
+	}
+	
+	public static BattleEvent itemDone(int timestamp, int playerIndex, Item item) {
+		BattleEvent event = new BattleEvent(timestamp, playerIndex);
+		event.action = Action.ITEM_DONE;
+		event.itemUsed = item;
 		return event;
 	}
 	
 	public static BattleEvent resuscitate(int timestamp, int playerIndex) {
-		BattleEvent event = new BattleEvent();
-		event.time = timestamp;
-		event.playerIndex = playerIndex;
+		BattleEvent event = new BattleEvent(timestamp, playerIndex);
 		event.action = Action.RESUSCITATE;
-		event.effects = new ArrayList<>();
 		event.effects.add(new BattleEventEffect(playerIndex, Stat.HP, 1));
 		return event;
 	}
 	
-	private BattleEvent() {}
+	// for deserialization
+	private BattleEvent() { }
+	
+	private BattleEvent(int timestamp, int playerIndex) {
+		time = timestamp;
+		this.playerIndex = playerIndex;
+	}
 	
 	public void validate() {
 		if (time < 0) {

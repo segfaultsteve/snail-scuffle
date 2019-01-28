@@ -43,7 +43,7 @@ public class Battle {
 	}
 	
 	private static int nextIncrement(Combatant p1, Combatant p2) {
-		return Math.min(p1.ticksToNextAp(), p2.ticksToNextAp());
+		return Math.min(p1.ticksToNextEvent(), p2.ticksToNextEvent());
 	}
 	
 	int currentTime() {

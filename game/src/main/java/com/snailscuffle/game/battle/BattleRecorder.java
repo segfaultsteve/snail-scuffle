@@ -36,6 +36,13 @@ class BattleRecorder {
 		currentRound.add(BattleEvent.useItem(time, playerIndex, type, stat, change));
 	}
 	
+	void recordItemDone(Combatant player, Item type) {
+		checkForNewRound();
+		int time = battle.currentTime();
+		int playerIndex = battle.playerIndexOf(player);
+		currentRound.add(BattleEvent.itemDone(time, playerIndex, type));
+	}
+	
 	void recordUseDefibrillator(Combatant player) {
 		checkForNewRound();
 		int time = battle.currentTime();

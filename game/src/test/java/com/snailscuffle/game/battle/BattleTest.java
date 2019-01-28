@@ -207,7 +207,7 @@ public class BattleTest {
 		
 		int itemsUsed = 0;
 		for (BattleEvent event : result.flattenEvents()) {
-			if (event.playerIndex == 1 && event.itemUsed == Item.ATTACK) {
+			if (event.playerIndex == 1 && event.action == Action.USE_ITEM && event.itemUsed == Item.ATTACK) {
 				itemsUsed++;
 			}
 		}

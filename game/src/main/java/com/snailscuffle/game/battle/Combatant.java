@@ -4,6 +4,7 @@ import static com.snailscuffle.common.battle.Constants.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import com.snailscuffle.common.battle.Accessory;
 import com.snailscuffle.common.battle.BattlePlan;
 import com.snailscuffle.common.battle.Instruction;
@@ -19,21 +20,11 @@ class Combatant {
 		ITEM_2
 	}
 	
-	private static class ActiveBoost {
+	private static class ItemEffect {
 		private Item type;
 		private int ticksRemaining;
 		
-		private ActiveBoost(Item type, int duration) {
-			this.type = type;
-			ticksRemaining = duration;
-		}
-	}
-	
-	private static class OpponentAppliedEffect {
-		private Item type;
-		private int ticksRemaining;
-		
-		private OpponentAppliedEffect(Item type, int duration) {
+		private ItemEffect(Item type, int duration) {
 			this.type = type;
 			ticksRemaining = duration;
 		}
@@ -60,8 +51,7 @@ class Combatant {
 	private MeteredStat hp;		// = HP * SCALE
 	private MeteredStat ap;		// = AP * SCALE
 	private int currentInstruction;
-	private final List<ActiveBoost> activeBoosts = new ArrayList<>();
-	private final List<OpponentAppliedEffect> opponentAppliedEffects = new ArrayList<>();
+	private final List<ItemEffect> activeEffects = new ArrayList<>();
 	private int itemsUsed;
 	private int saltedShellCounter;		// 0 = not equipped; 1 = equipped this period; 2 = equipped last period and this period; etc.
 	private boolean defibrillatorHasActivated = false;
@@ -82,23 +72,24 @@ class Combatant {
 	// until the next whole-number AP is therefore:
 	//   ticks = ((next whole AP) - (current AP)) / (Speed/SCALE)    <-- normal division
 	//         = ((ap/SCALE + 1)*SCALE - ap) * SCALE / speedStat()   <-- integer division
-	int ticksToNextAp() {
+	int ticksToNextEvent() {
 		int nextAp = (ap.get()/SCALE + 1) * SCALE;
-		return (nextAp - ap.get()) * SCALE / speedStat() + 1;		// +1 to round up after integer division
+		int ticksToNextEvent = (nextAp - ap.get()) * SCALE / speedStat() + 1;	// +1 to round up after integer division
+		for (ItemEffect effect : activeEffects) {
+			ticksToNextEvent = Math.min(ticksToNextEvent, effect.ticksRemaining);
+		}
+		assert(ticksToNextEvent >= 0);
+		return Math.max(ticksToNextEvent, 0);
 	}
 	
 	void update(int deltaTicks) {		
+		decrementActiveEffectTimers(deltaTicks);
 		
-		boolean isStunned = determineIfStunned(opponentAppliedEffects);
-		if (isStunned) {
-			decrementBoostTimers(activeBoosts, deltaTicks);
-			decrementOpponentAppliedEffectTimers(opponentAppliedEffects, deltaTicks);
+		if (isStunned()) {
 			return;
 		}
 		
-		ap.add(deltaTicks * speedStat() / SCALE);		
-		decrementBoostTimers(activeBoosts, deltaTicks);
-		decrementOpponentAppliedEffectTimers(opponentAppliedEffects, deltaTicks);
+		ap.add(deltaTicks * speedStat() / SCALE);
 		
 		boolean continueTurn = true;
 		while (continueTurn) {
@@ -127,22 +118,19 @@ class Combatant {
 		return instruction;
 	}
 	
-	private boolean determineIfStunned(List<OpponentAppliedEffect> opponentAppliedEffects2) {
-		for (OpponentAppliedEffect effect : opponentAppliedEffects) {
-			if (effect.type == Item.STUN)
-				return true;
-		}	
-		return false;
+	private boolean isStunned() {
+		return activeEffects.stream().anyMatch(e -> e.type == Item.STUN);
 	}
 	
-	private static void decrementBoostTimers(List<ActiveBoost> boosts, int ticks) {
-		boosts.forEach(b -> b.ticksRemaining -= ticks);
-		boosts.removeIf(b -> b.ticksRemaining <= 0);
-	}
-	
-	private static void decrementOpponentAppliedEffectTimers(List<OpponentAppliedEffect> effects, int ticks) {
-		effects.forEach(b -> b.ticksRemaining -= ticks);
-		effects.removeIf(b -> b.ticksRemaining <= 0);
+	private void decrementActiveEffectTimers(int ticks) {
+		activeEffects.forEach(e -> e.ticksRemaining -= ticks);
+		List<ItemEffect> toRemove = activeEffects.stream()
+				.filter(e -> e.ticksRemaining <= 0)
+				.collect(Collectors.toList());
+		for (ItemEffect effect : toRemove) {
+			recorder.recordItemDone(this, effect.type);
+			activeEffects.remove(effect);
+		}
 	}
 	
 	private boolean tryAttack() {
@@ -200,13 +188,13 @@ class Combatant {
 		switch (item) {
 		case ATTACK:
 			int initialAttack = attackStat();
-			activeBoosts.add(new ActiveBoost(Item.ATTACK, ATTACK_BOOST_DURATION));
+			activeEffects.add(new ItemEffect(Item.ATTACK, ATTACK_BOOST_DURATION));
 			recorder.recordUseItem(this, Item.ATTACK, Stat.ATTACK, 1.0 * (attackStat() - initialAttack) / SCALE);
 			break;
 			
 		case DEFENSE:
 			int initialDefense = defenseStat();
-			activeBoosts.add(new ActiveBoost(Item.DEFENSE, DEFENSE_BOOST_DURATION));
+			activeEffects.add(new ItemEffect(Item.DEFENSE, DEFENSE_BOOST_DURATION));
 			recorder.recordUseItem(this, Item.DEFENSE, Stat.DEFENSE, 1.0 * (defenseStat() - initialDefense) / SCALE);
 			break;
 			
@@ -216,7 +204,7 @@ class Combatant {
 			break;
 			
 		case STUN:
-			opponent.opponentAppliedEffects.add(new OpponentAppliedEffect(Item.STUN, STUN_DURATION));
+			opponent.activeEffects.add(new ItemEffect(Item.STUN, STUN_DURATION));
 			recorder.recordUseItem(this, Item.STUN, Stat.NONE, 0);
 			break;
 			
@@ -299,7 +287,7 @@ class Combatant {
 			multiplier = DEFENSE_BOOST_MULTIPLIER;
 		}
 		
-		int activeCount = (int) activeBoosts.stream().filter(b -> b.type == type).count();
+		int activeCount = (int) activeEffects.stream().filter(e -> e.type == type).count();
 		for (int i = 0; i < activeCount; i++) {
 			boost *= multiplier;
 		}

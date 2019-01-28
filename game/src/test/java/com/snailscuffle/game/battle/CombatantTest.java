@@ -158,11 +158,11 @@ public class CombatantTest {
 	public void caffeineIncreasesSpeed() {
 		player1.setBattlePlan(bp);
 		double initialSpeed = baseSpeedOf(bp);
-		double ticksBefore = player1.ticksToNextAp();
+		double ticksBefore = player1.ticksToNextEvent();
 		
 		bp.accessory = Accessory.CAFFEINE;
 		player1.setBattlePlan(bp);
-		double ticksAfter = player1.ticksToNextAp();
+		double ticksAfter = player1.ticksToNextEvent();
 		
 		double expectedIncrease = (initialSpeed + CAFFEINE_SPEED ) / initialSpeed;
 		double measuredIncrease = ticksBefore / ticksAfter;
@@ -426,8 +426,9 @@ public class CombatantTest {
 		
 		bp.item1 = Item.STUN;
 		bp.instructions = Arrays.asList(
-				Instruction.waitUntilApIs(ROCKET_AP_COST - 1),
-				Instruction.useItem(Item.STUN)); // stun just before player1 attacks
+			Instruction.waitUntilApIs(ROCKET_AP_COST - 1),	// stun just before player1 attacks
+			Instruction.useItem(Item.STUN)
+		);
 		player2.setBattlePlan(bp);
 		
 		runBattleUntilNextEvent();
@@ -436,8 +437,7 @@ public class CombatantTest {
 		BattleEvent firstEvent = recorder.eventsByRound().get(0).get(0);
 		assertEquals(Action.USE_ITEM, firstEvent.action);
 		assertEquals(Item.STUN, firstEvent.itemUsed);
-		assertEquals(1, firstEvent.effects.get(0).playerIndex);
-		assertEquals(Stat.NONE, firstEvent.effects.get(0).stat);
+		assertEquals(1, firstEvent.playerIndex);
 		
 		runBattleUntilNextEvent();
 		
@@ -448,10 +448,18 @@ public class CombatantTest {
 		
 		runBattleUntilNextEvent();
 		
-		// after the stun duration elapses, player 1 can attack
+		// stun duration elapses
 		BattleEvent thirdEvent = recorder.eventsByRound().get(0).get(2);
-		assertEquals(Action.ATTACK, thirdEvent.action);
-		assertEquals(0, thirdEvent.playerIndex);		
+		assertEquals(Action.ITEM_DONE, thirdEvent.action);
+		assertEquals(Item.STUN, thirdEvent.itemUsed);
+		assertEquals(0, thirdEvent.playerIndex);
+		
+		runBattleUntilNextEvent();
+		
+		// player 1 can now attack
+		BattleEvent fourthEvent = recorder.eventsByRound().get(0).get(3);
+		assertEquals(Action.ATTACK, fourthEvent.action);
+		assertEquals(0, fourthEvent.playerIndex);
 	}
 	
 	@Test
@@ -464,7 +472,7 @@ public class CombatantTest {
 		player2.setBattlePlan(bp);
 		
 		while (player2.isAlive()) {
-			int increment = player1.ticksToNextAp();
+			int increment = player1.ticksToNextEvent();
 			player1.update(increment);
 		}
 		
@@ -501,7 +509,7 @@ public class CombatantTest {
 		player2.setBattlePlan(bp);
 		
 		BattleEvent boostEvent = runBattleUntilNextEvent();
-		int ticksToPlayer2sNextAp = player2.ticksToNextAp();
+		int ticksToPlayer2sNextAp = player2.ticksToNextEvent();
 		BattleEvent nextEvent = runBattleUntilNextEvent();
 		
 		assertEquals(0, boostEvent.playerIndex);
@@ -561,8 +569,8 @@ public class CombatantTest {
 		int initialEventCount = recorder.flatEvents().size();
 		
 		while(recorder.flatEvents().size() == initialEventCount) {
-			int p1Ticks = player1.ticksToNextAp();
-			int p2Ticks = player2.ticksToNextAp();
+			int p1Ticks = player1.ticksToNextEvent();
+			int p2Ticks = player2.ticksToNextEvent();
 			int increment = Math.min(p1Ticks, p2Ticks);
 			
 			battleTime += increment;

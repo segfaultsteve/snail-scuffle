@@ -3,6 +3,7 @@ package com.snailscuffle.common.battle;
 public enum Action {
 	ATTACK,
 	USE_ITEM,
+	ITEM_DONE,
 	RESUSCITATE;
 	
 	@Override
