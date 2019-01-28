@@ -52,6 +52,7 @@ var snail = (function (snail) {
 		const clearInstructions = function () {
 			instructionList.forEach(instruction => instruction.remove());
 			instructionList = [];
+			updateModel();
 		};
 		
 		const updateModel = function () {
@@ -104,7 +105,7 @@ var snail = (function (snail) {
 			}
 		};
 		
-		snail.battleplan.instructionbox.refreshItemDropdowns = function () {
+		snail.battleplan.instructionbox.refreshItemReferences = function () {
 			equippedItems = snail.model.battleplan.playerBp.getItems().map(i => i.name).filter(i => i !== 'none');
 			for (let i = 0; i < instructionList.length; i++) {
 				const data = instructionList[i].getData();

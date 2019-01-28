@@ -65,11 +65,6 @@ var snail = (function (snail, $) {
 			onItemConditionChanged(condition);
 		};
 		
-		const disable = function () {
-			setState(states.noCondition);
-			menubutton.disable();
-		};
-		
 		// callbacks
 		const onMenubuttonSelectionChanged = function (index, selection) {
 			if (index === options.length - 1) {
@@ -103,6 +98,16 @@ var snail = (function (snail, $) {
 		};
 		
 		// public methods
+		const enable = function () {
+			setState(states.noCondition);
+			menubutton.enable();
+		};
+		
+		const disable = function () {
+			setState(states.noCondition);
+			menubutton.disable();
+		};
+		
 		const setOptionsList = function (optionsList, selectedIndex) {
 			options = optionsList;
 			menubutton.setOptionsList(options, selectedIndex);
@@ -158,12 +163,13 @@ var snail = (function (snail, $) {
 		setState(states.noCondition);
 		
 		return {
+			enable: enable,
+			disable: disable,
 			setOptionsList: setOptionsList,
 			getSelectedOption: getSelectedOption,
 			setSelectedOption: setSelectedOption,
 			setSelectedIndex: setSelectedIndex,
-			setCondition: setCondition,
-			disable: disable
+			setCondition: setCondition
 		};
 	};
 	

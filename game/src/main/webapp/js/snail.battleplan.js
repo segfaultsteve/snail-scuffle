@@ -78,6 +78,8 @@ var snail = (function (snail, $) {
 		weaponButton.enable();
 		shellButton.enable();
 		accessoryButton.enable();
+		item1Button.enable();
+		item2Button.enable();
 	};
 	
 	// callbacks
@@ -97,11 +99,11 @@ var snail = (function (snail, $) {
 				break;
 			case 'item1':
 				item1Button.setSelectedOption(newValue.displayName);
-				instructionBox.refreshItemDropdowns();
+				instructionBox.refreshItemReferences();
 				break;
 			case 'item2':
 				item2Button.setSelectedOption(newValue.displayName);
-				instructionBox.refreshItemDropdowns();
+				instructionBox.refreshItemReferences();
 				break;
 			case 'item1Rule':
 				item1Button.setCondition(newValue);
