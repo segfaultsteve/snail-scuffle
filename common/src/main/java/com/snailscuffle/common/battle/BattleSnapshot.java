@@ -1,6 +1,8 @@
 package com.snailscuffle.common.battle;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BattleSnapshot implements Serializable {
 	
@@ -9,6 +11,8 @@ public class BattleSnapshot implements Serializable {
 	public double player1Ap;
 	public double player2Hp;
 	public double player2Ap;
+	public final List<Item> player1ActiveEffects = new ArrayList<>();
+	public final List<Item> player2ActiveEffects = new ArrayList<>();
 	
 	@SuppressWarnings("unused")
 	private BattleSnapshot() {}		// needed for serialization via jackson

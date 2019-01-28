@@ -278,6 +278,10 @@ class Combatant {
 		return ap.get();
 	}
 	
+	List<Item> getActiveEffects() {
+		return activeEffects.stream().map(e -> e.type).collect(Collectors.toList());
+	};
+	
 	private double boostFactor(Item type) {
 		double boost = 1.0;
 		double multiplier = 1.0;

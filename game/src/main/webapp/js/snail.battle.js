@@ -66,7 +66,9 @@ var snail = (function (snail, PIXI) {
 				const deltaTicks = 8*delta;
 				battleData.time += deltaTicks;
 				for (let i = 0; i < 2; i++) {
-					battleData.ap[i] += speeds[i] * deltaTicks / 1000;
+					if (!battleData.effects[i].includes('stun')) {
+						battleData.ap[i] += speeds[i] * deltaTicks / 1000;
+					}
 				}
 				updateHud();
 			}
@@ -91,7 +93,19 @@ var snail = (function (snail, PIXI) {
 		if (battleEvent.action === 'attack') {
 			battleData.ap[battleEvent.playerIndex] -= bp.getWeaponApCost();
 		} else if (battleEvent.action === 'use_item') {
+			if (battleEvent.itemUsed === 'stun') {
+				const otherPlayer = (battleEvent.playerIndex === 0) ? 1 : 0;
+				battleData.effects[otherPlayer].push(battleEvent.itemUsed);
+			} else {
+				battleData.effects[battleEvent.playerIndex].push(battleEvent.itemUsed);
+			}
 			bp.registerItemUsed(battleEvent.itemUsed);
+		} else if (battleEvent.action === 'item_done') {
+			const effects = battleData.effects[battleEvent.playerIndex];
+			const index = effects.indexOf(battleEvent.itemUsed);
+			if (index > -1) {
+				effects.splice(index, 1);
+			}
 		}
 		
 		for (let i = 0; i < battleEvent.effects.length; i++) {

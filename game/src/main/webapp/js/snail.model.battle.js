@@ -24,6 +24,7 @@ var snail = (function (snail, $) {
 			names: [playerName, enemyName],
 			hp: [100, 100],
 			ap: [0, 0],
+			effects: [[],[]],
 			endOfRound: 0
 		};
 		
@@ -34,6 +35,7 @@ var snail = (function (snail, $) {
 				battleData.time = lastRound.time;
 				battleData.hp = [lastRound.player1Hp, lastRound.player2Hp];
 				battleData.ap = [lastRound.player1Ap, lastRound.player2Ap];
+				battleData.effects = [lastRound.player1ActiveEffects, lastRound.player2ActiveEffects];
 			}
 		}
 		

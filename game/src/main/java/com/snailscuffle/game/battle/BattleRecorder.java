@@ -77,7 +77,10 @@ class BattleRecorder {
 		player1Ap += 1.0 * ticksToEndOfRound * player1.speedStat() / (Combatant.SCALE * Combatant.SCALE);
 		player2Ap += 1.0 * ticksToEndOfRound * player2.speedStat() / (Combatant.SCALE * Combatant.SCALE);
 		
-		endOfRoundStats.add(new BattleSnapshot(time, player1Hp, player1Ap, player2Hp, player2Ap));
+		BattleSnapshot snapshot = new BattleSnapshot(time, player1Hp, player1Ap, player2Hp, player2Ap);
+		snapshot.player1ActiveEffects.addAll(player1.getActiveEffects());
+		snapshot.player2ActiveEffects.addAll(player2.getActiveEffects());
+		endOfRoundStats.add(snapshot);
 		
 		newRound = true;
 	}
