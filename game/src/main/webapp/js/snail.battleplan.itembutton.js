@@ -156,6 +156,7 @@ var snail = (function (snail, $) {
 		snail.io.promiseItemInfo().done(function (items) {
 			const $usesConditionItems = $container.find('.itembutton-condition-usescondition-item');
 			items
+				.filter(i => i.name !== 'none')
 				.map(i => '<option value="' + i.name + '">' + i.displayName + '</option>')
 				.forEach(i => $usesConditionItems.append(i));
 		});
