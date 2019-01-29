@@ -152,6 +152,14 @@ var snail = (function (snail, $) {
 		// init code
 		$container.addClass('itembutton');
 		$container.html(componentHtml);
+		
+		snail.io.promiseItemInfo().done(function (items) {
+			const $usesConditionItems = $container.find('.itembutton-condition-usescondition-item');
+			items
+				.map(i => '<option value="' + i.name + '">' + i.displayName + '</option>')
+				.forEach(i => $usesConditionItems.append(i));
+		});
+		
 		menubutton = snail.battleplan.menubutton.create($container.find('.itembutton-button'), onMenubuttonSelectionChanged)
 		$container.find('.itembutton-condition-addicon, .itembutton-condition-addtext').click(onAddConditionClicked);
 		$container.find('.itembutton-condition-removeicon').click(onRemoveConditionClicked);
