@@ -16,12 +16,12 @@ var snail = (function (snail, $) {
 		
 		// private methods
 		const setState = function (newState) {
-			$this.find('.instruction-item, .instruction-waitcondition').hide();
+			$this.find('.instruction-item, .instruction-waitcondition').addClass('hidden');
 			
 			if (newState === states.use) {
-				$this.find('.instruction-item').show();
+				$this.find('.instruction-item').removeClass('hidden');
 			} else if (newState === states.wait) {
-				$this.find('.instruction-waitcondition').show();
+				$this.find('.instruction-waitcondition').removeClass('hidden');
 			}
 		};
 		
@@ -89,15 +89,15 @@ var snail = (function (snail, $) {
 		const setAvailableItems = function (itemNames) {
 			availableItems = itemNames.sort();
 			
-			$this.find('.instruction-item option').hide();
+			$this.find('.instruction-item option').addClass('hidden');
 			for (let i = 0; i < availableItems.length; i++) {
-				$this.find('.instruction-item option[value=' + availableItems[i] + ']').show();
+				$this.find('.instruction-item option[value=' + availableItems[i] + ']').removeClass('hidden');
 			}
 			
 			if (availableItems.length > 0) {
-				$this.find('.instruction-type option[value=use]').show();
+				$this.find('.instruction-type option[value=use]').removeClass('hidden');
 			} else {
-				$this.find('.instruction-type option[value=use]').hide();
+				$this.find('.instruction-type option[value=use]').addClass('hidden');
 			}
 		};
 		

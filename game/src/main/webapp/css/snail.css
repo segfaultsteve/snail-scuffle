@@ -31,6 +31,6 @@ button.disabled-button {
 	cursor: default;
 }
 
-#components {
-	display: none;
+.hidden {
+	display: none !important;
 }

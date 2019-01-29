@@ -18,9 +18,9 @@ var snail = (function (snail) {
 		const beginExpand = function () {
 			$instructionbox.removeClass(states.collapsed);
 			$instructionbox.addClass(states.expanding);
-			$instructions.show();
-			$addbox.show();
-			$defaultattack.show();
+			$instructions.removeClass('hidden');
+			$addbox.removeClass('hidden');
+			$defaultattack.removeClass('hidden');
 			$instructionbox.one('animationend', endExpand);
 		};
 		
@@ -33,19 +33,19 @@ var snail = (function (snail) {
 		const endExpand = function () {
 			$instructionbox.removeClass(states.expanding);
 			$instructionbox.addClass(states.expanded);
-			$expandicon.hide();
-			$collapseicon.show();
+			$expandicon.addClass('hidden');
+			$collapseicon.removeClass('hidden');
 			$collapseicon.one('click', beginCollapse);
 		};
 		
 		const endCollapse = function() {
 			$instructionbox.removeClass(states.collapsing);
 			$instructionbox.addClass(states.collapsed);
-			$collapseicon.hide();
-			$instructions.hide();
-			$addbox.hide();
-			$defaultattack.hide();
-			$expandicon.show();
+			$collapseicon.addClass('hidden');
+			$instructions.addClass('hidden');
+			$addbox.addClass('hidden');
+			$defaultattack.addClass('hidden');
+			$expandicon.removeClass('hidden');
 			$instructionbox.one('click', beginExpand);
 		};
 		

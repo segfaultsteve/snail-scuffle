@@ -19,7 +19,7 @@ var snail = (function(snail, $) {
 		const onSetClicked = function () {
 			let name = $button.text();
 			name = (name === emptyText) ? defaultText : name;
-			$namebox.show();
+			$namebox.removeClass('hidden');
 			$nametext.val(name);
 			$nametext.focus();
 		};
@@ -34,11 +34,11 @@ var snail = (function(snail, $) {
 			name = (name.length > 0) ? name : defaultText;
 			snail.model.battleplan.saveBattlePlan(presetNumber, name);
 			$button.text(name);
-			$namebox.hide();
+			$namebox.addClass('hidden');
 		};
 		
 		const onCancelClicked = function () {
-			$namebox.hide();
+			$namebox.addClass('hidden');
 		};
 		
 		// init code
@@ -59,7 +59,7 @@ var snail = (function(snail, $) {
 		
 		const displayName = snail.model.battleplan.getPresetDisplayName(presetNumber);
 		$button.text(displayName || emptyText);
-		$namebox.hide();
+		$namebox.addClass('hidden');
 		
 		$nametext.focus(function () {
 			setTimeout(function () { $nametext.select() }, 50);

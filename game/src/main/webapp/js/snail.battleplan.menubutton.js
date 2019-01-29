@@ -61,11 +61,11 @@ var snail = (function(snail, $) {
 			const $allLists = $('.menubutton-list');
 			const initiallyHidden = $list.is(':hidden');
 			
-			$allLists.hide();
+			$allLists.addClass('hidden');
 			if (initiallyHidden) {
-				$list.show();
+				$list.removeClass('hidden');
 				$('html').one('click', function() {
-					$list.hide();
+					$list.addClass('hidden');
 				});
 				e.stopPropagation();
 			}

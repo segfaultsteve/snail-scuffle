@@ -8,16 +8,16 @@ var snail = (function (snail) {
 	snail.routing.init = function (pagesMap) {
 		pages = pagesMap;
 		for (let key in pages) {
-			pages[key].hide();
+			pages[key].addClass('hidden');
 		}
 	};
 	
 	snail.routing.switchTo = function (page) {
 		if (currentPage) {
-			currentPage.hide();
+			currentPage.addClass('hidden');
 		}
 		currentPage = pages[page];
-		currentPage.show();
+		currentPage.removeClass('hidden');
 	};
 	
 	return snail;

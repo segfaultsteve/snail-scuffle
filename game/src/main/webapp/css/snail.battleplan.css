@@ -220,7 +220,6 @@
 }
 
 #battleplan .menubutton-list {
-	display: none;
 	position: absolute;
 	top: 1.5em;
 	z-index: 999;
@@ -461,7 +460,6 @@
 }
 
 #battleplan .presetbutton-options {
-	display: none;
 	padding-top: 0.2em;
 	text-align: right;
 }

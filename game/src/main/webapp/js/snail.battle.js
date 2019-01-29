@@ -8,17 +8,17 @@ var snail = (function (snail, PIXI) {
 	
 	// private methods
 	const showWaitMessage = function () {
-		$hud.hide();
-		$opponentForfeitedMessage.hide();
-		$resultMessage.hide();
-		$waitMessage.show();
+		$hud.addClass('hidden');
+		$opponentForfeitedMessage.addClass('hidden');
+		$resultMessage.addClass('hidden');
+		$waitMessage.removeClass('hidden');
 	};
 	
 	const showOpponentForfeitedMessage = function () {
-		$hud.hide();
-		$resultMessage.hide();
-		$waitMessage.hide();
-		$opponentForfeitedMessage.show();
+		$hud.addClass('hidden');
+		$resultMessage.addClass('hidden');
+		$waitMessage.addClass('hidden');
+		$opponentForfeitedMessage.removeClass('hidden');
 	};
 	
 	const startRound = function (args) {
@@ -27,10 +27,10 @@ var snail = (function (snail, PIXI) {
 		speeds = [snail.model.battleplan.playerBp.getSpeed(), snail.model.battleplan.enemyBp.getSpeed()];
 		
 		updateHud();
-		$waitMessage.hide();
-		$opponentForfeitedMessage.hide();
-		$resultMessage.hide();
-		$hud.show();
+		$waitMessage.addClass('hidden');
+		$opponentForfeitedMessage.addClass('hidden');
+		$resultMessage.addClass('hidden');
+		$hud.removeClass('hidden');
 		
 		eventIndex = 0;
 		running = true;
@@ -76,11 +76,11 @@ var snail = (function (snail, PIXI) {
 			if (battleData.hp[1] <= TOLERANCE && eventIndex == events.length) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Won!');
-				$resultMessage.show();
+				$resultMessage.removeClass('hidden');
 			} else if (battleData.hp[0] <= TOLERANCE && eventIndex == events.length) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Lost!');
-				$resultMessage.show();
+				$resultMessage.removeClass('hidden');
 			} else if (battleData.time > battleData.endOfRound) {
 				running = false;
 				snail.model.battle.finishRound();

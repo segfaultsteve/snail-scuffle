@@ -19,24 +19,24 @@ var snail = (function (snail, $) {
 			state = newState;
 			const $condition = $container.find('.itembutton-condition');
 			if (!(newState in states) || newState === states.noCondition) {
-				$condition.hide();
+				$condition.addClass('hidden');
 			} else {
-				$condition.show();
-				$condition.children().hide();
+				$condition.removeClass('hidden');
+				$condition.children().addClass('hidden');
 
 				if (newState === states.addCondition) {
-					$condition.find('.itembutton-condition-addicon').show();
-					$condition.find('.itembutton-condition-addtext').show();
+					$condition.find('.itembutton-condition-addicon').removeClass('hidden');
+					$condition.find('.itembutton-condition-addtext').removeClass('hidden');
 					resetConditionElements();
 				} else {
-					$condition.find('.itembutton-condition-removeicon').show();
-					$condition.find('.itembutton-condition-usetext').show();
-					$condition.find('.itembutton-condition-type').show();
+					$condition.find('.itembutton-condition-removeicon').removeClass('hidden');
+					$condition.find('.itembutton-condition-usetext').removeClass('hidden');
+					$condition.find('.itembutton-condition-type').removeClass('hidden');
 
 					if (newState === states.hasCondition) {
-						$condition.find('.itembutton-condition-hascondition').show();
+						$condition.find('.itembutton-condition-hascondition').removeClass('hidden');
 					} else {
-						$condition.find('.itembutton-condition-usescondition').show();
+						$condition.find('.itembutton-condition-usescondition').removeClass('hidden');
 					}
 				}
 			}
