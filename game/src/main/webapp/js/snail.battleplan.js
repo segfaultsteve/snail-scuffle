@@ -177,6 +177,9 @@ var snail = (function (snail, $) {
 				break;
 			case 'nextRound':
 				previousPlayerBp = playerBp.get();
+				weaponButton.enable();
+				shellButton.enable();
+				accessoryButton.enable();
 				disableSnailButtons();
 				break;
 		}
