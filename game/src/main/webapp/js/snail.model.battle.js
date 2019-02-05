@@ -3,7 +3,7 @@ var snail = (function (snail, $) {
 	snail.model.battle = snail.model.battle || {};
 	
 	// private variables
-	let ioLayer, skirmishId, skirmishPollInterval, round, endOfCurrentRoundBattleData;
+	let ioLayer, skirmishId, skirmishPollInterval, skirmishTimerInterval, round, endOfCurrentRoundBattleData;
 	let eventHandlers = [];
 	
 	// private methods
@@ -58,6 +58,20 @@ var snail = (function (snail, $) {
 	const signalStartOfBattle = function (skirmishResponse) {
 		const battleData = newBattleData(skirmishResponse);
 		notifyEventHandlers('battleStarted', battleData);
+		startTimer(skirmishResponse.timeRemaining);
+	};
+	
+	const startTimer = function (initialMillis) {
+		let timeRemaining = initialMillis;
+		notifyEventHandlers('updateTimeRemaining', timeRemaining);
+		skirmishTimerInterval = setInterval(function () {
+			timeRemaining = Math.max(timeRemaining - 1000, 0);
+			notifyEventHandlers('updateTimeRemaining', timeRemaining);
+			if (timeRemaining === 0) {
+				clearInterval(skirmishTimerInterval);
+				notifyEventHandlers('outOfTime');
+			}
+		}, 1000);
 	};
 	
 	const putBattlePlanToMatchmaker = function (battlePlan) {
@@ -119,6 +133,7 @@ var snail = (function (snail, $) {
 				events: battleResult.eventsByRound.slice(-1)[0]
 			};
 			notifyEventHandlers('nextRound', args);
+			startTimer(state.skirmishResponse.timeRemaining);
 			
 			round += 1;
 			endOfCurrentRoundBattleData = newBattleData(state.skirmishResponse, battleResult.endOfRoundStats);
@@ -160,6 +175,7 @@ var snail = (function (snail, $) {
 	
 	snail.model.battle.submitBattlePlan = function (bp) {
 		notifyEventHandlers('battlePlanSubmitted', bp);
+		clearInterval(skirmishTimerInterval);
 		
 		const state = {};
 		

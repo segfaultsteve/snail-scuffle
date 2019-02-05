@@ -1,7 +1,6 @@
 package com.snailscuffle.match.players;
 
 import com.snailscuffle.common.battle.BattlePlan;
-import com.snailscuffle.match.NotAuthorizedException;
 import com.snailscuffle.match.skirmish.Skirmish;
 
 public class PlayerData {
@@ -28,11 +27,11 @@ public class PlayerData {
 		this.type = type;
 	}
 	
-	public void tryAddBattlePlan(BattlePlan bp) throws NotAuthorizedException {
+	public void tryAddBattlePlan(BattlePlan bp) {
 		skirmish.addBattlePlan(bp, this);
 	}
 	
-	public boolean hasSubmittedBattlePlan() throws NotAuthorizedException {
+	public boolean hasSubmittedBattlePlan() {
 		return skirmish.playerHasSubmittedBattlePlan(this);
 	}
 	

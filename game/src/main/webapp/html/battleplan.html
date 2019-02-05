@@ -45,14 +45,14 @@
 </section>
 <section class="info">
 	<div class="info-timer">
-		<div class="info-timer-blocks">
+		<div class="info-timer-blocks hidden">
 			<div class="info-timer-blocks-block block1"></div>
 			<div class="info-timer-blocks-block block2"></div>
 			<div class="info-timer-blocks-block block3"></div>
 			<div class="info-timer-blocks-block block4"></div>
 		</div>
 		<div class="info-timer-remaining">
-			Approximate time remaining:
+			Time remaining:
 			<span class="info-timer-remaining-time"></span>
 		</div>
 	</div>
@@ -105,6 +105,14 @@
 				<td class="info-enemystats-speed numeric-stat">?</td>
 			</tr>
 		</table>
+	</div>
+</section>
+<section class="modals">
+	<div class="modals-background modal-background hidden"></div>
+	<div class="modals-forfeit modal hidden">
+		<div class="modals-forfeit-text">You Lost!</div>
+		<div class="modals-forfeit-subtext">You ran out of time.</div>
+		<button type="button" class="modals-forfeit-okbutton">OK</button>
 	</div>
 </section>
 <button class="submit">Submit</button>

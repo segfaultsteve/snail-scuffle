@@ -4,7 +4,7 @@ var snail = (function (snail, $) {
 	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let $battleplan, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, playerBp, previousPlayerBp;
+	let $battleplan, $timer, $modalBackground, $forfeitModal, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, playerBp, previousPlayerBp;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
@@ -80,6 +80,8 @@ var snail = (function (snail, $) {
 		accessoryButton.enable();
 		item1Button.enable();
 		item2Button.enable();
+		$forfeitModal.addClass('hidden');
+		$modalBackground.addClass('hidden');
 	};
 	
 	// callbacks
@@ -170,7 +172,7 @@ var snail = (function (snail, $) {
 		playerBp.setAccessory(accessory);
 	};
 	
-	const onBattleEvent = function (event) {
+	const onBattleEvent = function (event, args) {
 		switch (event) {
 			case 'battleStarted':
 				reset();
@@ -182,12 +184,30 @@ var snail = (function (snail, $) {
 				accessoryButton.enable();
 				disableSnailButtons();
 				break;
+			case 'updateTimeRemaining':
+				updateTimeRemaining(args);
+				break;
+			case 'outOfTime':
+				$forfeitModal.removeClass('hidden');
+				$modalBackground.removeClass('hidden');
+				break;
 		}
+	};
+	
+	const updateTimeRemaining = function (millis) {
+		const totalSeconds = Math.floor(millis/1000);
+		const minutes = Math.floor(totalSeconds/60);
+		const seconds = totalSeconds - 60*minutes;
+		const separator = (seconds < 10) ? ':0' : ':';
+		$timer.text(minutes + separator + seconds);
 	};
 	
 	// public methods
 	snail.battleplan.init = function ($container) {
 		$battleplan = $container;
+		$timer = $battleplan.find('.info-timer-remaining-time');
+		$modalBackground = $battleplan.find('.modals-background');
+		$forfeitModal = $battleplan.find('.modals-forfeit');
 		playerBp = snail.model.battleplan.playerBp;
 		
 		snailButtons = {
@@ -208,6 +228,10 @@ var snail = (function (snail, $) {
 			snail.battleplan.presetbutton.init($preset, i + 1);
 		}
 		snail.battleplan.stats.init($battleplan.find('.info'));
+		
+		$forfeitModal.find('.modals-forfeit-okbutton').click(function () {
+			snail.model.battle.finishBattle();
+		});
 		
 		$battleplan.find('.submit').click(function () {
 			snail.model.battle.submitBattlePlan(playerBp.get());

@@ -8,14 +8,6 @@
 	z-index: 1;
 }
 
-#battle .modal {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 2;
-}
-
 #battle .waitmessage {
 	font-size: 2em;
 }

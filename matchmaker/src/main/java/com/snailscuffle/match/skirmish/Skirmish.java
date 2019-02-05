@@ -1,11 +1,11 @@
 package com.snailscuffle.match.skirmish;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import com.snailscuffle.common.battle.BattlePlan;
-import com.snailscuffle.match.NotAuthorizedException;
 import com.snailscuffle.match.players.PlayerData;
 
 public class Skirmish {
@@ -15,11 +15,14 @@ public class Skirmish {
 		private BattlePlan player2Bp;
 	}
 	
+	public static final int ROUND_TIME_LIMIT_MILLIS = 30 * 1000;
+	
 	private final UUID id;
 	private int round;
 	private PlayerData player1;
 	private PlayerData player2;
 	private List<BattlePlanPair> battlePlans = new ArrayList<>();
+	private long currentRoundStartTime;
 	private int forfeit;	// 1 if player 1 has forfeited, 2 if player 2 has forfeited, 0 otherwise
 	
 	public Skirmish(PlayerData player) {
@@ -33,13 +36,14 @@ public class Skirmish {
 	
 	public void addOpponent(PlayerData player) {
 		player2 = player;
+		currentRoundStartTime = new Date().getTime();
 	}
 	
-	public void addBattlePlan(BattlePlan bp, PlayerData player) throws NotAuthorizedException {
+	public void addBattlePlan(BattlePlan bp, PlayerData player) {
 		boolean isPlayer1 = player.id.equals(player1.id);
 		boolean isPlayer2 = (player2 != null) && player.id.equals(player2.id);
 		if (!isPlayer1 && !isPlayer2) {
-			throw new NotAuthorizedException("Submitting player is not part of this skirmish");
+			throw new RuntimeException("Submitting player is not part of this skirmish");
 		}
 		
 		BattlePlanPair thisRoundBps = null;
@@ -58,6 +62,7 @@ public class Skirmish {
 		
 		if (thisRoundBps.player1Bp != null && thisRoundBps.player2Bp != null) {
 			round++;
+			currentRoundStartTime = new Date().getTime();
 		}
 	}
 	
@@ -76,17 +81,26 @@ public class Skirmish {
 		return bps;
 	}
 	
-	public boolean playerHasSubmittedBattlePlan(PlayerData player) throws NotAuthorizedException {
+	public boolean playerHasSubmittedBattlePlan(PlayerData player) {
 		boolean isPlayer1 = player.id.equals(player1.id);
 		boolean isPlayer2 = (player2 != null) && player.id.equals(player2.id);
 		if (!isPlayer1 && !isPlayer2) {
-			throw new NotAuthorizedException("Submitting player is not part of this skirmish");
+			throw new RuntimeException("Submitting player is not part of this skirmish");
 		}
 		
 		boolean player1HasSubmitted = (battlePlans.size() > round && battlePlans.get(round).player1Bp != null);
 		boolean player2HasSubmitted = (battlePlans.size() > round && battlePlans.get(round).player2Bp != null);
 		
 		return (isPlayer1 && player1HasSubmitted) || (isPlayer2 && player2HasSubmitted);
+	}
+	
+	public int millisecondsRemaining() {
+		if (currentRoundStartTime == 0) {
+			return 0;
+		} else {
+			int elapsed = (int) (new Date().getTime() - currentRoundStartTime);
+			return Math.max(ROUND_TIME_LIMIT_MILLIS - elapsed, 0);
+		}
 	}
 	
 	public void forfeit(PlayerData player) {
@@ -98,10 +112,10 @@ public class Skirmish {
 	}
 	
 	public boolean opponentHasForfeited(PlayerData player) {
-		if (player.id.equals(player1.id)) {
-			return forfeit == 2;
+		if (player.id.equals(player1.id) && player2 != null) {
+			return forfeit == 2 || (!playerHasSubmittedBattlePlan(player2) && millisecondsRemaining() == 0);
 		} else if (player2 != null && player.id.equals(player2.id)) {
-			return forfeit == 1;
+			return forfeit == 1 || (!playerHasSubmittedBattlePlan(player1) && millisecondsRemaining() == 0);
 		} else {
 			return false;
 		}

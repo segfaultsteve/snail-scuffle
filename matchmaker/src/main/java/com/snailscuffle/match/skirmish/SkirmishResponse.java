@@ -13,6 +13,7 @@ public class SkirmishResponse implements Serializable {
 	public final String opponentName;
 	public final List<BattlePlan> battlePlans;
 	public final int firstMover;
+	public final int timeRemaining;
 	public final boolean opponentHasForfeited;
 	
 	public SkirmishResponse(PlayerData requestingPlayer) {
@@ -35,6 +36,7 @@ public class SkirmishResponse implements Serializable {
 		}
 		
 		battlePlans = skirmish.getBattlePlans(requestingPlayer.id);
+		timeRemaining = skirmish.millisecondsRemaining();
 		opponentHasForfeited = skirmish.opponentHasForfeited(requestingPlayer);
 	}
 	

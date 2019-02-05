@@ -115,14 +115,14 @@ var snail = (function(snail, $) {
 		const enable = function () {
 			if ($button.hasClass('disabled-button')) {
 				$button.removeClass('disabled-button');
-				$button.off('click', onButtonClicked).on('click', onButtonClicked);
+				$button.prop('disabled', false);
 			}
 		};
 		
 		const disable = function () {
 			if (!$button.hasClass('disabled-button')) {
 				$button.addClass('disabled-button');
-				$button.off('click', onButtonClicked);
+				$button.prop('disabled', true);
 			}
 		};
 		

@@ -63,25 +63,10 @@
 
 /* MODALS */
 
-#home .modals-background {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	z-index: 1;
-	background-color: rgba(0,0,0,0.4);
-}
-
 #home .modals-play {
 	display:flex;
-	position: fixed;
 	width: 40vw;
 	height: 35vh;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 2;
 	justify-content: space-between;
 	align-items: center;
 	background-color: white;
@@ -115,11 +100,6 @@
 }
 
 #home .modals-matching {
-	position: fixed;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 2;
 	padding: 3em 4em 2em 4em;
 	background-color: white;
 	border: 1px solid black;
