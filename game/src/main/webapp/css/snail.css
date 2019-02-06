@@ -1,7 +1,7 @@
 body {
 	margin: 0;
 	font-family: Verdana, 'DejaVu Sans', sans-serif;
-	font-size: 1.8vh;
+	font-size: 2vh;
 }
 
 input, select {
@@ -37,6 +37,40 @@ button.disabled-button {
 	left: 50%;
 	transform: translate(-50%, -50%);
 	z-index: 2;
+	display: flex;
+	flex-flow: column nowrap;
+	align-items: center;
+	justify-content: center;
+	padding: 2em 4em;
+	background-color: white;
+	border: 1px solid black;
+	border-radius: 1em;
+}
+
+.modal-text {
+	font-size: 2em;
+}
+
+.modal-subtext {
+	margin-top: 1em;
+	font-size: 1.2em;
+}
+
+.modal-button {
+	display: block;
+	margin: auto;
+	margin-top: 2em;
+	padding: 1em 2em;
+	border-radius: 0.3em;
+	font-size: 1.2em;
+}
+
+.modal-closeicon {
+	position: absolute;
+	top: 0.8em;
+	right: 0.8em;
+	font-size: 1.5em;
+	cursor: pointer;
 }
 
 .modal-background {

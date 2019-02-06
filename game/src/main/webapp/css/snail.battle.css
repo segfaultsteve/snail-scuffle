@@ -9,54 +9,7 @@
 }
 
 #battle .waitmessage {
-	font-size: 2em;
-}
-
-#battle .opponentforfeitedmessage {
-	display: flex;
-	flex-flow: column nowrap;
-	align-items: center;
-	justify-content: center;
-	padding: 3em 4em 2em 4em;
-	background-color: white;
-	border: 1px solid black;
-	border-radius: 1em;
-}
-
-#battle .opponentforfeitedmessage-text {
-	font-size: 2em;
-}
-
-#battle .opponentforfeitedmessage-subtext {
-	margin-top: 1em;
-	font-size: 1em;
-}
-
-#battle .opponentforfeitedmessage-okbutton {
-	display: block;
-	margin: auto;
-	margin-top: 2em;
-	padding: 1em 2em;
-	border-radius: 0.3em;
-}
-
-#battle .result {
-	padding: 3em 4em 2em 4em;
-	background-color: white;
-	border: 1px solid black;
-	border-radius: 1em;
-}
-
-#battle .result-text {
-	font-size: 2em;
-}
-
-#battle .result-okbutton {
-	display: block;
-	margin: auto;
-	margin-top: 2em;
-	padding: 1em 2em;
-	border-radius: 0.3em;
+	border: none;
 }
 
 #battle .hud-player,
