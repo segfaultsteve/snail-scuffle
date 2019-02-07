@@ -133,7 +133,10 @@ var snail = (function (snail, $) {
 				events: battleResult.eventsByRound.slice(-1)[0]
 			};
 			notifyEventHandlers('nextRound', args);
-			startTimer(state.skirmishResponse.timeRemaining);
+			
+			if (battleResult.winnerIndex < 0) {
+				startTimer(state.skirmishResponse.timeRemaining);
+			}
 			
 			round += 1;
 			endOfCurrentRoundBattleData = newBattleData(state.skirmishResponse, battleResult.endOfRoundStats);

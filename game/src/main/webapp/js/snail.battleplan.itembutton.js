@@ -99,7 +99,11 @@ var snail = (function (snail, $) {
 		
 		// public methods
 		const enable = function () {
-			setState(states.noCondition);
+			if (menubutton.getSelectedOption().name === 'none') {
+				setState(states.noCondition);
+			} else {
+				setState(states.addCondition);
+			}
 			menubutton.enable();
 		};
 		
