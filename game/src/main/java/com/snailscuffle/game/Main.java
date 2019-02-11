@@ -39,7 +39,7 @@ public class Main {
 		
 		ServletContextHandler context = new ServletContextHandler();
 		context.setBaseResource(Resource.newResource(findWebRoot()));
-		context.addServlet(DefaultServlet.class, "/");
+		context.addServlet(DefaultServlet.class, "/").setInitParameter("precompressed", "true");
 		context.addServlet(BattleServlet.class, "/battle");
 		context.addServlet(new ServletHolder(new InfoServlet(settings)), "/info/*");
 		
