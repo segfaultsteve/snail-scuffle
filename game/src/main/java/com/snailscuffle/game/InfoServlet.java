@@ -1,5 +1,7 @@
 package com.snailscuffle.game;
 
+import static com.snailscuffle.common.battle.Constants.*;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -122,6 +124,12 @@ public class InfoServlet extends HttpServlet {
 		for (Accessory accessory : Accessory.values()) {
 			EquipmentInfo info = new EquipmentInfo(accessory.name().toLowerCase(), accessory.displayName, accessory.description,
 					accessory.attack, accessory.defense, accessory.speed);
+			if (accessory == Accessory.CHARGED_ATTACK) {
+				info.other.put("divisor", CHARGED_ATTACK_AP_DIVISOR);
+			} else if (accessory == Accessory.ADRENALINE) {
+				info.other.put("crossover", ADRENALINE_CROSSOVER);
+				info.other.put("divisor", ADRENALINE_DIVISOR);
+			}
 			accessories.add(info);
 		}
 		return JsonUtil.serialize((Serializable) accessories);

@@ -124,7 +124,15 @@ var snail = (function (snail, $) {
 		
 		const getAttack = function () {
 			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
-				return selectedSnail.attackModifier + selectedWeapon.attackModifier + selectedShell.attackModifier + selectedAccessory.attackModifier;
+				let attack = selectedSnail.attackModifier + selectedWeapon.attackModifier + selectedShell.attackModifier + selectedAccessory.attackModifier;
+				if (selectedAccessory.name === 'salted_shell') {
+					attack *= snail.model.battle.saltedShellAttackMultiplier();
+				} else if (selectedAccessory.name === 'charged_attack') {
+					attack *= 1 + snail.model.battle.chargedAttackModifier();
+				} else if (selectedAccessory.name === 'adrenaline') {
+					attack += snail.model.battle.adrenalineModifier();
+				}
+				return attack;
 			} else {
 				return 0;
 			}
@@ -132,7 +140,11 @@ var snail = (function (snail, $) {
 
 		const getDefense = function () {
 			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
-				return selectedSnail.defenseModifier + selectedWeapon.defenseModifier + selectedShell.defenseModifier + selectedAccessory.defenseModifier;
+				let defense = selectedSnail.defenseModifier + selectedWeapon.defenseModifier + selectedShell.defenseModifier + selectedAccessory.defenseModifier;
+				if (selectedAccessory.name === 'salted_shell') {
+					defense *= snail.model.battle.saltedShellDefenseMultiplier();
+				}
+				return defense;
 			} else {
 				return 0;
 			}

@@ -3,8 +3,9 @@ var snail = (function (snail, $) {
 	snail.model.battle = snail.model.battle || {};
 	
 	// private variables
-	let ioLayer, skirmishId, skirmishPollInterval, skirmishTimerInterval, round, endOfCurrentRoundBattleData;
+	let ioLayer, accessoryInfo, skirmishId, skirmishPollInterval, skirmishTimerInterval, round, endOfCurrentRoundBattleData;
 	let eventHandlers = [];
+	let playerBps = [];
 	
 	// private methods
 	const newBattleData = function (skirmishResponse, stats) {
@@ -117,7 +118,7 @@ var snail = (function (snail, $) {
 	}
 	
 	const saveBattlePlansToModel = function (skirmishResponse) {
-		snail.model.battleplan.playerBp.set(skirmishResponse.battlePlans.slice(-2)[0]);
+		playerBps.push(skirmishResponse.battlePlans.slice(-2)[0]);
 		snail.model.battleplan.enemyBp.set(skirmishResponse.battlePlans.slice(-2)[1]);
 		return skirmishResponse;
 	};
@@ -150,6 +151,7 @@ var snail = (function (snail, $) {
 	// public methods
 	snail.model.battle.init = function (io) {
 		ioLayer = io;
+		ioLayer.promiseAccessoryInfo().done(info => accessoryInfo = info);
 	};
 	
 	snail.model.battle.addEventHandler = function (handler) {
@@ -174,6 +176,35 @@ var snail = (function (snail, $) {
 	snail.model.battle.cancelSkirmish = function () {
 		clearInterval(skirmishPollInterval);
 		ioLayer.deleteSkirmish();
+	};
+	
+	snail.model.battle.saltedShellAttackMultiplier = function () {
+		return (round === 0 || playerBps[round-1].accessory !== 'salted_shell') ? 1 : 2;
+	};
+	
+	snail.model.battle.saltedShellDefenseMultiplier = function () {
+		return (round === 0 || playerBps[round-1].accessory !== 'salted_shell') ? 0.5 : 1;
+	};
+	
+	snail.model.battle.chargedAttackModifier = function () {
+		if (round === 0 || !accessoryInfo) {
+			return 0;
+		} else {
+			const currentAp = endOfCurrentRoundBattleData.ap[0];
+			const divisor = accessoryInfo.filter(i => i.name === 'charged_attack')[0].other.divisor;
+			return currentAp / divisor;
+		}
+	};
+	
+	snail.model.battle.adrenalineModifier = function () {
+		if (!accessoryInfo) {
+			return 0;
+		} else {
+			const currentHp = (round === 0) ? 100 : endOfCurrentRoundBattleData.hp[0];
+			const crossover = accessoryInfo.filter(i => i.name === 'adrenaline')[0].other.crossover;
+			const divisor = accessoryInfo.filter(i => i.name === 'adrenaline')[0].other.divisor;
+			return (crossover - currentHp) / divisor;
+		}
 	};
 	
 	snail.model.battle.submitBattlePlan = function (bp) {

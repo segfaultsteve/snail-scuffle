@@ -62,9 +62,9 @@ var snail = (function (snail) {
 	
 	const onBattlePlanUpdated = function (bp, $attack, $defense, $speed) {
 		return function () {
-			updateStat($attack, bp.getAttack());
-			updateStat($defense, bp.getDefense());
-			updateStat($speed, bp.getSpeed());
+			updateStat($attack, formatNumber(bp.getAttack()));
+			updateStat($defense, formatNumber(bp.getDefense()));
+			updateStat($speed, formatNumber(bp.getSpeed()));
 		}
 	};
 	
