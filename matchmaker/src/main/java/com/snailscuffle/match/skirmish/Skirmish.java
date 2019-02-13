@@ -15,7 +15,7 @@ public class Skirmish {
 		private BattlePlan player2Bp;
 	}
 	
-	public static final int ROUND_TIME_LIMIT_MILLIS = 30 * 1000;
+	public static final int ROUND_TIME_LIMIT_MILLIS = 3 * 60 * 1000;
 	
 	private final UUID id;
 	private int round;
