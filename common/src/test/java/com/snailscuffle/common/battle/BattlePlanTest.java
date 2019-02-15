@@ -16,8 +16,8 @@ public class BattlePlanTest {
 		bp.weapon = Weapon.RIFLE;
 		bp.shell = Shell.ALUMINUM;
 		bp.accessory = Accessory.STEROIDS;
-		bp.item1 = Item.ATTACK;
-		bp.item2 = Item.DEFENSE;
+		bp.items[0] = Item.ATTACK;
+		bp.items[1] = Item.DEFENSE;
 	}
 	
 	@Test
@@ -41,42 +41,42 @@ public class BattlePlanTest {
 	}
 	
 	@Test
-	public void failValidationOnEmptyItem1Rule() {
-		bp.item1Rule = ItemRule.useWhenEnemyUses(null);
+	public void failValidationOnEmptyItem0Rule() {
+		bp.itemRules[0] = ItemRule.useWhenEnemyUses(null);
 		assertValidateThrowsInvalidBattleException(bp);
 	}
 	
 	@Test
-	public void failValidationOnEmptyItem2Rule() {
-		bp.item2Rule = ItemRule.useWhenEnemyUses(null);
+	public void failValidationOnEmptyItem1Rule() {
+		bp.itemRules[1] = ItemRule.useWhenEnemyUses(null);
+		assertValidateThrowsInvalidBattleException(bp);
+	}
+	
+	@Test
+	public void failValidationOnOverspecifiedItem0Rule() {
+		bp.itemRules[0] = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
+		bp.itemRules[0].enemyUsesCondition = Item.ATTACK;
 		assertValidateThrowsInvalidBattleException(bp);
 	}
 	
 	@Test
 	public void failValidationOnOverspecifiedItem1Rule() {
-		bp.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
-		bp.item1Rule.enemyUsesCondition = Item.ATTACK;
+		bp.itemRules[1] = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
+		bp.itemRules[1].enemyUsesCondition = Item.ATTACK;
 		assertValidateThrowsInvalidBattleException(bp);
 	}
 	
 	@Test
-	public void failValidationOnOverspecifiedItem2Rule() {
-		bp.item2Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
-		bp.item2Rule.enemyUsesCondition = Item.ATTACK;
+	public void failValidationOnItem0RuleWithInvalidHasCondition() {
+		bp.itemRules[0] = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
+		bp.itemRules[0].hasCondition.stat = null;
 		assertValidateThrowsInvalidBattleException(bp);
 	}
 	
 	@Test
 	public void failValidationOnItem1RuleWithInvalidHasCondition() {
-		bp.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
-		bp.item1Rule.hasCondition.stat = null;
-		assertValidateThrowsInvalidBattleException(bp);
-	}
-	
-	@Test
-	public void failValidationOnItem2RuleWithInvalidHasCondition() {
-		bp.item2Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
-		bp.item2Rule.hasCondition.stat = null;
+		bp.itemRules[1] = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, 10);
+		bp.itemRules[1].hasCondition.stat = null;
 		assertValidateThrowsInvalidBattleException(bp);
 	}
 	

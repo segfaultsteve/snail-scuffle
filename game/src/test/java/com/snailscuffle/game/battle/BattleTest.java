@@ -135,7 +135,7 @@ public class BattleTest {
 	@Test
 	public void attackBoostSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
-		bp2.item1 = Item.ATTACK;
+		bp2.items[0] = Item.ATTACK;
 		bp2.instructions = Arrays.asList(Instruction.waitUntilApIs(30), Instruction.useItem(Item.ATTACK));
 		BattleConfig config = new BattleConfig(bp, bp2, bp, bp, bp, bp);
 		
@@ -147,7 +147,7 @@ public class BattleTest {
 	@Test
 	public void defenseBoostSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
-		bp2.item1 = Item.DEFENSE;
+		bp2.items[0] = Item.DEFENSE;
 		bp2.instructions = Arrays.asList(Instruction.waitUntilApIs(15), Instruction.useItem(Item.DEFENSE));
 		BattleConfig config = new BattleConfig(bp, bp2, bp, bp, bp, bp);
 		
@@ -159,7 +159,7 @@ public class BattleTest {
 	@Test
 	public void speedBoostSwingsBattle() {
 		BattlePlan bp2 = clone(bp);
-		bp2.item1 = Item.SPEED;
+		bp2.items[0] = Item.SPEED;
 		bp2.instructions = Arrays.asList(Instruction.useItem(Item.SPEED));
 		BattleConfig config = new BattleConfig(bp, bp2, bp, bp, bp, bp);
 		
@@ -198,8 +198,8 @@ public class BattleTest {
 	@Test
 	public void playerCanUseAtMostTwoItemsPerBattle() {
 		BattlePlan bp2 = clone(bp);
-		bp2.item1 = Item.ATTACK;
-		bp2.item2 = Item.ATTACK;
+		bp2.items[0] = Item.ATTACK;
+		bp2.items[1] = Item.ATTACK;
 		bp2.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK), Instruction.useItem(Item.ATTACK));
 		BattleConfig config = new BattleConfig(bp, bp2, bp, bp2, bp, bp2);
 		
@@ -216,7 +216,7 @@ public class BattleTest {
 	
 	private void assertBoostWorks(Item boostToUse, Stat statWhichShouldIncrease) {
 		BattlePlan bp2 = clone(bp);
-		bp2.item1 = boostToUse;
+		bp2.items[0] = boostToUse;
 		bp2.instructions = Arrays.asList(Instruction.useItem(boostToUse));
 		BattleConfig config = new BattleConfig(bp2, bp, bp, bp, bp, bp);
 		

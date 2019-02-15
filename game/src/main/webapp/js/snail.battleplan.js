@@ -4,7 +4,7 @@ var snail = (function (snail, $) {
 	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let $battleplan, $timer, $modalBackground, $forfeitModal, snails, snailButtons, weaponButton, shellButton, accessoryButton, item1Button, item2Button, instructionBox, playerBp, previousPlayerBp;
+	let $battleplan, $timer, $modalBackground, $forfeitModal, snails, snailButtons, weaponButton, shellButton, accessoryButton, item0Button, item1Button, instructionBox, playerBp, previousPlayerBp;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
@@ -78,8 +78,8 @@ var snail = (function (snail, $) {
 		weaponButton.enable();
 		shellButton.enable();
 		accessoryButton.enable();
+		item0Button.enable();
 		item1Button.enable();
-		item2Button.enable();
 		$forfeitModal.addClass('hidden');
 		$modalBackground.addClass('hidden');
 	};
@@ -99,19 +99,19 @@ var snail = (function (snail, $) {
 			case 'accessory':
 				accessoryButton.setSelectedOption(newValue.displayName);
 				break;
+			case 'item0':
+				item0Button.setSelectedOption(newValue.displayName);
+				instructionBox.refreshItemReferences();
+				break;
 			case 'item1':
 				item1Button.setSelectedOption(newValue.displayName);
 				instructionBox.refreshItemReferences();
 				break;
-			case 'item2':
-				item2Button.setSelectedOption(newValue.displayName);
-				instructionBox.refreshItemReferences();
+			case 'item0Rule':
+				item0Button.setCondition(newValue);
 				break;
 			case 'item1Rule':
 				item1Button.setCondition(newValue);
-				break;
-			case 'item2Rule':
-				item2Button.setCondition(newValue);
 				break;
 			case 'instructions':
 				instructionBox.setInstructions(newValue);
@@ -121,9 +121,9 @@ var snail = (function (snail, $) {
 	
 	const onItemUsed = function (index) {
 		if (index === 0) {
-			item1Button.disable();
+			item0Button.disable();
 		} else {
-			item2Button.disable();
+			item1Button.disable();
 		}
 	};
 	
@@ -219,8 +219,8 @@ var snail = (function (snail, $) {
 		weaponButton = createMenuButton($battleplan.find('.equip-weapon'), snail.io.promiseWeaponInfo(), 0, onWeaponSelected);
 		shellButton = createMenuButton($battleplan.find('.equip-shell'), snail.io.promiseShellInfo(), 'last', onShellSelected);
 		accessoryButton = createMenuButton($battleplan.find('.equip-accessory'), snail.io.promiseAccessoryInfo(), 'last', onAccessorySelected);
-		item1Button = createItemButton($battleplan.find('.equip-item1'), snail.io.promiseItemInfo(), 0);
-		item2Button = createItemButton($battleplan.find('.equip-item2'), snail.io.promiseItemInfo(), 1);
+		item0Button = createItemButton($battleplan.find('.equip-item0'), snail.io.promiseItemInfo(), 0);
+		item1Button = createItemButton($battleplan.find('.equip-item1'), snail.io.promiseItemInfo(), 1);
 		instructionBox = snail.battleplan.instructionbox;
 		instructionBox.init($battleplan.find('.instructionbox'));
 		for (let i = 0; i < 4; i++) {

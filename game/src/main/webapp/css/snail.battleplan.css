@@ -95,8 +95,8 @@
 		"weapon ."
 		"shell ."
 		"accessory ."
+		"item0 item0"
 		"item1 item1"
-		"item2 item2"
 		". .";
 	grid-gap: 0.8em 0;
 }
@@ -113,12 +113,12 @@
 	grid-area: accessory;
 }
 
-#battleplan .equip-item1 {
-	grid-area: item1;
+#battleplan .equip-item0 {
+	grid-area: item0;
 }
 
-#battleplan .equip-item2 {
-	grid-area: item2;
+#battleplan .equip-item1 {
+	grid-area: item1;
 }
 
 

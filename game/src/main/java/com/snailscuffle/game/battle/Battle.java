@@ -8,44 +8,44 @@ public class Battle {
 	private static final int PERIOD = 6 * Combatant.SCALE;
 	
 	private int time;
+	private Combatant player0;
 	private Combatant player1;
-	private Combatant player2;
 	private BattleRecorder recorder;
 	
 	public Battle(BattleConfig config) {
 		recorder = new BattleRecorder(this);
+		player0 = new Combatant(recorder);
 		player1 = new Combatant(recorder);
-		player2 = new Combatant(recorder);
 		
-		player1.setOpponent(player2);
-		player2.setOpponent(player1);
+		player0.setOpponent(player1);
+		player1.setOpponent(player0);
 		
-		Combatant firstMover = (config.firstMover == 0) ? player1 : player2;
-		Combatant secondMover = (config.firstMover == 0) ? player2 : player1;
+		Combatant firstMover = (config.firstMover == 0) ? player0 : player1;
+		Combatant secondMover = (config.firstMover == 0) ? player1 : player0;
 		
 		int periodEnd = PERIOD;
-		for (int bpIndex = 0; bpIndex < config.battlePlans.length && player1.isAlive() && player2.isAlive(); bpIndex += 2) {
-			player1.setBattlePlan(config.battlePlans[bpIndex]);
-			player2.setBattlePlan(config.battlePlans[bpIndex + 1]);
+		for (int bpIndex = 0; bpIndex < config.battlePlans.length && player0.isAlive() && player1.isAlive(); bpIndex += 2) {
+			player0.setBattlePlan(config.battlePlans[bpIndex]);
+			player1.setBattlePlan(config.battlePlans[bpIndex + 1]);
 			
 			int increment = 0;
-			while (time + increment < periodEnd && player1.isAlive() && player2.isAlive()) {
+			while (time + increment < periodEnd && player0.isAlive() && player1.isAlive()) {
 				time += increment;
 				firstMover.update(increment);
 				if (secondMover.isAlive()) {
 					secondMover.update(increment);
 				}
-				increment = nextIncrement(player1, player2);
+				increment = nextIncrement(player0, player1);
 			}
 			
-			if (player1.isAlive() && player2.isAlive()) {
+			if (player0.isAlive() && player1.isAlive()) {
 				int ticksToEndOfRound = periodEnd - time; 
 				time = periodEnd;
 				firstMover.update(ticksToEndOfRound);
 				secondMover.update(ticksToEndOfRound);
 			}
 			
-			recorder.recordEndOfRound(time, player1, player2);
+			recorder.recordEndOfRound(time, player0, player1);
 			periodEnd += PERIOD;
 		}
 	}
@@ -59,9 +59,9 @@ public class Battle {
 	}
 	
 	int playerIndexOf(Combatant combatant) {
-		if (combatant == player1) {
+		if (combatant == player0) {
 			return 0;
-		} else if (combatant == player2) {
+		} else if (combatant == player1) {
 			return 1;
 		} else {
 			throw new RuntimeException("Unknown player");
@@ -70,9 +70,9 @@ public class Battle {
 
 	public BattleResult getResult() {
 		int winnerIndex = -1;
-		if (!player2.isAlive()) {
+		if (!player1.isAlive()) {
 			winnerIndex = 0;
-		} else if (!player1.isAlive()) {
+		} else if (!player0.isAlive()) {
 			winnerIndex = 1;
 		}
 		return new BattleResult(recorder.eventsByRound(), recorder.endOfRoundStats(), winnerIndex);

@@ -34,9 +34,9 @@ var snail = (function (snail, $) {
 			if (round > 0) {
 				const lastRound = stats[round-1];
 				battleData.time = lastRound.time;
-				battleData.hp = [lastRound.player1Hp, lastRound.player2Hp];
-				battleData.ap = [lastRound.player1Ap, lastRound.player2Ap];
-				battleData.effects = [lastRound.player1ActiveEffects, lastRound.player2ActiveEffects];
+				battleData.hp = lastRound.players.map(p => p.hp);
+				battleData.ap = lastRound.players.map(p => p.ap);
+				battleData.effects = lastRound.players.map(p => p.activeEffects);
 			}
 		}
 		

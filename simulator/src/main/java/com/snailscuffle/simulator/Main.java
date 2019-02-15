@@ -16,7 +16,6 @@ import com.snailscuffle.common.battle.*;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.battle.Battle;
 
-
 class Main {
 
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -24,17 +23,14 @@ class Main {
 	private static SimulatorSettings simulatorSettings = new SimulatorSettings();
 
 	public static void main(String[] args) {
-		
-		RandomBattlePlanGen battlePlanGenerator = new RandomBattlePlanGen();	
+		RandomBattlePlanGen battlePlanGenerator = new RandomBattlePlanGen();
 		List<BattlePlan> generatedBattlePlans = battlePlanGenerator.getGeneratedBattlePlans();
-				
-		PostAndResponseStructure httpClient = new PostAndResponseStructure();	
+
+		PostAndResponseStructure httpClient = new PostAndResponseStructure();
 		submitBattlePlansToGameServer(generatedBattlePlans, httpClient);
 	}
-	
-	public static void submitBattlePlansToGameServer(List<BattlePlan> generatedBattlePlans, PostAndResponseStructure httpClient) {
 
-		DatabaseUtil database = new DatabaseUtil();
+	public static void submitBattlePlansToGameServer(List<BattlePlan> generatedBattlePlans, PostAndResponseStructure httpClient) {
 		List<BattlePlan> battlePlans = new ArrayList<BattlePlan>();
 		List<BattleResult> battleResults = new ArrayList<BattleResult>();
 		String response;
@@ -43,76 +39,73 @@ class Main {
 		int matchesProcessedCounter = 0;
 		int totalMatchesProcessed = 0;
 		int battleId = 0;
-		
-		for(int i = 0; i < generatedBattlePlans.size(); i++)
-		{
-			for(int j = 0; j < generatedBattlePlans.size();j++) {				
-				try {						
-						//Build a list that contains enough battle plans to ensure a battle always ends
-						battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j),
-								generatedBattlePlans.get(i), generatedBattlePlans.get(j),
-								generatedBattlePlans.get(i), generatedBattlePlans.get(j),
-								generatedBattlePlans.get(i), generatedBattlePlans.get(j),
-								generatedBattlePlans.get(i), generatedBattlePlans.get(j),
-								generatedBattlePlans.get(i), generatedBattlePlans.get(j)));
-						
-						int winnerFound = -1;
-						while(winnerFound < 0) {
-							if (simulatorSettings.goOverNetwork) {									
-								BattleConfig battleConfig = new BattleConfig(battlePlans.toArray(new BattlePlan[0]));
-								jsonToSend = JsonUtil.serialize(battleConfig);
-								response = httpClient.postMessage(urlToConnectTo, jsonToSend);
-								result = JsonUtil.deserialize(BattleResult.class, response);									
-								battleResults.add(result);
-								winnerFound = result.winnerIndex;
-								battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)));
-							} else {									
-								//For now just keep sending the same one																
-								BattleConfig battleConfig = new BattleConfig(battlePlans.toArray(new BattlePlan[0]));
-								result = (new Battle(battleConfig)).getResult();
-								battleResults.add(result);
-								winnerFound = result.winnerIndex;
-								battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)));
-							}							
+
+		for (int i = 0; i < generatedBattlePlans.size(); i++) {
+			for (int j = 0; j < generatedBattlePlans.size(); j++) {
+				try {
+					// Build a list that contains enough battle plans to ensure
+					// a battle always ends
+					battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j),
+							generatedBattlePlans.get(i), generatedBattlePlans.get(j), generatedBattlePlans.get(i),
+							generatedBattlePlans.get(j), generatedBattlePlans.get(i), generatedBattlePlans.get(j),
+							generatedBattlePlans.get(i), generatedBattlePlans.get(j), generatedBattlePlans.get(i),
+							generatedBattlePlans.get(j)));
+
+					int winnerFound = -1;
+					while (winnerFound < 0) {
+						if (simulatorSettings.goOverNetwork) {
+							BattleConfig battleConfig = new BattleConfig(battlePlans.toArray(new BattlePlan[0]));
+							jsonToSend = JsonUtil.serialize(battleConfig);
+							response = httpClient.postMessage(urlToConnectTo, jsonToSend);
+							result = JsonUtil.deserialize(BattleResult.class, response);
+							battleResults.add(result);
+							winnerFound = result.winnerIndex;
+							battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)));
+						} else {
+							// For now just keep sending the same one
+							BattleConfig battleConfig = new BattleConfig(battlePlans.toArray(new BattlePlan[0]));
+							result = (new Battle(battleConfig)).getResult();
+							battleResults.add(result);
+							winnerFound = result.winnerIndex;
+							battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)));
 						}
+					}
 
 					BattleResultMetaData metaData = new BattleResultMetaData(battleResults);
-					database.StoreResult(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)), metaData, battleId);
+					DatabaseUtil.StoreResult(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)), metaData, battleId);
 
 					totalMatchesProcessed++;
 					matchesProcessedCounter++;
 					battleId++;
 					battlePlans.clear();
 					battleResults.clear();
-					
+
 					if (matchesProcessedCounter >= 1000000) {
-						logger.debug("Processed " + totalMatchesProcessed + "/" + (generatedBattlePlans.size() * generatedBattlePlans.size()) + " matches.");
+						logger.debug("Processed " + totalMatchesProcessed + "/"
+								+ (generatedBattlePlans.size() * generatedBattlePlans.size()) + " matches.");
 						matchesProcessedCounter = 0;
 					}
-					
+
 				} catch (Exception e) {
 					logger.error("Error when trying to simulate battle. Error message: " + e.getMessage());
-					for(BattlePlan battlePlan : battlePlans)
-						logger.debug(battlePlan.toString());			
-				}							
-			}		
+					for (BattlePlan battlePlan : battlePlans)
+						logger.debug(battlePlan.toString());
+				}
+			}
 		}
 	}
-	
+
 	public static class PostAndResponseStructure {
 		final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-		
+
 		OkHttpClient client = new OkHttpClient();
-		
+
 		String postMessage(String url, String json) throws Exception {
 			RequestBody body = RequestBody.create(JSON, json);
-			Request request = new Request.Builder()
-			        .url(url)
-			        .post(body)
-			        .build();
-			    try (Response response = client.newCall(request).execute()) {
-			      return response.body().string();
+			Request request = new Request.Builder().url(url).post(body).build();
+			try (Response response = client.newCall(request).execute()) {
+				return response.body().string();
 			}
-		}					
+		}
 	}
 }

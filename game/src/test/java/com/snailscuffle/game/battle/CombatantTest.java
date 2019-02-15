@@ -33,23 +33,23 @@ public class CombatantTest {
 	private BattlePlan bp;
 	private Integer battleTime = new Integer(0);
 	private BattleRecorder recorder;
+	private Combatant player0;
 	private Combatant player1;
-	private Combatant player2;
 	
 	@Before
 	public void setUp() throws Exception {
 		bp = defaultBattlePlan();
 		Battle battle = mock(Battle.class);
 		recorder = new BattleRecorder(battle);
+		player0 = new Combatant(recorder);
 		player1 = new Combatant(recorder);
-		player2 = new Combatant(recorder);
 		
 		when(battle.currentTime()).thenAnswer(i -> battleTime.intValue());
-		when(battle.playerIndexOf(player1)).thenReturn(0);
-		when(battle.playerIndexOf(player2)).thenReturn(1);
+		when(battle.playerIndexOf(player0)).thenReturn(0);
+		when(battle.playerIndexOf(player1)).thenReturn(1);
 		
-		player1.setOpponent(player2);
-		player2.setOpponent(player1);
+		player0.setOpponent(player1);
+		player1.setOpponent(player0);
 	}
 	
 	private static BattlePlan defaultBattlePlan() {
@@ -63,8 +63,8 @@ public class CombatantTest {
 	
 	@Test
 	public void attackEventsAreFilledOutCorrectly() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		BattleEvent secondEvent = recorder.flatEvents().get(1);
@@ -86,8 +86,8 @@ public class CombatantTest {
 	
 	@Test
 	public void attackForCorrectDamage() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		
@@ -98,8 +98,8 @@ public class CombatantTest {
 	
 	@Test
 	public void attackAtCorrectTime() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		
@@ -112,8 +112,8 @@ public class CombatantTest {
 	public void waitUntilCorrectTime() {
 		final int WAIT_AP = 2 * bp.weapon.apCost;
 		bp.instructions = Arrays.asList(Instruction.waitUntilApIs(WAIT_AP));
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		
@@ -124,13 +124,13 @@ public class CombatantTest {
 	
 	@Test
 	public void steroidsIncreaseAttack() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialAttack = baseAttackOf(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		bp.accessory = Accessory.STEROIDS;
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		double expectedIncrease = (initialAttack + STEROIDS_ATTACK) / initialAttack;
@@ -140,13 +140,13 @@ public class CombatantTest {
 	
 	@Test
 	public void snailMailIncreasesDefense() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialDefense = baseDefenseOf(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		bp.accessory = Accessory.SNAIL_MAIL;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		double expectedIncrease = (initialDefense + SNAIL_MAIL_DEFENSE) / initialDefense;
@@ -156,13 +156,13 @@ public class CombatantTest {
 	
 	@Test
 	public void caffeineIncreasesSpeed() {
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		double initialSpeed = baseSpeedOf(bp);
-		double ticksBefore = player1.ticksToNextEvent();
+		double ticksBefore = player0.ticksToNextEvent();
 		
 		bp.accessory = Accessory.CAFFEINE;
-		player1.setBattlePlan(bp);
-		double ticksAfter = player1.ticksToNextEvent();
+		player0.setBattlePlan(bp);
+		double ticksAfter = player0.ticksToNextEvent();
 		
 		double expectedIncrease = (initialSpeed + CAFFEINE_SPEED ) / initialSpeed;
 		double measuredIncrease = ticksBefore / ticksAfter;
@@ -171,12 +171,12 @@ public class CombatantTest {
 	
 	@Test
 	public void chargedAttackIncreasesAttack() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		bp.accessory = Accessory.CHARGED_ATTACK;
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		double expectedIncrease = 1 + 1.0 * bp.weapon.apCost / CHARGED_ATTACK_AP_DIVISOR;
@@ -186,14 +186,14 @@ public class CombatantTest {
 	
 	@Test
 	public void adrenalineDecreasesAttackAtHighHp() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialAttack = baseAttackOf(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		double hpAfterFirstHit = 100 - damageWithout;
 		bp.accessory = Accessory.ADRENALINE;
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		double expectedChange = (initialAttack + (ADRENALINE_CROSSOVER - hpAfterFirstHit) / ADRENALINE_DIVISOR) / initialAttack;
@@ -206,8 +206,8 @@ public class CombatantTest {
 	public void adrenalineIncreasesAttackAtLowHp() {
 		final int HIT_COUNT = 5;
 		
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialAttack = baseAttackOf(bp);
 		
 		for (int i = 0; i < HIT_COUNT; i++) {
@@ -217,7 +217,7 @@ public class CombatantTest {
 		double hpRemaining = 100 - HIT_COUNT * damageWithout;
 		
 		bp.accessory = Accessory.ADRENALINE;
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		double expectedChange = (initialAttack + (ADRENALINE_CROSSOVER - hpRemaining) / ADRENALINE_DIVISOR) / initialAttack;
@@ -235,12 +235,12 @@ public class CombatantTest {
 	// plays it in consecutive periods).
 	@Test
 	public void saltedShellReducesDefenseInFirstPeriod() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		bp.accessory = Accessory.SALTED_SHELL;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		double expectedChange = 1 / SALTED_SHELL_DEFENSE_MULTIPLIER;
@@ -252,16 +252,16 @@ public class CombatantTest {
 	public void saltedShellIncreasesAttackInLaterPeriods() {
 		final int BATTLE_DURATION_IN_PERIODS = 3;
 		
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double damageWithout = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		bp.accessory = Accessory.SALTED_SHELL;
-		player1.setBattlePlan(bp);		// first period
+		player0.setBattlePlan(bp);		// first period
 		
 		// subsequent periods
 		for (int i = 1; i < BATTLE_DURATION_IN_PERIODS; i++) {
-			player1.setBattlePlan(bp); 		// next period; keep salted shell equipped
+			player0.setBattlePlan(bp); 		// next period; keep salted shell equipped
 			double damageWith = -runBattleUntilNextEvent().effects.get(0).change;
 			double measuredChange = damageWith / damageWithout;
 			assertEquals(SALTED_SHELL_ATTACK_MULTIPLIER, measuredChange, REAL_TOLERANCE);
@@ -270,22 +270,22 @@ public class CombatantTest {
 	
 	@Test
 	public void unequippingSaltedShellResetsTheEffect() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialDamage = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		// first period - equip it
 		bp.accessory = Accessory.SALTED_SHELL;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		
 		// second period - unequip it
 		bp.accessory = Accessory.NONE;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		double damageAfterUnequipping = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		// third period - re-equip it
 		bp.accessory = Accessory.SALTED_SHELL;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		double damageAfterReEquipping = -runBattleUntilNextEvent().effects.get(0).change;
 		
 		// expect defense decrease instead of attack increase, since player did not hold
@@ -300,9 +300,9 @@ public class CombatantTest {
 	
 	@Test
 	public void thornsDamageAttacker() {
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		bp.accessory = Accessory.THORNS;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		
 		runBattleUntilNextEvent();
 		double damageDone = -recorder.flatEvents().get(0).effects.get(0).change;
@@ -316,19 +316,19 @@ public class CombatantTest {
 	
 	@Test
 	public void defibrillatorAllowsPlayerToTakeOneExtraHit() {
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		bp.accessory = Accessory.DEFIBRILLATOR;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		
 		int hits = 0;
-		while (player2.isAlive()) {
+		while (player1.isAlive()) {
 			runBattleUntilNextEvent();
 			hits++;
 		}
 		double damageEachHit = -recorder.flatEvents().get(0).effects.get(0).change;
 		
-		int hitsToKillPlayer2WithoutDefibrillator = (int) Math.ceil(100 / damageEachHit);
-		assertEquals(hitsToKillPlayer2WithoutDefibrillator + 1, hits);	// +1 for defibrillator
+		int hitsToKillplayer1WithoutDefibrillator = (int) Math.ceil(100 / damageEachHit);
+		assertEquals(hitsToKillplayer1WithoutDefibrillator + 1, hits);	// +1 for defibrillator
 	}
 	
 	@Test
@@ -338,14 +338,14 @@ public class CombatantTest {
 	
 	@Test
 	public void attackBoostIncreasesAttack() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialAttack = baseAttackOf(bp);
 		double damageBefore = -runBattleUntilNextEvent().effects.get(0).change;
 		
-		bp.item1 = Item.ATTACK;
+		bp.items[0] = Item.ATTACK;
 		bp.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK));
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		double reportedAttackBoost = runBattleUntilNextEvent().effects.get(0).change;
 		double damageAfter = -runBattleUntilNextEvent().effects.get(0).change;
 		
@@ -362,14 +362,14 @@ public class CombatantTest {
 	
 	@Test
 	public void defenseBoostIncreasesDefense() {
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		double initialDefense = baseDefenseOf(bp);
 		double damageBefore = -runBattleUntilNextEvent().effects.get(0).change;
 		
-		bp.item1 = Item.DEFENSE;
+		bp.items[0] = Item.DEFENSE;
 		bp.instructions = Arrays.asList(Instruction.useItem(Item.DEFENSE));
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		double reportedDefenseBoost = runBattleUntilNextEvent().effects.get(0).change;
 		double damageAfter = -runBattleUntilNextEvent().effects.get(0).change;
 		
@@ -386,16 +386,16 @@ public class CombatantTest {
 	
 	@Test
 	public void speedBoostIncreasesAp() {
-		bp.item1 = Item.SPEED;
-		bp.item2 = Item.ATTACK;
+		bp.items[0] = Item.SPEED;
+		bp.items[1] = Item.ATTACK;
 		bp.instructions = Arrays.asList(
 				Instruction.useItem(Item.SPEED),
 				Instruction.waitUntilApIs(SPEED_BOOST_AP_INCREASE),		// speed boost should hit this threshold immediately...
 				Instruction.useItem(Item.ATTACK));						// ...so attack boost should happen in same tick
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
-		player1.update(0);		// should fire both boosts
+		player0.update(0);		// should fire both boosts
 		
 		// use speed boost
 		BattleEvent firstEvent = recorder.flatEvents().get(0);
@@ -422,14 +422,14 @@ public class CombatantTest {
 	// attacked to ensure that the stun item is working correctly.
 	@Test
 	public void stunItemIncapacitatesOpponent() {
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		
-		bp.item1 = Item.STUN;
+		bp.items[0] = Item.STUN;
 		bp.instructions = Arrays.asList(
-			Instruction.waitUntilApIs(ROCKET_AP_COST - 1),	// stun just before player1 attacks
+			Instruction.waitUntilApIs(ROCKET_AP_COST - 1),	// stun just before player0 attacks
 			Instruction.useItem(Item.STUN)
 		);
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		
 		runBattleUntilNextEvent();
 		
@@ -466,29 +466,29 @@ public class CombatantTest {
 	public void playerHasConditionTriggersCorrectly() {
 		final int HP_THRESHOLD = 50;
 		
+		player0.setBattlePlan(bp);
+		bp.items[0] = Item.DEFENSE;
+		bp.itemRules[0] = ItemRule.useWhenIHave(Stat.HP, Inequality.LESS_THAN_OR_EQUALS, HP_THRESHOLD);
 		player1.setBattlePlan(bp);
-		bp.item1 = Item.DEFENSE;
-		bp.item1Rule = ItemRule.useWhenIHave(Stat.HP, Inequality.LESS_THAN_OR_EQUALS, HP_THRESHOLD);
-		player2.setBattlePlan(bp);
 		
-		while (player2.isAlive()) {
-			int increment = player1.ticksToNextEvent();
-			player1.update(increment);
+		while (player1.isAlive()) {
+			int increment = player0.ticksToNextEvent();
+			player0.update(increment);
 		}
 		
-		List<Double> player2HpChanges = new ArrayList<>();
+		List<Double> player1HpChanges = new ArrayList<>();
 		for (BattleEvent event : recorder.flatEvents()) {
 			if (event.action == Action.ATTACK) {
 				assert(event.playerIndex == 0);
-				player2HpChanges.add(event.effects.get(0).change);
+				player1HpChanges.add(event.effects.get(0).change);
 			} else if (event.action == Action.USE_ITEM) {
 				assert(event.playerIndex == 1);
 				break;
 			}
 		}
 		
-		double hpThatTriggeredItem = player2HpChanges.stream().reduce(100.0, (x, y) -> x + y);
-		double hpBeforeTrigger = player2HpChanges.stream().limit(player2HpChanges.size() - 1).reduce(100.0, (x, y) -> x + y);
+		double hpThatTriggeredItem = player1HpChanges.stream().reduce(100.0, (x, y) -> x + y);
+		double hpBeforeTrigger = player1HpChanges.stream().limit(player1HpChanges.size() - 1).reduce(100.0, (x, y) -> x + y);
 		
 		assertTrue(hpThatTriggeredItem < HP_THRESHOLD);
 		assertTrue(hpBeforeTrigger > HP_THRESHOLD);
@@ -498,18 +498,18 @@ public class CombatantTest {
 	public void enemyHasConditionTriggersCorrectly() {
 		final int AP_THRESHOLD = 20;
 		
-		bp.item1 = Item.DEFENSE;
-		bp.item1Rule = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, AP_THRESHOLD);
+		bp.items[0] = Item.DEFENSE;
+		bp.itemRules[0] = ItemRule.useWhenEnemyHas(Stat.AP, Inequality.GREATER_THAN_OR_EQUALS, AP_THRESHOLD);
 		bp.instructions = Arrays.asList(Instruction.waitUntilApIs(2 * AP_THRESHOLD));	// don't attack
+		player0.setBattlePlan(bp);
+		
+		bp.items[0] = null;
+		bp.itemRules[0] = null;
+		bp.instructions = Arrays.asList(Instruction.waitUntilApIs(AP_THRESHOLD + 1));
 		player1.setBattlePlan(bp);
 		
-		bp.item1 = null;
-		bp.item1Rule = null;
-		bp.instructions = Arrays.asList(Instruction.waitUntilApIs(AP_THRESHOLD + 1));
-		player2.setBattlePlan(bp);
-		
 		BattleEvent boostEvent = runBattleUntilNextEvent();
-		int ticksToPlayer2sNextAp = player2.ticksToNextEvent();
+		int ticksToplayer1sNextAp = player1.ticksToNextEvent();
 		BattleEvent nextEvent = runBattleUntilNextEvent();
 		
 		assertEquals(0, boostEvent.playerIndex);
@@ -518,19 +518,19 @@ public class CombatantTest {
 		
 		assertEquals(1, nextEvent.playerIndex);
 		assertEquals(Action.ATTACK, nextEvent.action);
-		assertEquals(boostEvent.time + ticksToPlayer2sNextAp, nextEvent.time);		// player 2 was exactly 1 AP away from attacking
+		assertEquals(boostEvent.time + ticksToplayer1sNextAp, nextEvent.time);		// player 2 was exactly 1 AP away from attacking
 	}
 	
 	@Test
 	public void enemyUsesItemConditionTriggersCorrectly() {
-		bp.item1 = Item.ATTACK;
+		bp.items[0] = Item.ATTACK;
 		bp.instructions = Arrays.asList(Instruction.useItem(Item.ATTACK));
-		player1.setBattlePlan(bp);
+		player0.setBattlePlan(bp);
 		
-		bp.item1 = Item.DEFENSE;
-		bp.item1Rule = ItemRule.useWhenEnemyUses(Item.ATTACK);
+		bp.items[0] = Item.DEFENSE;
+		bp.itemRules[0] = ItemRule.useWhenEnemyUses(Item.ATTACK);
 		bp.instructions = null;
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		
 		BattleEvent firstEvent = runBattleUntilNextEvent();
 		BattleEvent secondEvent = recorder.flatEvents().get(1);
@@ -553,10 +553,10 @@ public class CombatantTest {
 	@Test
 	public void bothPlayersUseThorns() {
 		bp.accessory = Accessory.THORNS;
+		player0.setBattlePlan(bp);
 		player1.setBattlePlan(bp);
-		player2.setBattlePlan(bp);
 		
-		while (player1.isAlive() && player2.isAlive()) {
+		while (player0.isAlive() && player1.isAlive()) {
 			runBattleUntilNextEvent();		// crashed before bug fix
 		}
 	}
@@ -569,13 +569,13 @@ public class CombatantTest {
 		int initialEventCount = recorder.flatEvents().size();
 		
 		while(recorder.flatEvents().size() == initialEventCount) {
-			int p1Ticks = player1.ticksToNextEvent();
-			int p2Ticks = player2.ticksToNextEvent();
+			int p1Ticks = player0.ticksToNextEvent();
+			int p2Ticks = player1.ticksToNextEvent();
 			int increment = Math.min(p1Ticks, p2Ticks);
 			
 			battleTime += increment;
+			player0.update(increment);
 			player1.update(increment);
-			player2.update(increment);
 		}
 		
 		return recorder.flatEvents().get(initialEventCount);
@@ -600,10 +600,10 @@ public class CombatantTest {
 	}
 	
 	private void assertBoostEventIsFilledOutCorrectly(Item itemToTest, Stat statExpectedToIncrease) {
-		player1.setBattlePlan(bp);
-		bp.item1 = itemToTest;
+		player0.setBattlePlan(bp);
+		bp.items[0] = itemToTest;
 		bp.instructions = Arrays.asList(Instruction.useItem(itemToTest));
-		player2.setBattlePlan(bp);
+		player1.setBattlePlan(bp);
 		
 		BattleEvent boostEvent = runBattleUntilNextEvent();
 		BattleEventEffect boostEffect = boostEvent.effects.get(0);

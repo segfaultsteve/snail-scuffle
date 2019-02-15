@@ -64,18 +64,18 @@ class BattleRecorder {
 		lastEvent.effects.add(new BattleEventEffect(playerIndex, stat, change));
 	}
 	
-	void recordEndOfRound(int time, Combatant player1, Combatant player2) {
+	void recordEndOfRound(int time, Combatant player0, Combatant player1) {
+		double player0Hp = 1.0 * player0.getHp() / Combatant.SCALE;
+		double player0Ap = 1.0 * player0.getAp() / Combatant.SCALE;
 		double player1Hp = 1.0 * player1.getHp() / Combatant.SCALE;
 		double player1Ap = 1.0 * player1.getAp() / Combatant.SCALE;
-		double player2Hp = 1.0 * player2.getHp() / Combatant.SCALE;
-		double player2Ap = 1.0 * player2.getAp() / Combatant.SCALE;
 		
+		player0Hp = Math.max(player0Hp, 0);
 		player1Hp = Math.max(player1Hp, 0);
-		player2Hp = Math.max(player2Hp, 0);
 		
-		BattleSnapshot snapshot = new BattleSnapshot(time, player1Hp, player1Ap, player2Hp, player2Ap);
-		snapshot.player1ActiveEffects.addAll(player1.getActiveEffects());
-		snapshot.player2ActiveEffects.addAll(player2.getActiveEffects());
+		BattleSnapshot snapshot = new BattleSnapshot(time, player0Hp, player0Ap, player1Hp, player1Ap);
+		snapshot.players.get(0).activeEffects.addAll(player0.getActiveEffects());
+		snapshot.players.get(1).activeEffects.addAll(player1.getActiveEffects());
 		endOfRoundStats.add(snapshot);
 		
 		newRound = true;

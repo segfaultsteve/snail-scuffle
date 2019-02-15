@@ -10,10 +10,8 @@ public class BattlePlan implements Serializable {
 	public Weapon weapon;
 	public Shell shell;
 	public Accessory accessory;
-	public Item item1;
-	public Item item2;
-	public ItemRule item1Rule;
-	public ItemRule item2Rule;
+	public Item[] items = new Item[2];
+	public ItemRule[] itemRules = new ItemRule[2];
 	public List<Instruction> instructions;
 	
 	public BattlePlan() {}
@@ -23,15 +21,12 @@ public class BattlePlan implements Serializable {
 		weapon = other.weapon;
 		shell = other.shell;
 		accessory = other.accessory;
-		item1 = other.item1;
-		item2 = other.item2;
 		
-		if (other.item1Rule != null) {
-			item1Rule = new ItemRule(other.item1Rule);
-		}
-		
-		if (other.item2Rule != null) {
-			item2Rule = new ItemRule(other.item2Rule);
+		for (int i = 0; i < 2; i++) {
+			items[i] = other.items[i];
+			if (other.itemRules[i] != null) {
+				itemRules[i] = new ItemRule(other.itemRules[i]);
+			}
 		}
 		
 		if (other.instructions != null) {
@@ -63,20 +58,13 @@ public class BattlePlan implements Serializable {
 			accessory = Accessory.NONE;
 		}
 		
-		if (item1 == null) {
-			item1 = Item.NONE;
-		}
-		
-		if (item2 == null) {
-			item2 = Item.NONE;
-		}
-		
-		if (item1Rule != null) {
-			item1Rule.validate();
-		}
-		
-		if (item2Rule != null) {
-			item2Rule.validate();
+		for (int i = 0; i < 2; i++) {
+			if (items[i] == null) {
+				items[i] = Item.NONE;
+			}
+			if (itemRules[i] != null) {
+				itemRules[i].validate();
+			}
 		}
 		
 		if (instructions != null) {

@@ -18,18 +18,18 @@ public class SkirmishResponse implements Serializable {
 	
 	public SkirmishResponse(PlayerData requestingPlayer) {
 		Skirmish skirmish = requestingPlayer.skirmish;
+		PlayerData player0 = skirmish.getPlayer0();
 		PlayerData player1 = skirmish.getPlayer1();
-		PlayerData player2 = skirmish.getPlayer2();
 		
 		skirmishId = skirmish.getId().toString();
 		
-		if (requestingPlayer.id.equals(player1.id)) {
-			playerName = player1.name;
-			opponentName = (player2 == null) ? null : player2.name;
+		if (requestingPlayer.id.equals(player0.id)) {
+			playerName = player0.name;
+			opponentName = (player1 == null) ? null : player1.name;
 			firstMover = 0;
-		} else if (player2 != null && requestingPlayer.id.equals(player2.id)) {
-			playerName = player2.name;
-			opponentName = player1.name;
+		} else if (player1 != null && requestingPlayer.id.equals(player1.id)) {
+			playerName = player1.name;
+			opponentName = player0.name;
 			firstMover = 1;
 		} else {
 			throw new RuntimeException("Requesting player is not part of this battle");

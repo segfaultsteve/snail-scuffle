@@ -15,11 +15,6 @@ import com.snailscuffle.common.battle.Stat;
 
 class Combatant {
 	
-	private enum ItemSlot {
-		ITEM_1,
-		ITEM_2
-	}
-	
 	private static class ItemEffect {
 		private Item type;
 		private int ticksRemaining;
@@ -165,25 +160,20 @@ class Combatant {
 	
 	private boolean tryUseItem(Item item) {
 		if (itemsUsed < MAX_ITEMS_PER_BATTLE) {
-			if (battlePlan.item1 == item) {
-				applyItem(ItemSlot.ITEM_1);
-			} else if (battlePlan.item2 == item) {
-				applyItem(ItemSlot.ITEM_2);
+			for (int i = 0; i < battlePlan.items.length; i++) {
+				if (battlePlan.items[i] == item) {
+					applyItem(i);
+					break;
+				}
 			}
 		}
 		currentInstruction++;
 		return true;	// using an item has zero "cost"; always continue to next instruction
 	}
 	
-	private void applyItem(ItemSlot itemSlot) {
-		Item item = null;
-		if (itemSlot == ItemSlot.ITEM_1) {
-			item = battlePlan.item1;
-			battlePlan.item1 = null;	// null this here to avoid infinite recursion below
-		} else {
-			item = battlePlan.item2;
-			battlePlan.item2 = null;
-		}
+	private void applyItem(int itemIndex) {
+		Item item = battlePlan.items[itemIndex];
+		battlePlan.items[itemIndex] = null;
 		
 		switch (item) {
 		case ATTACK:
@@ -300,12 +290,13 @@ class Combatant {
 	}
 	
 	private void onOpponentUsedItem(Item item) {
-		if (itemsUsed < MAX_ITEMS_PER_BATTLE) {
-			if (battlePlan.item1 != null && usesConditionIsSatisfied(battlePlan.item1Rule, item)) {
-				applyItem(ItemSlot.ITEM_1);
-			}
-			if (battlePlan.item2 != null && usesConditionIsSatisfied(battlePlan.item2Rule, item)) {
-				applyItem(ItemSlot.ITEM_2);
+		if (itemsUsed >= MAX_ITEMS_PER_BATTLE) {
+			return;
+		}
+		
+		for (int i = 0; i < battlePlan.items.length; i++) {
+			if (battlePlan.items[i] != null && usesConditionIsSatisfied(battlePlan.itemRules[i], item)) {
+				applyItem(i);
 			}
 		}
 	}
@@ -327,11 +318,10 @@ class Combatant {
 	}
 	
 	private void checkItemRuleHasConditions(Player subject, double subjectHp, double subjectAp) {
-		if (battlePlan.item1 != null && hasConditionIsSatisfied(battlePlan.item1Rule, subject, subjectHp, subjectAp)) {
-			applyItem(ItemSlot.ITEM_1);
-		}
-		if (battlePlan.item2 != null && hasConditionIsSatisfied(battlePlan.item2Rule, subject, subjectHp, subjectAp)) {
-			applyItem(ItemSlot.ITEM_2);
+		for (int i = 0; i < battlePlan.items.length; i++) {
+			if (battlePlan.items[i] != null && hasConditionIsSatisfied(battlePlan.itemRules[i], subject, subjectHp, subjectAp)) {
+				applyItem(i);
+			}
 		}
 	}
 	

@@ -176,10 +176,8 @@ var snail = (function (snail, $) {
 				weapon: selectedWeapon.name,
 				shell: selectedShell.name,
 				accessory: selectedAccessory.name,
-				item1: selectedItems[0].name,
-				item2: selectedItems[1].name,
-				item1Rule: itemConditions[0],
-				item2Rule: itemConditions[1],
+				items: selectedItems.map(i => i.name),
+				itemRules: itemConditions,
 				instructions: instructions
 			};
 		};
@@ -218,7 +216,7 @@ var snail = (function (snail, $) {
 
 		const setItem = function (index, item) {
 			selectedItems[index] = item;
-			notifyBattlePlanUpdatedHandlers('item' + (index + 1), selectedItems[index]);
+			notifyBattlePlanUpdatedHandlers('item' + index, selectedItems[index]);
 		};
 		
 		const setItemCondition = function (index, condition) {
@@ -226,7 +224,7 @@ var snail = (function (snail, $) {
 				itemConditions[index] = null;
 			} else {
 				itemConditions[index] = condition;
-				notifyBattlePlanUpdatedHandlers('item' + (index + 1) + 'Rule', itemConditions[index]);
+				notifyBattlePlanUpdatedHandlers('item' + index + 'Rule', itemConditions[index]);
 			}
 		};
 		
@@ -248,10 +246,10 @@ var snail = (function (snail, $) {
 				setWeapon(findByProperty(weaponsResponse, 'name', bp.weapon));
 				setShell(findByProperty(shellsResponse, 'name', bp.shell));
 				setAccessory(findByProperty(accessoriesResponse, 'name', bp.accessory));
-				setItem(0, findByProperty(itemsResponse, 'name', bp.item1));
-				setItem(1, findByProperty(itemsResponse, 'name', bp.item2));
-				setItemCondition(0, bp.item1Rule);
-				setItemCondition(1, bp.item2Rule);
+				for (let i = 0; i < 2; i++) {
+					setItem(i, findByProperty(itemsResponse, 'name', bp.items[i]));
+					setItemCondition(i, bp.itemRules[i]);
+				}
 				setInstructions(bp.instructions);
 			});
 		};

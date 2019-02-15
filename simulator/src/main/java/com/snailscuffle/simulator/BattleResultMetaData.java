@@ -34,22 +34,22 @@ public class BattleResultMetaData {
 	
 	private int determineMarginOfVictory() {
 		
+		int player0Health = 100;
 		int player1Health = 100;
-		int player2Health = 100;
 		
 		for(BattleResult result : battleResults) {
 			for(BattleEvent event : result.flattenEvents()) {
 				for(BattleEventEffect effect : event.effects) {
 					if (effect.playerIndex == 0 && effect.stat == Stat.HP) {
-						player1Health += effect.change;
+						player0Health += effect.change;
 					} else if (effect.playerIndex == 1 && effect.stat == Stat.HP) {
-						player2Health += effect.change;
+						player1Health += effect.change;
 					}
 				}
 			}		
 		}
 
-		return Math.abs(player1Health - player2Health);
+		return Math.abs(player0Health - player1Health);
 	}
 	
 	private int determineTimeToVictory() {
