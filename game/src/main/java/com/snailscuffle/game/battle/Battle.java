@@ -37,7 +37,15 @@ public class Battle {
 				}
 				increment = nextIncrement(player1, player2);
 			}
-			recorder.recordEndOfRound(periodEnd, player1, player2);
+			
+			if (player1.isAlive() && player2.isAlive()) {
+				int ticksToEndOfRound = periodEnd - time; 
+				time = periodEnd;
+				firstMover.update(ticksToEndOfRound);
+				secondMover.update(ticksToEndOfRound);
+			}
+			
+			recorder.recordEndOfRound(time, player1, player2);
 			periodEnd += PERIOD;
 		}
 	}
