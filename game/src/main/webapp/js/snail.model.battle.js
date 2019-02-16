@@ -8,7 +8,7 @@ var snail = (function (snail, $) {
 	let playerBps = [];
 	
 	// private methods
-	const newBattleData = function (skirmishResponse, stats) {
+	const newBattleData = function (skirmishResponse, battleResult) {
 		let playerName = skirmishResponse.playerName;
 		let enemyName = skirmishResponse.opponentName;
 		
@@ -26,13 +26,15 @@ var snail = (function (snail, $) {
 			hp: [100, 100],
 			ap: [0, 0],
 			effects: [[],[]],
-			endOfRound: 0
+			endOfRound: 0,
+			winnerIndex: -1
 		};
 		
-		if (stats) {
-			battleData.endOfRound = stats[0].time * (round+1);
+		if (battleResult) {
+			battleData.endOfRound = battleResult.endOfRoundStats[0].time * (round+1);
+			battleData.winnerIndex = battleResult.winnerIndex;
 			if (round > 0) {
-				const lastRound = stats[round-1];
+				const lastRound = battleResult.endOfRoundStats[round-1];
 				battleData.time = lastRound.time;
 				battleData.hp = lastRound.players.map(p => p.hp);
 				battleData.ap = lastRound.players.map(p => p.ap);
@@ -130,7 +132,7 @@ var snail = (function (snail, $) {
 	const playNextRound = function (state) {
 		return function (battleResult) {
 			const args = {
-				battleData: newBattleData(state.skirmishResponse, battleResult.endOfRoundStats),
+				battleData: newBattleData(state.skirmishResponse, battleResult),
 				events: battleResult.eventsByRound.slice(-1)[0]
 			};
 			notifyEventHandlers('nextRound', args);
@@ -140,7 +142,7 @@ var snail = (function (snail, $) {
 			}
 			
 			round += 1;
-			endOfCurrentRoundBattleData = newBattleData(state.skirmishResponse, battleResult.endOfRoundStats);
+			endOfCurrentRoundBattleData = newBattleData(state.skirmishResponse, battleResult);
 		};
 	};
 	

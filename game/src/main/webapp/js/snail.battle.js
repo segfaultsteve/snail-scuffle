@@ -73,15 +73,15 @@ var snail = (function (snail, PIXI) {
 				updateHud();
 			}
 			
-			if (battleData.hp[1] <= TOLERANCE && eventIndex == events.length) {
+			if (eventIndex == events.length && battleData.winnerIndex === 0) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Won!');
 				$resultMessage.removeClass('hidden');
-			} else if (battleData.hp[0] <= TOLERANCE && eventIndex == events.length) {
+			} else if (eventIndex == events.length && battleData.winnerIndex === 1) {
 				running = false;
 				$resultMessage.find('.result-text').text('You Lost!');
 				$resultMessage.removeClass('hidden');
-			} else if (battleData.time > battleData.endOfRound) {
+			} else if (battleData.time > battleData.endOfRound && battleData.winnerIndex < 0) {
 				running = false;
 				snail.model.battle.finishRound();
 			}
