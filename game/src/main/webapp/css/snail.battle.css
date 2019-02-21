@@ -1,7 +1,6 @@
-#battleCanvas {
-	display: block;
-	width: 100vw;
-	height: 100vh;
+#battlecanvas {
+	width: 100%;
+	height: 100%;
 }
 
 #battle .hud {
@@ -17,23 +16,43 @@
 	position: absolute;
 	padding: 1em;
 	min-width: 7em;
-	font-size: 1.5em;
 	border: 1px solid black;
 	border-radius: 1em;
 }
 
 #battle .hud-player {
-	right: 3em;
-	bottom: 2em;
+	top: 2em;
+	right: 2em;
 }
 
 #battle .hud-enemy {
 	top: 2em;
-	left: 3em;
+	left: 2em;
 }
 
-#battle .hud-player-name,
-#battle .hud-enemy-name {
-	font-size: 1.3em;
-	margin-bottom: 0.3em;
+#battle .sidebar {
+	width: 15vw;
+	display: flex;
+	flex-direction: column;
+}
+
+#battle .sidebar-name,
+#battle .sidebar-equipment,
+#battle .sidebar-stats,
+#battle .sidebar-hpap {
+	margin-top: 1em;
+}
+
+#battle .sidebar-name {
+	text-align: center;
+	font-size: 2em;
+}
+
+#battle .sidebar td {
+	font-size: 1.2em;
+}
+
+#battle .sidebar-hpap {
+	margin-bottom: 1em;
+	font-size: 1.2em;
 }

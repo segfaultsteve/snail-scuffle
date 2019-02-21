@@ -32,22 +32,10 @@ var snail = (function (snail) {
 	};
 	
 	const updateHpAndAp = function (battleData) {
-		$playerHp.text(formatHp(battleData.hp[0]));
-		$playerAp.text(formatNumber(battleData.ap[0]));
-		$enemyHp.text(formatHp(battleData.hp[1]));
-		$enemyAp.text(formatNumber(battleData.ap[1]));
-	};
-	
-	const formatHp = function (hp) {
-		if (hp > 1 || hp < 0) {
-			return formatNumber(hp);
-		} else {
-			return '< 1';
-		}
-	};
-	
-	const formatNumber = function (num) {
-		return Math.max(Math.round(100*num)/100, 0);
+		$playerHp.text(snail.util.formatHp(battleData.hp[0]));
+		$playerAp.text(snail.util.formatAp(battleData.ap[0]));
+		$enemyHp.text(snail.util.formatHp(battleData.hp[1]));
+		$enemyAp.text(snail.util.formatAp(battleData.ap[1]));
 	};
 	
 	// callbacks
@@ -62,9 +50,9 @@ var snail = (function (snail) {
 	
 	const onBattlePlanUpdated = function (bp, $attack, $defense, $speed) {
 		return function () {
-			updateStat($attack, formatNumber(bp.getAttack()));
-			updateStat($defense, formatNumber(bp.getDefense()));
-			updateStat($speed, formatNumber(bp.getSpeed()));
+			updateStat($attack, snail.util.formatNumber(bp.getAttack(), 1));
+			updateStat($defense, snail.util.formatNumber(bp.getDefense(), 1));
+			updateStat($speed, snail.util.formatNumber(bp.getSpeed(), 1));
 		}
 	};
 	

@@ -102,7 +102,7 @@ var snail = (function (snail, $) {
 	};
 	
 	// battleplan object
-	snail.model.battleplan.create = function (bp) {
+	snail.model.battleplan.create = function (combatantIndex, bp) {
 		let selectedSnail, selectedWeapon, selectedShell, selectedAccessory;
 		let selectedItems = [null, null];
 		let itemConditions = [null, null];
@@ -122,15 +122,15 @@ var snail = (function (snail, $) {
 			battlePlanUpdatedHandlers.forEach(handler => handler(updatedElement, newValue));
 		};
 		
-		const getAttack = function () {
+		const getAttack = function (hp, ap) {
 			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
 				let attack = selectedSnail.attackModifier + selectedWeapon.attackModifier + selectedShell.attackModifier + selectedAccessory.attackModifier;
 				if (selectedAccessory.name === 'salted_shell') {
-					attack *= snail.model.battle.saltedShellAttackMultiplier();
+					attack *= snail.model.battle.saltedShellAttackMultiplier(combatantIndex);
 				} else if (selectedAccessory.name === 'charged_attack') {
-					attack *= 1 + snail.model.battle.chargedAttackModifier();
+					attack *= 1 + snail.model.battle.chargedAttackModifier(combatantIndex, ap);
 				} else if (selectedAccessory.name === 'adrenaline') {
-					attack += snail.model.battle.adrenalineModifier();
+					attack += snail.model.battle.adrenalineModifier(combatantIndex, hp);
 				}
 				return attack;
 			} else {
@@ -142,7 +142,7 @@ var snail = (function (snail, $) {
 			if (selectedSnail && selectedWeapon && selectedShell && selectedAccessory) {
 				let defense = selectedSnail.defenseModifier + selectedWeapon.defenseModifier + selectedShell.defenseModifier + selectedAccessory.defenseModifier;
 				if (selectedAccessory.name === 'salted_shell') {
-					defense *= snail.model.battle.saltedShellDefenseMultiplier();
+					defense *= snail.model.battle.saltedShellDefenseMultiplier(combatantIndex);
 				}
 				return defense;
 			} else {
@@ -293,8 +293,8 @@ var snail = (function (snail, $) {
 	};
 	
 	// public fields
-	snail.model.battleplan.playerBp = snail.model.battleplan.create();
-	snail.model.battleplan.enemyBp = snail.model.battleplan.create();
+	snail.model.battleplan.playerBp = snail.model.battleplan.create(0);
+	snail.model.battleplan.enemyBp = snail.model.battleplan.create(1);
 	
 	return snail;
 }(snail || {}, jQuery));

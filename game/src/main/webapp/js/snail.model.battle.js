@@ -3,9 +3,9 @@ var snail = (function (snail, $) {
 	snail.model.battle = snail.model.battle || {};
 	
 	// private variables
-	let ioLayer, accessoryInfo, skirmishId, skirmishPollInterval, skirmishTimerInterval, round, endOfCurrentRoundBattleData;
+	let ioLayer, accessoryInfo, skirmishId, skirmishPollInterval, skirmishTimerInterval, round, lastSkirmishResponse, lastBattleResult;
 	let eventHandlers = [];
-	let playerBps = [];
+	let bpsByCombatant = [[],[]];
 	
 	// private methods
 	const newBattleData = function (skirmishResponse, battleResult) {
@@ -120,8 +120,11 @@ var snail = (function (snail, $) {
 	}
 	
 	const saveBattlePlansToModel = function (skirmishResponse) {
-		playerBps.push(skirmishResponse.battlePlans.slice(-2)[0]);
-		snail.model.battleplan.enemyBp.set(skirmishResponse.battlePlans.slice(-2)[1]);
+		const playerBp = skirmishResponse.battlePlans.slice(-2)[0];
+		const enemyBp = skirmishResponse.battlePlans.slice(-2)[1];
+		snail.model.battleplan.enemyBp.set(enemyBp);
+		bpsByCombatant[0].push(playerBp);
+		bpsByCombatant[1].push(enemyBp);
 		return skirmishResponse;
 	};
 	
@@ -141,8 +144,8 @@ var snail = (function (snail, $) {
 				startTimer(state.skirmishResponse.timeRemaining);
 			}
 			
-			round += 1;
-			endOfCurrentRoundBattleData = newBattleData(state.skirmishResponse, battleResult);
+			lastSkirmishResponse = state.skirmishResponse;
+			lastBattleResult = battleResult;
 		};
 	};
 	
@@ -180,32 +183,43 @@ var snail = (function (snail, $) {
 		ioLayer.deleteSkirmish();
 	};
 	
-	snail.model.battle.saltedShellAttackMultiplier = function () {
-		return (round === 0 || playerBps[round-1].accessory !== 'salted_shell') ? 1 : 2;
+	snail.model.battle.saltedShellAttackMultiplier = function (combatantIndex) {
+		const bps = bpsByCombatant[combatantIndex];
+		return (round === 0 || bps[round-1].accessory !== 'salted_shell') ? 1 : 2;
 	};
 	
-	snail.model.battle.saltedShellDefenseMultiplier = function () {
-		return (round === 0 || playerBps[round-1].accessory !== 'salted_shell') ? 0.5 : 1;
+	snail.model.battle.saltedShellDefenseMultiplier = function (combatantIndex) {
+		const bps = bpsByCombatant[combatantIndex];
+		return (round === 0 || bps[round-1].accessory !== 'salted_shell') ? 0.5 : 1;
 	};
 	
-	snail.model.battle.chargedAttackModifier = function () {
-		if (round === 0 || !accessoryInfo) {
+	snail.model.battle.chargedAttackModifier = function (combatantIndex, ap) {
+		if (!accessoryInfo || (!ap && round === 0)) {
 			return 0;
-		} else {
-			const currentAp = endOfCurrentRoundBattleData.ap[0];
-			const divisor = accessoryInfo.filter(i => i.name === 'charged_attack')[0].other.divisor;
-			return currentAp / divisor;
 		}
+		
+		if (!ap) {
+			const stats = lastBattleResult.endOfRoundStats;
+			ap = stats[stats.length - 1].players[combatantIndex].ap;
+		}
+			
+		const divisor = accessoryInfo.filter(i => i.name === 'charged_attack')[0].other.divisor;
+		return ap / divisor;
 	};
 	
-	snail.model.battle.adrenalineModifier = function () {
+	snail.model.battle.adrenalineModifier = function (combatantIndex, hp) {
 		if (!accessoryInfo) {
 			return 0;
 		} else {
-			const currentHp = (round === 0) ? 100 : endOfCurrentRoundBattleData.hp[0];
+			if (!hp && round === 0) {
+				hp = 100;
+			} else if (!hp) {
+				const stats = lastBattleResult.endOfRoundStats;
+				hp = stats[stats.length - 1].players[combatantIndex].hp;
+			}
 			const crossover = accessoryInfo.filter(i => i.name === 'adrenaline')[0].other.crossover;
 			const divisor = accessoryInfo.filter(i => i.name === 'adrenaline')[0].other.divisor;
-			return (crossover - currentHp) / divisor;
+			return (crossover - hp) / divisor;
 		}
 	};
 	
@@ -226,11 +240,13 @@ var snail = (function (snail, $) {
 	};
 	
 	snail.model.battle.finishRound = function () {
+		round += 1;
+		const endOfCurrentRoundBattleData = newBattleData(lastSkirmishResponse, lastBattleResult);
 		notifyEventHandlers('roundComplete', endOfCurrentRoundBattleData);
 	};
 	
 	snail.model.battle.finishBattle = function () {
-		notifyEventHandlers('battleComplete', endOfCurrentRoundBattleData);
+		notifyEventHandlers('battleComplete');
 	};
 	
 	return snail;
