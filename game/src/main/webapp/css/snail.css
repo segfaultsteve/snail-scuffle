@@ -1,6 +1,6 @@
 body {
 	margin: 0;
-	font-family: Verdana, 'DejaVu Sans', sans-serif;
+	font-family: "DejaVu Sans", sans-serif;
 	font-size: 2vh;
 }
 
@@ -10,8 +10,6 @@ input, select {
 }
 
 button {
-	font-family: inherit;
-	font-size: inherit;
 	background: white;
 	color: black;
 	border: solid 1px black;
