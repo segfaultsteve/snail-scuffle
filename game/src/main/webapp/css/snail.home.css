@@ -36,6 +36,8 @@
 #home header span {
 	float: right;
 	margin-left: 1em;
+	font-size: 1.3em;
+	color: white;
 }
 
 #home .header-createaccount:hover,
@@ -50,17 +52,32 @@
 #home .mainmenu-button {
 	display: block;
 	margin-top: 2em;
-	width: 70%;
-	padding: 1em;
+	width: 80%;
+	height: 2.5em;
+	border: none;
+	background: none;
+	background-image: url("/assets/button.svg");
+	background-size: 100% 100%;
+	font-family: "Rubik";
+	font-size: 1.8em;
+	font-weight: 700;
+	color: white;
 	vertical-align: middle;
-	border-radius: 0.5em;
 }
 
 #home .mainmenu-play {
 	width: 100%;
-	height: 3.5em;
-	font-size: 1.8em;
-	padding: 0.5em;
+	height: 2em;
+	font-size: 3.5em;
+}
+
+#home .mainmenu-button:not(.disabled-button):hover {
+	background-image: url("/assets/button_hover.svg");
+}
+
+#home .mainmenu-button.disabled-button {
+	background-image: url("/assets/button_disabled.svg");
+	color:#ddd;
 }
 
 
