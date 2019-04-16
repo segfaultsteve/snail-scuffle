@@ -26,16 +26,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.56625504"
-     inkscape:cx="542.85021"
-     inkscape:cy="167.10381"
+     inkscape:zoom="0.80572853"
+     inkscape:cx="546.06188"
+     inkscape:cy="128.56298"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1384"
-     inkscape:window-height="787"
-     inkscape:window-x="337"
-     inkscape:window-y="142"
+     inkscape:window-width="1465"
+     inkscape:window-height="843"
+     inkscape:window-x="264"
+     inkscape:window-y="102"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata5">
@@ -61,7 +61,7 @@
        height="100"
        width="300"
        id="rect1406"
-       style="opacity:1;vector-effect:none;fill:#371d0d;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+       style="opacity:1;vector-effect:none;fill:#3c1514;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     <path
        style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:0.23880597;stroke:none;stroke-width:0.99999994px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        d="M 59.632812 301.64453 L 0 325.875 L 0 340.07031 C -3.5708759e-15 355.89088 9.603076 369.38272 23.320312 375.06836 C 29.050325 376.88909 34.143242 377.95312 37.882812 377.95312 L 1095.9766 377.95312 C 1116.9634 377.95312 1133.8574 361.05711 1133.8574 340.07031 L 1133.8574 326.64062 L 1094.2305 303.87891 L 59.632812 301.64453 z "
@@ -73,7 +73,7 @@
        transform="matrix(0.26458333,0,0,0.26458333,0,197)"
        id="path3401" />
     <rect
-       style="opacity:1;vector-effect:none;fill:#673312;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="opacity:1;vector-effect:none;fill:#823634;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect1408"
        width="290.82654"
        height="82.076454"
