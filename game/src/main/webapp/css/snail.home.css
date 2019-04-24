@@ -94,6 +94,7 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: 0;
+	font-size: 1.2em;
 }
 
 #home .modals-play::before,
@@ -101,20 +102,10 @@
 	content: "";
 }
 
-#home .modal button {
-	background: none;
-	background-image: url("/assets/tallbutton.svg");
-	background-size: 100% 100%;
-	font-family: "Rubik";
-	font-size: 1.8em;
-	font-weight: 700;
-	color: white;
-	border: none;
-}
-
 #home .modals-play button {
 	width: 40%;
 	height: 70%;
+	background-image: url("/assets/tallbutton.svg");
 }
 
 #home .modals-play button:not(.disabled-button):hover {
