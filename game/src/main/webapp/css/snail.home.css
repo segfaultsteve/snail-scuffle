@@ -114,12 +114,16 @@
 
 #home .modals-play .disabled-button {
 	background-image: url("/assets/tallbutton_disabled.svg");
-	color:#ddd;
 }
 
 #home .modals-play-subtext {
 	margin-top: 0.3em;
 	font-size: 0.6em;
+}
+
+#home .modals-play-closeicon {
+	top: 0.4em;
+	right: 0.6em;
 }
 
 #home .modals-matching-cancel {

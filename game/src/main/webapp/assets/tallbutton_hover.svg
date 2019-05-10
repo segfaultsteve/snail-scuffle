@@ -15,7 +15,8 @@
    version="1.1"
    id="svg26"
    inkscape:version="0.92.4 (33fec40, 2019-01-16)"
-   sodipodi:docname="tallbutton_hover.svg">
+   sodipodi:docname="tallbutton_hover.svg"
+   preserveAspectRatio="none">
   <defs
      id="defs20" />
   <sodipodi:namedview
@@ -31,8 +32,8 @@
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1311"
-     inkscape:window-height="713"
+     inkscape:window-width="1865"
+     inkscape:window-height="1025"
      inkscape:window-x="55"
      inkscape:window-y="27"
      inkscape:window-maximized="1" />
@@ -61,7 +62,7 @@
        height="200"
        width="300"
        id="rect1406"
-       style="opacity:1;vector-effect:none;fill:#d78b89;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;font-variant-east_asian:normal" />
+       style="opacity:1;vector-effect:none;fill:#d78b89;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     <path
        inkscape:connector-curvature="0"
        style="opacity:1;vector-effect:none;fill:#000000;fill-opacity:0.23880597;stroke:none;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"

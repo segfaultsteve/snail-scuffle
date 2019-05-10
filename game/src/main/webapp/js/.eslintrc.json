@@ -6,7 +6,6 @@
 		"ecmaVersion": 6
 	},
 	"globals": {
-		"jQuery": false,
-		"PIXI": false
+		"jQuery": false
 	}
 }

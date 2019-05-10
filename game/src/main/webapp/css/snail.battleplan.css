@@ -1,5 +1,15 @@
 /* GLOBAL */
 
+#battleplan {
+	background-color: white;
+}
+
+#battleplan button {
+	background-color: #d23038;
+	border: 4px solid #8f1219;
+	color: white;
+}
+
 #battleplan .addicon,
 #battleplan .removeicon {
 	vertical-align: middle;
@@ -17,9 +27,9 @@
 /* TOP-LEVEL GRID */
 
 #battleplan {
-	height: 85vh;
+	height: 100vh;
 	display: grid;
-	grid-template-rows: 1% 10% 1fr 10% 20% 7% 1%;
+	grid-template-rows: 3% 10% 1fr 10% 20% 7% 3%;
 	grid-template-columns: 2% 2em 60% 1fr 20% 2em 2%;
 	grid-template-areas:
 		". . . . . . ."
@@ -29,7 +39,6 @@
 		". . instructionbox . submit . ."
 		". . presets . submit . ."
 		". . presets . . . .";
-	grid-gap: 1em 0;
 }
 
 #battleplan .snails {
@@ -99,6 +108,7 @@
 		"item1 item1"
 		". .";
 	grid-gap: 0.8em 0;
+	margin-top: 1em;
 }
 
 #battleplan .equip-weapon {
@@ -193,7 +203,8 @@
 }
 
 #battleplan .snails .selected-snail {
-	background: #aaa;
+	background: #cc6d6b;
+	border-color: #d78b89;
 }
 
 
@@ -207,10 +218,12 @@
 	height: 3.5em;
 	padding-left: 2em;
 	text-align: left;
+	border-radius: 0.5em;
 }
 
 #battleplan .menubutton-button:not(.disabled-button):focus {
-	background: #ddd;
+	background: #cc6d6b;
+	border-color: #d78b89;
 }
 
 #battleplan .menubutton-button::-moz-focus-inner {
@@ -223,15 +236,15 @@
 	z-index: 999;
 	margin: 0;
 	padding: 0.5em;
-	background: white;
-	color: black;
-	border: 1px solid black;
+	background: #d23038;
+	color: white;
+	border: 4px solid #8f1219;
 	list-style: none;
 }
 
 #battleplan .menubutton-list li {
 	padding: 0.9em;
-	border-bottom: solid 1px #ccc;
+	border-bottom: solid 2px #8f1219;
 }
 
 #battleplan .menubutton-list .item-tooltip {
@@ -253,7 +266,7 @@
 }
 
 #battleplan .menubutton-list li:hover {
-	background: #ddd;
+	background: #cc6d6b;
 }
 
 #battleplan .menubutton-list li:last-child {
@@ -334,7 +347,9 @@
 
 #battleplan .instructionbox {
 	padding-left: 2em;
-	border: 1px solid black;
+	background-color: #d23038;
+	color: white;
+	border: 4px solid #8f1219;
 	border-radius: 0.5em;
 }
 
@@ -377,8 +392,7 @@
 }
 
 #battleplan .instructionbox.expanded {
-	width: calc(100% - 2em);
-	height: 100%;
+	height: 90%;
 }
 
 #battleplan .instructionbox.collapsing {
@@ -394,8 +408,8 @@
 	}
 	
 	to {
-		width: calc(100% - 2.5em);
-		height: 100%;
+		width: calc(100% - 3em);
+		height: 90%;
 	}
 }
 
@@ -419,7 +433,7 @@
 
 #battleplan .instructionbox-defaultattack {
 	margin-left: 3.1em;
-	color: gray;
+	color: #ccc;
 }
 
 
@@ -587,4 +601,5 @@
 
 #battleplan .submit {
 	margin: 0 2em 2em 2em;
+	font-size: 1.5em;
 }

@@ -13,17 +13,8 @@ button {
 	cursor: pointer;
 }
 
-button:not(.disabled-button):hover {
-	background: #ddd;
-}
-
 button::-moz-focus-inner {
 	border: 0;
-}
-
-button.disabled-button {
-	color: #aaa;
-	cursor: default;
 }
 
 .modal {
@@ -75,7 +66,7 @@ button.disabled-button {
 	width: 100vw;
 	height: 100vh;
 	z-index: 1;
-	background-color: rgba(0,0,0,0.4);
+	background-color: rgba(0,0,0,0.7);
 }
 
 .hidden {

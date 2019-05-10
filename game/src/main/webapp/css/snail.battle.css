@@ -1,6 +1,7 @@
-#battlecanvas {
-	width: 100%;
-	height: 100%;
+#battle {
+	height: 100vh;
+	background-image: url("/assets/battle.svg");
+	background-size: 100% 100%;
 }
 
 #battle .hud {
@@ -9,6 +10,7 @@
 
 #battle .waitmessage {
 	border: none;
+	background-color: white;
 }
 
 #battle .hud-player,
@@ -18,6 +20,7 @@
 	min-width: 7em;
 	border: 1px solid black;
 	border-radius: 1em;
+	background-color: white;
 }
 
 #battle .hud-player {
@@ -55,4 +58,8 @@
 #battle .sidebar-hpap {
 	margin-bottom: 1em;
 	font-size: 1.2em;
+}
+
+#battle .result {
+	background-color: white;
 }

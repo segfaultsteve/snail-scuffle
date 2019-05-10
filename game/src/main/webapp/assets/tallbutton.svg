@@ -15,7 +15,8 @@
    version="1.1"
    id="svg26"
    inkscape:version="0.92.4 (33fec40, 2019-01-16)"
-   sodipodi:docname="tallbutton.svg">
+   sodipodi:docname="tallbutton.svg"
+   preserveAspectRatio="none">
   <defs
      id="defs20" />
   <sodipodi:namedview
@@ -25,14 +26,14 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="47.522818"
-     inkscape:cy="10.460291"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="512.08584"
+     inkscape:cy="363.35766"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1311"
-     inkscape:window-height="713"
+     inkscape:window-width="1865"
+     inkscape:window-height="1025"
      inkscape:window-x="55"
      inkscape:window-y="27"
      inkscape:window-maximized="1" />
@@ -44,7 +45,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>

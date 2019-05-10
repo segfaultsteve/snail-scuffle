@@ -1,9 +1,8 @@
-var snail = (function (snail, PIXI) {
+var snail = (function (snail) {
 	snail.battle = snail.battle || {};
 	
 	// private variables
-	const WIDTH = 1000, HEIGHT = 500;
-	let pixiApp, $hud, $waitMessage, $opponentForfeitedMessage, $resultMessage, battleData, speeds, running, eventIndex;
+	let $hud, $waitMessage, $opponentForfeitedMessage, $resultMessage, lastRender, battleData, speeds, running, eventIndex;
 	let combatants = [];
 	let events = [];
 	
@@ -48,13 +47,16 @@ var snail = (function (snail, PIXI) {
 		}
 	};
 	
-	const animationLoop = function (delta) {
+	const animationLoop = function (timestamp) {
+		const delta = timestamp - lastRender;
+		lastRender = timestamp;
+		
 		if (running) {
 			if (eventIndex < events.length && battleData.time > events[eventIndex].time) {
 				applyEvent(events[eventIndex]);
 				eventIndex++;
 			} else {
-				const deltaTicks = 8*delta;
+				const deltaTicks = delta/2;
 				battleData.time += deltaTicks;
 				for (let i = 0; i < 2; i++) {
 					if (!battleData.effects[i].includes('stun')) {
@@ -77,6 +79,8 @@ var snail = (function (snail, PIXI) {
 				snail.model.battle.finishRound();
 			}
 		}
+		
+		window.requestAnimationFrame(animationLoop);
 	};
 	
 	const applyEvent = function (battleEvent) {
@@ -136,14 +140,6 @@ var snail = (function (snail, PIXI) {
 	
 	// public methods
 	snail.battle.init = function ($container) {
-		pixiApp = new PIXI.Application({
-			view: $container.find('#battlecanvas')[0],
-			width: WIDTH,
-			height: HEIGHT,
-			backgroundColor: 0xffffff
-		});
-		pixiApp.ticker.add(animationLoop);
-		
 		$hud = $container.find('.hud');
 		const playerInfo = snail.battle.sidebar.create($hud.find('.hud-player'), snail.model.battleplan.playerBp);
 		const enemyInfo = snail.battle.sidebar.create($hud.find('.hud-enemy'), snail.model.battleplan.enemyBp);
@@ -161,9 +157,9 @@ var snail = (function (snail, PIXI) {
 		});
 		
 		reset();
-		
+		window.requestAnimationFrame(animationLoop);
 		snail.model.battle.addEventHandler(onBattleEvent);
 	};
 	
 	return snail;
-}(snail || {}, PIXI));
+}(snail || {}));
