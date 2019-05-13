@@ -11,6 +11,7 @@ input, select {
 
 button {
 	cursor: pointer;
+	font-size: inherit;
 }
 
 button::-moz-focus-inner {
