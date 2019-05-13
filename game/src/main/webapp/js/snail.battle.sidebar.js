@@ -10,8 +10,10 @@ var snail = (function (snail, $) {
 		
 		// callbacks
 		const onBattlePlanUpdated = function (updatedElement, newValue) {
-			set(updatedElement, newValue.displayName);
-			updateStats();
+			if (newValue && newValue.displayName) {
+				set(updatedElement, newValue.displayName);
+				updateStats();
+			}
 		};
 		
 		// public methods
