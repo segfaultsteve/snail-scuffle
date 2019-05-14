@@ -1,7 +1,8 @@
 /* GLOBAL */
 
 #battleplan {
-	background-color: white;
+	background-image: url("../assets/battleplan.svg");
+	background-size: 100% 100%;
 }
 
 #battleplan button {
@@ -30,15 +31,15 @@
 	height: 100vh;
 	display: grid;
 	grid-template-rows: 3% 10% 1fr 10% 20% 7% 3%;
-	grid-template-columns: 2% 2em 60% 1fr 20% 2em 2%;
+	grid-template-columns: 2% 2em 20% 40% 1fr 20% 2em 2%;
 	grid-template-areas:
-		". . . . . . ."
-		". snail snail snail snail snail ."
-		". . equip . info . ."
-		". . instructionbox . info . ."
-		". . instructionbox . submit . ."
-		". . presets . submit . ."
-		". . presets . . . .";
+		". . . . . . . ."
+		". snail snail snail snail snail snail ."
+		". . equip equip . info . ."
+		". . instructionbox instructionbox . info . ."
+		". . instructionbox instructionbox . submit . ."
+		". . presets presets . submit . ."
+		". . presets presets . . . .";
 }
 
 #battleplan .snails {
@@ -594,6 +595,15 @@
 	from { color: red; }
 	33% { color: red; }
 	to { color: black; }
+}
+
+
+/* SNAIL IMAGES */
+#battleplan .snail-img {
+	grid-column: 4 / 6;
+	grid-row: 3 / 6;
+	place-self: center;
+	height: 90%;
 }
 
 

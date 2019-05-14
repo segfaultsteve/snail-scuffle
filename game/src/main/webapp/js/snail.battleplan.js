@@ -4,7 +4,7 @@ var snail = (function (snail, $) {
 	snail.model.battleplan = snail.model.battleplan || {};
 	
 	// private variables
-	let $battleplan, $timer, $modalBackground, $forfeitModal, snails, snailButtons, weaponButton, shellButton, accessoryButton, item0Button, item1Button, instructionBox, playerBp, previousPlayerBp;
+	let $battleplan, $timer, $modalBackground, $forfeitModal, snails, snailButtons, snailImages, weaponButton, shellButton, accessoryButton, item0Button, item1Button, instructionBox, playerBp, previousPlayerBp;
 	
 	// private methods
 	const createMenuButton = function ($container, itemsPromise, defaultSelectionIndex, selectionChangedHandler) {
@@ -39,12 +39,14 @@ var snail = (function (snail, $) {
 		}
 	};
 	
-	const updateSnailButtons = function (newSnail) {
+	const onSnailUpdated = function (newSnail) {
 		const $selectedSnailButton = $battleplan.find('.snails .selected-snail');
 		const selectedSnailDisplayName = $selectedSnailButton.find('.snails-button-name').text();
 		if (newSnail.displayName !== selectedSnailDisplayName) {
 			$selectedSnailButton.removeClass('selected-snail');
 			snailButtons[newSnail.name].addClass('selected-snail');
+			
+			setSnailImage(newSnail.name);
 			
 			if (newSnail.name === 'doug') {
 				shellButton.disable();
@@ -52,6 +54,13 @@ var snail = (function (snail, $) {
 				shellButton.enable();
 			}
 		}
+	};
+	
+	const setSnailImage = function (snailName) {
+		for (let snail in snailImages) {
+				snailImages[snail].hide();
+			}
+			snailImages[snailName].show();
 	};
 	
 	const enableSnailButtons = function () {
@@ -88,7 +97,7 @@ var snail = (function (snail, $) {
 	const onBattlePlanUpdated = function (updatedElement, newValue) {
 		switch (updatedElement) {
 			case 'snail':
-				updateSnailButtons(newValue);
+				onSnailUpdated(newValue);
 				break;
 			case 'weapon':
 				weaponButton.setSelectedOption(newValue.displayName);
@@ -215,6 +224,12 @@ var snail = (function (snail, $) {
 			gail: $battleplan.find('.snails-gail'),
 			todd: $battleplan.find('.snails-todd'),
 			doug: $battleplan.find('.snails-doug')
+		};
+		snailImages = {
+			dale: $battleplan.find('.dale-img'),
+			gail: $battleplan.find('.gail-img'),
+			todd: $battleplan.find('.todd-img'),
+			doug: $battleplan.find('.doug-img')
 		};
 		weaponButton = createMenuButton($battleplan.find('.equip-weapon'), snail.io.promiseWeaponInfo(), 0, onWeaponSelected);
 		shellButton = createMenuButton($battleplan.find('.equip-shell'), snail.io.promiseShellInfo(), 'last', onShellSelected);
