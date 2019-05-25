@@ -1,0 +1,15 @@
+plugins {
+	id 'application'
+}
+
+dependencies {
+	compile project(':common')
+	compile project(':game')
+	compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.8.11.2'
+}
+
+mainClassName = 'com.snailscuffle.simulator.Main'
+
+eclipse.project {
+	name = 'snail-scuffle-simulator'
+}

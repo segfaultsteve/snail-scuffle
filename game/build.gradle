@@ -1,0 +1,90 @@
+plugins {
+	id 'application'
+	id 'eu.butter.gradle.js' version '2.15.1'
+}
+
+dependencies {
+	compile project(':common')
+}
+
+ext {
+	webrootSrc = 'src/main/webapp'
+	webrootDest = 'src/main/resources/webroot'
+}
+
+mainClassName = 'com.snailscuffle.game.Main'
+
+eclipse.project {
+	name = 'snail-scuffle-game'
+}
+
+javascript.source {
+	dev.js {
+		srcDir "${webrootSrc}/js"
+		include '*.js'
+		exclude '*.min.js'
+	}
+	prod.js {
+		srcDir "${webrootSrc}/js"
+		include '*.min.js'
+	}
+}
+
+combineJs {
+	encoding = 'UTF-8'
+	source = javascript.source.dev.js.files
+	dest = file("${webrootDest}/js/all.js")
+}
+
+minifyJs {
+	source = combineJs
+	dest = file("${webrootDest}/js/all-min.js")
+	sourceMap = file("${webrootDest}/js/all.sourcemap.json")
+	closure {
+		compilationLevel = 'WHITESPACE_ONLY'
+		compilerOptions.languageIn = 'STABLE'
+	}
+}
+
+gzipJs {
+	source = file("${webrootDest}/js/all-min.js")
+	dest = file("${webrootDest}/js/all-min.js.gz")
+}
+
+task copyHtml(type: Copy) {
+	outputs.upToDateWhen { false }
+	
+	def htmlFiles = [:]
+	file("src/main/webapp/html").eachFile() {
+		file -> htmlFiles[file.name] = file.text
+	}
+	
+	from "${webrootSrc}"
+	include 'index.html'
+	into "${webrootDest}"
+	expand(htmlFiles: htmlFiles)
+}
+
+task copyExternalJs(type: Copy) {
+	from "${webrootSrc}/js/external"
+	include '*.js'
+	into "${webrootDest}/js/external"
+}
+
+task copyCss(type: Copy) {
+	from "${webrootSrc}/css"
+	include '*.css'
+	into "${webrootDest}/css"
+}
+
+task copyAssets(type: Copy) {
+	from "${webrootSrc}/assets"
+	into "${webrootDest}/assets"
+}
+
+gzipJs.dependsOn minifyJs
+processResources.dependsOn gzipJs
+processResources.dependsOn copyHtml
+processResources.dependsOn copyExternalJs
+processResources.dependsOn copyCss
+processResources.dependsOn copyAssets

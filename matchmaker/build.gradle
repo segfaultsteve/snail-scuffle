@@ -1,0 +1,13 @@
+plugins {
+	id 'application'
+}
+
+dependencies {
+	compile project(':common')
+}
+
+mainClassName = 'com.snailscuffle.match.Main'
+
+eclipse.project {
+	name = 'snail-scuffle-matchmaker'
+}
