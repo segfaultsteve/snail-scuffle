@@ -1,4 +1,4 @@
-package com.snailscuffle.game;
+package com.snailscuffle.game.battle;
 
 import java.io.IOException;
 
@@ -16,7 +16,6 @@ import com.snailscuffle.common.battle.InvalidBattleException;
 import com.snailscuffle.common.util.HttpUtil;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.common.util.ServletUtil;
-import com.snailscuffle.game.battle.Battle;
 
 public class BattleServlet extends HttpServlet {
 	

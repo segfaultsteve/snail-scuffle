@@ -1,4 +1,4 @@
-package com.snailscuffle.game;
+package com.snailscuffle.game.info;
 
 import static com.snailscuffle.common.battle.Constants.*;
 
@@ -26,6 +26,7 @@ import com.snailscuffle.common.battle.Snail;
 import com.snailscuffle.common.battle.Weapon;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.common.util.ServletUtil;
+import com.snailscuffle.game.GameSettings;
 import com.snailscuffle.game.battle.EquipmentInfo;
 
 public class InfoServlet extends HttpServlet {
@@ -81,7 +82,7 @@ public class InfoServlet extends HttpServlet {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 				break;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			logger.error("Unexpected error", e);
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			response.getWriter().print(ErrorResponse.unexpectedError().because(e.getMessage()));

@@ -7,7 +7,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.snailscuffle.common.util.InvalidConfigurationException;
+import com.snailscuffle.common.InvalidConfigurationException;
 
 public class GameSettings {
 	

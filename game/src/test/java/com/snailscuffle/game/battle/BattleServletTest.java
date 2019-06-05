@@ -1,4 +1,4 @@
-package com.snailscuffle.game;
+package com.snailscuffle.game.battle;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;

@@ -1,4 +1,4 @@
-package com.snailscuffle.match;
+package com.snailscuffle.api;
 
 import java.io.InputStream;
 import java.util.Properties;
@@ -8,14 +8,14 @@ import org.slf4j.LoggerFactory;
 
 import com.snailscuffle.common.InvalidConfigurationException;
 
-public class MatchmakerSettings {
+public class ApiSettings {
 	
 	public final int port;
 	
 	private static final String CONFIG_FILE = "/config.properties";
-	private static final Logger logger = LoggerFactory.getLogger(MatchmakerSettings.class);
+	private static final Logger logger = LoggerFactory.getLogger(ApiSettings.class);
 	
-	public MatchmakerSettings() throws InvalidConfigurationException {
+	public ApiSettings() throws InvalidConfigurationException {
 		Properties config = new Properties();
 		try (InputStream configFile = this.getClass().getResourceAsStream(CONFIG_FILE)) {
 			config.load(configFile);

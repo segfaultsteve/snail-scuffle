@@ -1,4 +1,4 @@
-package com.snailscuffle.common.util;
+package com.snailscuffle.common;
 
 public class InvalidConfigurationException extends Exception {
 	
