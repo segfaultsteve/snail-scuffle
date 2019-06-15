@@ -1,12 +1,13 @@
 package com.snailscuffle.game;
 
+import static com.snailscuffle.common.util.LoggingUtil.createRequestLog;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -56,16 +57,6 @@ public class Main {
 	private static URI findWebRoot() throws URISyntaxException {
 		URL webRootLocation = Main.class.getClass().getResource("/webroot/index.html");
 		return URI.create(webRootLocation.toURI().toASCIIString().replaceFirst("/index.html$", "/"));
-	}
-	
-	private static NCSARequestLog createRequestLog() {
-		NCSARequestLog requestLog = new NCSARequestLog("yyyy_mm_dd.request.log");
-		requestLog.setAppend(true);
-		requestLog.setExtended(false);
-		requestLog.setLogTimeZone("GMT");
-		requestLog.setLogLatency(true);
-		requestLog.setRetainDays(90);
-		return requestLog;
 	}
 	
 }
