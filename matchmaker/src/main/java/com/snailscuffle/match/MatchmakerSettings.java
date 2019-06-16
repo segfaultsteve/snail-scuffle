@@ -7,17 +7,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.snailscuffle.common.InvalidConfigurationException;
+import com.snailscuffle.common.util.ResourceUtil;
 
 public class MatchmakerSettings {
 	
 	public final int port;
 	
-	private static final String CONFIG_FILE = "/config.properties";
 	private static final Logger logger = LoggerFactory.getLogger(MatchmakerSettings.class);
 	
 	public MatchmakerSettings() throws InvalidConfigurationException {
 		Properties config = new Properties();
-		try (InputStream configFile = this.getClass().getResourceAsStream(CONFIG_FILE)) {
+		try (InputStream configFile = ResourceUtil.getConfigFile("config.properties", this.getClass())) {
 			config.load(configFile);
 		} catch (Exception e) {
 			String error = "Could not load config file";

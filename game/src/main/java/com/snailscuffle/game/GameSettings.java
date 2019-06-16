@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.snailscuffle.common.InvalidConfigurationException;
+import com.snailscuffle.common.util.ResourceUtil;
 
 public class GameSettings {
 	
@@ -15,12 +16,11 @@ public class GameSettings {
 	public final URI matchmakerUrl;
 	public final URI apiUrl;
 	
-	private static final String CONFIG_FILE = "/config.properties";
 	private static final Logger logger = LoggerFactory.getLogger(GameSettings.class);
 	
 	public GameSettings() throws InvalidConfigurationException {
 		Properties config = new Properties();
-		try (InputStream configFile = this.getClass().getResourceAsStream(CONFIG_FILE)) {
+		try (InputStream configFile = ResourceUtil.getConfigFile("config.properties", this.getClass())) {
 			config.load(configFile);
 		} catch (Exception e) {
 			String error = "Could not load config file";

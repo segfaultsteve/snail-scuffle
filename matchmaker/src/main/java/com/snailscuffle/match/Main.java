@@ -1,7 +1,5 @@
 package com.snailscuffle.match;
 
-import static com.snailscuffle.common.util.LoggingUtil.createRequestLog;
-
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -13,6 +11,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.snailscuffle.common.util.LoggingUtil;
 import com.snailscuffle.match.players.PlayersServlet;
 import com.snailscuffle.match.skirmish.SkirmishServlet;
 import com.snailscuffle.match.skirmish.SkirmishSessionListener;
@@ -23,6 +22,7 @@ public class Main {
 	
 	public static void main(String[] args) {
 		try {
+			LoggingUtil.initLogback(Main.class);
 			MatchmakerSettings settings = new MatchmakerSettings();
 			Server server = configureJettyServer(settings);
 			server.start();
@@ -60,7 +60,7 @@ public class Main {
 		server.addConnector(connector);
 		server.setHandler(context);
 		server.setStopAtShutdown(true);
-		server.setRequestLog(createRequestLog());
+		server.setRequestLog(LoggingUtil.createRequestLog());
 		return server;
 	}
 	

@@ -29,4 +29,5 @@ build/
 *.log
 *.tmp
 game/src/main/resources/webroot/
+*/src/dist/config/
 deploy
