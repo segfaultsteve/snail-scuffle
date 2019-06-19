@@ -12,6 +12,15 @@ public class HttpUtil {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 	
+	public static String getQueryParameterValue(String paramName, HttpServletRequest request) {
+		String[] values = request.getParameterMap().get(paramName);
+		if (values == null || values[0].isEmpty()) {
+			return null;
+		} else {
+			return values[0];
+		}
+	}
+	
 	public static String extractBody(HttpServletRequest request) {
 		String body = "";
 		try {

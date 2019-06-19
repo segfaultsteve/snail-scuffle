@@ -1,5 +1,6 @@
 package com.snailscuffle.match;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -15,11 +16,11 @@ public class MatchmakerSettings {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MatchmakerSettings.class);
 	
-	public MatchmakerSettings() throws InvalidConfigurationException {
+	public MatchmakerSettings(String filename) throws InvalidConfigurationException {
 		Properties config = new Properties();
-		try (InputStream configFile = ResourceUtil.getConfigFile("config.properties", this.getClass())) {
+		try (InputStream configFile = ResourceUtil.getConfigFile(filename, this.getClass())) {
 			config.load(configFile);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			String error = "Could not load config file";
 			logger.error(error, e);
 			throw new InvalidConfigurationException(error);

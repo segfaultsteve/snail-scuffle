@@ -4,7 +4,7 @@ import static com.snailscuffle.common.battle.Constants.*;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,12 +40,12 @@ public class InfoServlet extends HttpServlet {
 	
 	private static final Logger logger = LoggerFactory.getLogger(InfoServlet.class);
 	
-	private final URI matchmakerUrl;
-	private final URI apiUrl;
+	private final URL matchmakerUrl;
+	private final URL delegateGameServerUrl;
 	
 	public InfoServlet(GameSettings settings) {
 		matchmakerUrl = settings.matchmakerUrl;
-		apiUrl = settings.apiUrl;
+		delegateGameServerUrl = settings.delegateGameServerUrl;
 	}
 
 	@Override
@@ -148,7 +148,7 @@ public class InfoServlet extends HttpServlet {
 	private String describeServers() throws IOException {
 		Map<String, String> servers = new HashMap<>();
 		servers.put("matchmaker", matchmakerUrl.toString());
-		servers.put("api", apiUrl.toString());
+		servers.put("delegateGameServer", delegateGameServerUrl.toString());
 		return JsonUtil.serialize((Serializable) servers);
 	}
 

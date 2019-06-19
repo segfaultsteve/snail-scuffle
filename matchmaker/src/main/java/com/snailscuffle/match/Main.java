@@ -23,7 +23,7 @@ public class Main {
 	public static void main(String[] args) {
 		try {
 			LoggingUtil.initLogback(Main.class);
-			MatchmakerSettings settings = new MatchmakerSettings();
+			MatchmakerSettings settings = new MatchmakerSettings("config.properties");
 			Server server = configureJettyServer(settings);
 			server.start();
 			server.join();

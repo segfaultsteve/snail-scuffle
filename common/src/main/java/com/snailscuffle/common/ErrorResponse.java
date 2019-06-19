@@ -25,6 +25,7 @@ public class ErrorResponse implements Serializable {
 	public static ErrorResponse invalidBattlePlan() { return new ErrorResponse(213, "Battle plan is invalid"); }
 	
 	// general
+	public static ErrorResponse invalidQuery() { return new ErrorResponse(900, "Query is invalid"); }
 	public static ErrorResponse unexpectedError() { return new ErrorResponse(999, "Unexpected error"); }
 	
 	private ErrorResponse() {}
