@@ -32,15 +32,19 @@ public class GameSettings {
 		}
 		
 		port = Integer.parseInt(config.getProperty("port", "80"));
-		logger.debug("port = {}", port);
-		
 		matchmakerUrl = ConfigUtil.getUrl(config, "matchmakerUrl");
-		logger.debug("matchmakerUrl = {}", matchmakerUrl);
-		
 		delegateGameServerUrl = ConfigUtil.getUrl(config, "delegateGameServerUrl");
-		logger.debug("delegateGameServerUrl = {}", delegateGameServerUrl);
-		
 		ignisArchivalNodeUrl = ConfigUtil.getUrl(config, "ignisArchivalNodeUrl");
+		
+		if (matchmakerUrl == null) {
+			throw new InvalidConfigurationException("matchmakerUrl must be specified in " + filename);
+		} else if (delegateGameServerUrl == null && ignisArchivalNodeUrl == null) {
+			throw new InvalidConfigurationException("either delegateGameServerUrl or ignisArchivalNodeUrl must be specified in " + filename);
+		}
+		
+		logger.debug("port = {}", port);
+		logger.debug("matchmakerUrl = {}", matchmakerUrl);
+		logger.debug("delegateGameServerUrl = {}", delegateGameServerUrl);
 		logger.debug("ignisArchivalNodeUrl = {}", ignisArchivalNodeUrl);
 	}
 

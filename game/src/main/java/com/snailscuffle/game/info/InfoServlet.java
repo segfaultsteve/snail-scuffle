@@ -148,7 +148,9 @@ public class InfoServlet extends HttpServlet {
 	private String describeServers() throws IOException {
 		Map<String, String> servers = new HashMap<>();
 		servers.put("matchmaker", matchmakerUrl.toString());
-		servers.put("delegateGameServer", delegateGameServerUrl.toString());
+		if (delegateGameServerUrl != null) {
+			servers.put("delegateGameServer", delegateGameServerUrl.toString());
+		}
 		return JsonUtil.serialize((Serializable) servers);
 	}
 
