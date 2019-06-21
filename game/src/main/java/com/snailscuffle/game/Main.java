@@ -18,7 +18,7 @@ import com.snailscuffle.common.util.LoggingUtil;
 import com.snailscuffle.game.accounts.Accounts;
 import com.snailscuffle.game.accounts.AccountsServlet;
 import com.snailscuffle.game.battle.BattleServlet;
-import com.snailscuffle.game.blockchain.BlockchainSubsystem;
+import com.snailscuffle.game.blockchain.BlockchainInterpreter;
 import com.snailscuffle.game.info.InfoServlet;
 import com.snailscuffle.game.tx.TransactionsServlet;
 
@@ -30,9 +30,7 @@ public class Main {
 		try {
 			LoggingUtil.initLogback(Main.class);
 			GameSettings settings = new GameSettings("config.properties");
-			BlockchainSubsystem blockchain = new BlockchainSubsystem(settings.ignisArchivalNodeUrl);
-			Accounts accounts = new Accounts(blockchain);
-			Server server = configureJettyServer(settings, blockchain, accounts);
+			Server server = configureJettyServer(settings);
 			server.start();
 			server.join();
 		} catch(Exception e) {
@@ -40,7 +38,7 @@ public class Main {
 		}
 	}
 	
-	private static Server configureJettyServer(GameSettings settings, BlockchainSubsystem blockchain, Accounts accounts) throws Exception {
+	private static Server configureJettyServer(GameSettings settings) throws Exception {
 		Server server = new Server();
 		ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory());
 		connector.setPort(settings.port);
@@ -51,8 +49,17 @@ public class Main {
 		context.addServlet(DefaultServlet.class, "/").setInitParameter("precompressed", "true");
 		context.addServlet(BattleServlet.class, "/battle");
 		context.addServlet(new ServletHolder(new InfoServlet(settings)), "/info/*");
-		context.addServlet(new ServletHolder(new AccountsServlet(accounts)), "/accounts/*");
-		context.addServlet(new ServletHolder(new TransactionsServlet(blockchain)), "/transactions/*");
+		
+		if (settings.ignisArchivalNodeUrl == null) {
+			String baseUrl = settings.delegateGameServerUrl.toString();
+			context.addServlet(new ServletHolder(new RedirectServlet(baseUrl + "/accounts")), "/accounts/*");
+			context.addServlet(new ServletHolder(new RedirectServlet(baseUrl + "/transactions")), "/transactions/*");
+		} else {
+			Accounts accounts = new Accounts();
+			BlockchainInterpreter blockchainInterpreter = new BlockchainInterpreter(settings.ignisArchivalNodeUrl, accounts);
+			context.addServlet(new ServletHolder(new AccountsServlet(accounts)), "/accounts/*");
+			context.addServlet(new ServletHolder(new TransactionsServlet(blockchainInterpreter)), "/transactions/*");
+		}
 		
 		server.addConnector(connector);
 		server.setHandler(context);
