@@ -19,6 +19,7 @@ public class Accounts implements Closeable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Accounts.class);
 	private final Connection sqlite;
+	private Account[] accountsOrderedByRating = new Account[0];
 	
 	public Accounts(String dbPath) throws SQLException {
 		String connectionUrl = "jdbc:sqlite:" + dbPath;
@@ -36,6 +37,12 @@ public class Accounts implements Closeable {
 		
 		try (Statement statement = sqlite.createStatement()) {
 			statement.executeUpdate(createAccountsTableSql);
+		}
+		
+		try {
+			refreshRanking();
+		} catch (AccountsException e) {
+			logger.error("Failed to obtain account ranking on startup", e);
 		}
 	}
 	
@@ -62,6 +69,8 @@ public class Accounts implements Closeable {
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
+		
+		refreshRanking();
 	}
 	
 	public Account get(AccountsQuery query) throws AccountNotFoundException {
@@ -72,26 +81,31 @@ public class Accounts implements Closeable {
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
 			getAccount.setString(1, useId ? query.id : query.player);
 			ResultSet result = getAccount.executeQuery();
-			Account match = extractAccounts(result).get(0);
-			
-			Account[] allAccounts = (Account[]) getAllAccounts().toArray(new Account[0]);
-			int index = Arrays.binarySearch(allAccounts, match, compareByRank());
-			match.rank = index + 1;
-			return match;
-		} catch (SQLException | AccountsException e) {
-			String error = "Database error while attempting to retrieve account " + (useId ? query.id : ("for " + query.player));
+			List<Account> accountsInResult = extractAccounts(result);
+			if (accountsInResult.size() == 1) {
+				Account match = extractAccounts(result).get(0);
+				match.rank = determineRank(match);
+				return match;
+			} else {
+				throw new AccountNotFoundException("Could not find account " + (useId ? query.id : ("for username '" + query.player + "'")));
+			}
+		} catch (SQLException e) {
+			String error = "Database error while attempting to retrieve account " + (useId ? query.id : ("for username '" + query.player + "'"));
 			logger.error(error, e);
 			throw new AccountNotFoundException(error, e);
 		}
 	}
 	
-	private List<Account> getAllAccounts() throws AccountsException {
+	private void refreshRanking() throws AccountsException {
 		String getAllAccountsSql = "SELECT * FROM accounts ORDER BY rating DESC;";
 		try (Statement statement = sqlite.createStatement()) {
 			ResultSet result = statement.executeQuery(getAllAccountsSql);
-			return extractAccounts(result);
+			Account[] accountsByRating = extractAccounts(result).toArray(new Account[0]);
+			synchronized (accountsOrderedByRating) {
+				accountsOrderedByRating = accountsByRating;
+			}
 		} catch (SQLException e) {
-			String error = "Database error while retrieving all accounts";
+			String error = "Database error while determining rankings";
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
@@ -110,6 +124,16 @@ public class Accounts implements Closeable {
 					queryResult.getInt("rating")));
 		}
 		return accounts;
+	}
+	
+	private int determineRank(Account account) {
+		synchronized (accountsOrderedByRating) {
+			int index = Arrays.binarySearch(accountsOrderedByRating, account, compareByRank());
+			while (index > 0 && accountsOrderedByRating[index-1].rating == account.rating) {
+				--index;
+			}
+			return index + 1;
+		}
 	}
 	
 	private static Comparator<Account> compareByRank() {

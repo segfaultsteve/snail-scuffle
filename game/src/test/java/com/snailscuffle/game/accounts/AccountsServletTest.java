@@ -63,9 +63,10 @@ public class AccountsServletTest {
 	}
 	
 	@Test
-	public void determineCorrectRankingsWithTwoAccounts() throws Exception {
-		accounts.insertOrUpdate(ACCOUNT1);
+	public void determineCorrectRankingWithTwoAccounts() throws Exception {
+		// insertion order shouldn't matter
 		accounts.insertOrUpdate(ACCOUNT3);
+		accounts.insertOrUpdate(ACCOUNT1);
 		
 		int rank1 = getRank(ACCOUNT1);
 		int rank3 = getRank(ACCOUNT3);
@@ -75,10 +76,11 @@ public class AccountsServletTest {
 	}
 	
 	@Test
-	public void determineCorrectRankingsWithThreeAccounts() throws Exception {
+	public void determineCorrectRankingWithThreeAccounts() throws Exception {
+		// insertion order shouldn't matter
+		accounts.insertOrUpdate(ACCOUNT3);
 		accounts.insertOrUpdate(ACCOUNT1);
 		accounts.insertOrUpdate(ACCOUNT2);
-		accounts.insertOrUpdate(ACCOUNT3);
 		
 		int rank1 = getRank(ACCOUNT1);
 		int rank2 = getRank(ACCOUNT2);
@@ -86,6 +88,24 @@ public class AccountsServletTest {
 		
 		assertEquals(1, rank1);
 		assertEquals(2, rank2);
+		assertEquals(3, rank3);
+	}
+	
+	@Test
+	public void determineCorrectRankingWithATie() throws Exception {
+		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500, 1, 100);
+		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1500, 1, 200);
+		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 300, 3, 300);
+		accounts.insertOrUpdate(third);
+		accounts.insertOrUpdate(tiedForFirst);
+		accounts.insertOrUpdate(alsoTiedForFirst);
+		
+		int rank1 = getRank(tiedForFirst);
+		int rank2 = getRank(alsoTiedForFirst);
+		int rank3 = getRank(third);
+		
+		assertEquals(1, rank1);
+		assertEquals(1, rank2);
 		assertEquals(3, rank3);
 	}
 	
