@@ -6,6 +6,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -28,6 +29,10 @@ public class JsonUtil {
 				.readerFor(type)
 				.with(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
 				.readValue(json);
+	}
+	
+	public static JsonNode deserialize(String json) throws IOException {
+		return (new ObjectMapper()).readTree(json);
 	}
 
 }

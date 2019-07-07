@@ -5,6 +5,8 @@ plugins {
 
 dependencies {
 	compile project(':common')
+	compile 'org.eclipse.jetty:jetty-client:9.4.8.v20171121'
+	compile 'org.xerial:sqlite-jdbc:3.28.0'
 }
 
 ext {

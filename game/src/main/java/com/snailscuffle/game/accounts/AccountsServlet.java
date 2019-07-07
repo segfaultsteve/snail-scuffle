@@ -14,15 +14,16 @@ import com.snailscuffle.common.ErrorResponse;
 import com.snailscuffle.common.InvalidQueryException;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.common.util.ServletUtil;
+import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 
 public class AccountsServlet extends HttpServlet {
 
 	private static final Logger logger = LoggerFactory.getLogger(AccountsServlet.class);
 	
-	private final Accounts accounts;
+	private final BlockchainSubsystem blockchainSubsystem;
 	
-	public AccountsServlet(Accounts accounts) {
-		this.accounts = accounts;
+	public AccountsServlet(BlockchainSubsystem blockchainSubsystem) {
+		this.blockchainSubsystem = blockchainSubsystem;
 	}
 	
 	@Override
@@ -31,12 +32,16 @@ public class AccountsServlet extends HttpServlet {
 		
 		try {
 			AccountsQuery query = new AccountsQuery(request);
-			Account account = accounts.get(query);
+			Account account = blockchainSubsystem.getAccount(query);
 			JsonUtil.serialize(account, response.getWriter());
 		} catch (InvalidQueryException e) {
 			logger.error("Invalid query to /accounts", e);
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().print(ErrorResponse.invalidQuery().because(e.getMessage()));
+		} catch (AccountNotFoundException e) {
+			logger.error("Failed to retrieve account with query string " + request.getQueryString());
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().print(ErrorResponse.failedToRetrieveAccount().because(e.getMessage()));
 		} catch (Exception e) {
 			logger.error("Unexpected error", e);
 			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

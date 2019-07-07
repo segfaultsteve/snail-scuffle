@@ -16,6 +16,7 @@ public class ErrorResponse implements Serializable {
 	// game server
 	public static ErrorResponse battleConfigDeserializationError() { return new ErrorResponse(101, "Error deserializing battle config"); }
 	public static ErrorResponse invalidBattleConfig() { return new ErrorResponse(102, "Battle config is invalid"); }
+	public static ErrorResponse failedToRetrieveAccount() { return new ErrorResponse(111, "Failed to retrieve account"); }
 	
 	// matchmaker server
 	public static ErrorResponse playerDeserializationError() { return new ErrorResponse(201, "Error deserializing player"); }

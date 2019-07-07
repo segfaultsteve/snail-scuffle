@@ -25,18 +25,12 @@ import com.snailscuffle.common.battle.Weapon;
 import com.snailscuffle.common.util.JsonUtil;
 
 public class BattleServletTest {
-
-	@Mock private Request request;
+	
 	@Mock private Response response;
-	private StringWriter responseBuffer;
 
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-
-		responseBuffer = new StringWriter();
-		PrintWriter printWriter = new PrintWriter(responseBuffer);
-		when(response.getWriter()).thenReturn(printWriter);
 	}
 
 	@Test
@@ -47,35 +41,40 @@ public class BattleServletTest {
 		bp.validate();
 		BattleConfig config = new BattleConfig(bp, bp, bp, bp, bp, bp);		// three periods
 		
-		postRequest(JsonUtil.serialize(config));
-		BattleResult result = JsonUtil.deserialize(BattleResult.class, responseBuffer.toString());
+		String response = sendPostRequest(JsonUtil.serialize(config));
+		BattleResult result = JsonUtil.deserialize(BattleResult.class, response);
 		
 		assertEquals(0, result.winnerIndex);	// player 1 (index 0) wins when battle plans are identical
 	}
 	
 	@Test
 	public void doPostWithEmptyBody() throws Exception {
-		postRequest("");
+		sendPostRequest("");
 		verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	}
 	
 	@Test
 	public void doPostWithPlainTextBody() throws Exception {
-		postRequest("not json");
+		sendPostRequest("not json");
 		verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	}
 	
 	@Test
 	public void doPostWithNullBattlePlans() throws Exception {
-		postRequest("{}");
+		sendPostRequest("{}");
 		verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	}
 	
-	private void postRequest(String body) throws Exception {
-		try (BufferedReader reader = new BufferedReader(new StringReader(body))) {
-			when(request.getReader()).thenReturn(reader);
-			(new BattleServlet()).doPost(request, response);
-		}
+	private String sendPostRequest(String body) throws Exception {
+		Request request = mock(Request.class);
+		when(request.getReader()).thenReturn(new BufferedReader(new StringReader(body)));
+		
+		StringWriter responseBuffer = new StringWriter();
+		when(response.getWriter()).thenReturn(new PrintWriter(responseBuffer));
+		
+		(new BattleServlet()).doPost(request, response);
+		
+		return responseBuffer.toString();
 	}
 
 }

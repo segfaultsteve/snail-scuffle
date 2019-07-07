@@ -13,13 +13,13 @@ import org.slf4j.LoggerFactory;
 import com.snailscuffle.common.ErrorResponse;
 import com.snailscuffle.common.util.ServletUtil;
 import com.snailscuffle.game.accounts.AccountsServlet;
-import com.snailscuffle.game.blockchain.BlockchainInterpreter;
+import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 
 public class TransactionsServlet extends HttpServlet {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AccountsServlet.class);
 	
-	public TransactionsServlet(BlockchainInterpreter blockchain) {
+	public TransactionsServlet(BlockchainSubsystem blockchain) {
 		
 	}
 	

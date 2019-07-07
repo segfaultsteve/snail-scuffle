@@ -1,8 +1,11 @@
 package com.snailscuffle.game;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
@@ -18,7 +21,7 @@ import com.snailscuffle.common.util.LoggingUtil;
 import com.snailscuffle.game.accounts.Accounts;
 import com.snailscuffle.game.accounts.AccountsServlet;
 import com.snailscuffle.game.battle.BattleServlet;
-import com.snailscuffle.game.blockchain.BlockchainInterpreter;
+import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.info.InfoServlet;
 import com.snailscuffle.game.tx.TransactionsServlet;
 
@@ -26,19 +29,32 @@ public class Main {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 	
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
+		BlockchainSubsystem blockchainSubsystem = null;
 		try {
 			LoggingUtil.initLogback(Main.class);
 			GameSettings settings = new GameSettings("config.properties");
-			Server server = configureJettyServer(settings);
+			
+			if (settings.ignisArchivalNodeUrl != null) {
+				createAccountsDatabaseDirectory(settings.databasePath);
+				Accounts accounts = new Accounts(settings.databasePath.toString());
+				blockchainSubsystem = new BlockchainSubsystem(settings.ignisArchivalNodeUrl, accounts);
+			}
+			
+			Server server = configureJettyServer(settings, blockchainSubsystem);
 			server.start();
 			server.join();
 		} catch(Exception e) {
 			logger.error("Fatal error", e);
+		} finally {
+			if (blockchainSubsystem != null) {
+				blockchainSubsystem.close();
+			}
 		}
 	}
 	
-	private static Server configureJettyServer(GameSettings settings) throws Exception {
+	private static Server configureJettyServer(GameSettings settings, BlockchainSubsystem blockchainSubsystem) throws Exception {
 		Server server = new Server();
 		ServerConnector connector = new ServerConnector(server, new HttpConnectionFactory());
 		connector.setPort(settings.port);
@@ -50,15 +66,13 @@ public class Main {
 		context.addServlet(BattleServlet.class, "/battle");
 		context.addServlet(new ServletHolder(new InfoServlet(settings)), "/info/*");
 		
-		if (settings.ignisArchivalNodeUrl == null) {
-			String baseUrl = settings.delegateGameServerUrl.toString();
-			context.addServlet(new ServletHolder(new RedirectServlet(baseUrl + "/accounts")), "/accounts/*");
-			context.addServlet(new ServletHolder(new RedirectServlet(baseUrl + "/transactions")), "/transactions/*");
+		if (blockchainSubsystem == null) {
+			String redirectBaseUrl = settings.delegateGameServerUrl.toString();
+			context.addServlet(new ServletHolder(new RedirectServlet(redirectBaseUrl + "/accounts")), "/accounts/*");
+			context.addServlet(new ServletHolder(new RedirectServlet(redirectBaseUrl + "/transactions")), "/transactions/*");
 		} else {
-			Accounts accounts = new Accounts();
-			BlockchainInterpreter blockchainInterpreter = new BlockchainInterpreter(settings.ignisArchivalNodeUrl, accounts);
-			context.addServlet(new ServletHolder(new AccountsServlet(accounts)), "/accounts/*");
-			context.addServlet(new ServletHolder(new TransactionsServlet(blockchainInterpreter)), "/transactions/*");
+			context.addServlet(new ServletHolder(new AccountsServlet(blockchainSubsystem)), "/accounts/*");
+			context.addServlet(new ServletHolder(new TransactionsServlet(blockchainSubsystem)), "/transactions/*");
 		}
 		
 		server.addConnector(connector);
@@ -71,6 +85,14 @@ public class Main {
 	private static URI findWebRoot() throws URISyntaxException {
 		URL webRootLocation = Main.class.getResource("/webroot/index.html");
 		return URI.create(webRootLocation.toURI().toASCIIString().replaceFirst("/index.html$", "/"));
+	}
+	
+	private static void createAccountsDatabaseDirectory(Path dbPath) throws IOException {
+		File dbDir = new File(dbPath.getParent().toString());
+		dbDir.mkdirs();
+		if (!dbDir.exists()) {
+			throw new IOException("Could not create database directory '" + dbDir.getAbsolutePath() + "'");
+		}
 	}
 	
 }
