@@ -13,13 +13,38 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.snailscuffle.game.Constants;
+
 public class Accounts implements Closeable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Accounts.class);
 	private final Connection sqlite;
 	
 	public Accounts(String dbPath) throws AccountException {
-		String createAccountsTableSql = "CREATE TABLE IF NOT EXISTS accounts ("
+		try {
+			String connectionUrl = "jdbc:sqlite:" + dbPath;
+			sqlite = DriverManager.getConnection(connectionUrl);
+			
+			if (!dbPreviouslyInitialized()) {
+				initDb();
+			}
+		} catch (SQLException e) {
+			String error = "Database error while initializing accounts";
+			logger.error(error, e);
+			throw new AccountException(error, e);
+		}
+	}
+	
+	private boolean dbPreviouslyInitialized() throws SQLException {
+		String accountsTableExistsSql = "SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'";
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(accountsTableExistsSql);
+			return result.next();
+		}
+	}
+	
+	private void initDb() throws SQLException {
+		String createAccountsTableSql = "CREATE TABLE accounts ("
 				+ "ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
 				+ "username TEXT NOT NULL CHECK (length(username) > 0), "
 				+ "public_key TEXT NOT NULL CHECK (length(public_key) > 0), "
@@ -29,28 +54,39 @@ public class Accounts implements Closeable {
 				+ "rating REAL NOT NULL"
 				+ ");";
 		
-		try {
-			String connectionUrl = "jdbc:sqlite:" + dbPath;
-			sqlite = DriverManager.getConnection(connectionUrl);
-			
-			try (Statement statement = sqlite.createStatement()) {
-				statement.executeUpdate(createAccountsTableSql);
-			}
+		String createSnapshotsTableSql = "CREATE TABLE snapshots ("
+				+ "table_name TEXT PRIMARY KEY NOT NULL, "
+				+ "sync_height INTEGER NOT NULL, "
+				+ "sync_block_id TEXT NOT NULL"
+				+ ");";
+		
+		String updateSnapshotsTableSql = "INSERT INTO snapshots VALUES ("
+				+ "'accounts', "
+				+ Constants.INITIAL_SYNC_HEIGHT + ", "
+				+ "'" + Long.toUnsignedString(Constants.INITIAL_SYNC_BLOCK_ID) + "'"
+				+ ")";
+		
+		sqlite.setAutoCommit(false);
+		try (Statement statement = sqlite.createStatement()) {
+			statement.executeUpdate(createAccountsTableSql);
+			statement.executeUpdate(createSnapshotsTableSql);
+			statement.executeUpdate(updateSnapshotsTableSql);
+			sqlite.commit();
 		} catch (SQLException e) {
-			String error = "Database error while initializing accounts";
-			logger.error(error, e);
-			throw new AccountException(error, e);
+			sqlite.rollback();
+		} finally {
+			sqlite.setAutoCommit(true);
 		}
 	}
 	
 	public void insertOrUpdate(Account account) throws AccountException {
 		String upsertAccountSql = "INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, ?) "
 				+ "ON CONFLICT (ardor_account_id) DO UPDATE SET "
-				+ "username=excluded.username,"
-				+ "wins=excluded.wins,"
-				+ "losses=excluded.losses,"
-				+ "streak=excluded.streak,"
-				+ "rating=excluded.rating;";
+				+ 	"username=excluded.username,"
+				+ 	"wins=excluded.wins,"
+				+ 	"losses=excluded.losses,"
+				+ 	"streak=excluded.streak,"
+				+ 	"rating=excluded.rating;";
 		
 		try (PreparedStatement upsertAccount = sqlite.prepareStatement(upsertAccountSql)) {
 			upsertAccount.setLong(1, account.numericId());
