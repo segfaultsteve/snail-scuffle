@@ -18,7 +18,7 @@ public class AccountsTest {
 	public void storeAndRetrieveAccount() throws Exception {
 		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		accounts.insertOrUpdate(storedAccount);
-		Account retrievedAccount = accounts.get(AccountQuery.forId(storedAccount.id));
+		Account retrievedAccount = accounts.getById(storedAccount.id);
 		
 		assertEquals(storedAccount.id, retrievedAccount.id);
 		assertEquals(storedAccount.username, retrievedAccount.username);
@@ -40,7 +40,7 @@ public class AccountsTest {
 		storedAccount.losses++;
 		storedAccount.streak = -1;
 		accounts.insertOrUpdate(storedAccount);
-		Account retrievedAccount = accounts.get(AccountQuery.forId(storedAccount.id));
+		Account retrievedAccount = accounts.getById(storedAccount.id);
 		
 		assertEquals(storedAccount.wins, retrievedAccount.wins);
 		assertEquals(storedAccount.losses, retrievedAccount.losses);
@@ -58,9 +58,9 @@ public class AccountsTest {
 		accounts.insertOrUpdate(account1);
 		accounts.insertOrUpdate(account2);
 		
-		int rank1 = getRank(account1);
-		int rank2 = getRank(account2);
-		int rank3 = getRank(account3);
+		int rank1 = accounts.getById(account1.id).rank;
+		int rank2 = accounts.getById(account2.id).rank;
+		int rank3 = accounts.getById(account3.id).rank;
 		
 		assertEquals(1, rank1);
 		assertEquals(2, rank2);
@@ -76,17 +76,13 @@ public class AccountsTest {
 		accounts.insertOrUpdate(alsoTiedForFirst);
 		accounts.insertOrUpdate(third);
 		
-		int rank1 = getRank(tiedForFirst);
-		int rank2 = getRank(alsoTiedForFirst);
-		int rank3 = getRank(third);
+		int rank1 = accounts.getById(tiedForFirst.id).rank;
+		int rank2 = accounts.getById(alsoTiedForFirst.id).rank;
+		int rank3 = accounts.getById(third.id).rank;
 		
 		assertEquals(1, rank1);
 		assertEquals(1, rank2);
 		assertEquals(3, rank3);
-	}
-	
-	private int getRank(Account account) throws Exception {
-		return accounts.get(AccountQuery.forId(account.id)).rank;
 	}
 	
 }

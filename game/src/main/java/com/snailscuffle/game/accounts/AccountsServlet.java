@@ -32,7 +32,9 @@ public class AccountsServlet extends HttpServlet {
 		
 		try {
 			AccountQuery query = new AccountQuery(request);
-			Account account = blockchainSubsystem.getAccount(query);
+			Account account = query.byId() ?
+					blockchainSubsystem.getAccountById(query.id)
+					: blockchainSubsystem.getAccountByUsername(query.player);
 			JsonUtil.serialize(account, response.getWriter());
 		} catch (InvalidQueryException e) {
 			logger.error("Invalid query to /accounts", e);

@@ -21,7 +21,7 @@ public class Accounts implements Closeable {
 	public Accounts(String dbPath) throws AccountException {
 		String createAccountsTableSql = "CREATE TABLE IF NOT EXISTS accounts ("
 				+ "ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
-				+ "user_name TEXT NOT NULL CHECK (length(user_name) > 0), "
+				+ "username TEXT NOT NULL CHECK (length(username) > 0), "
 				+ "public_key TEXT NOT NULL CHECK (length(public_key) > 0), "
 				+ "wins INTEGER NOT NULL CHECK (wins >= 0) DEFAULT 0, "
 				+ "losses INTEGER NOT NULL CHECK (losses >= 0) DEFAULT 0, "
@@ -46,7 +46,7 @@ public class Accounts implements Closeable {
 	public void insertOrUpdate(Account account) throws AccountException {
 		String upsertAccountSql = "INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, ?) "
 				+ "ON CONFLICT (ardor_account_id) DO UPDATE SET "
-				+ "user_name=excluded.user_name,"
+				+ "username=excluded.username,"
 				+ "wins=excluded.wins,"
 				+ "losses=excluded.losses,"
 				+ "streak=excluded.streak,"
@@ -68,26 +68,39 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public Account get(AccountQuery query) throws AccountException {
-		boolean useId = query.id != null;
-		String getAccountSql = "SELECT * FROM accounts WHERE "
-				+ (useId ? "ardor_account_id" : "user_name")
-				+ " LIKE ?";
+	public Account getById(String id) throws AccountException {
+		String getAccountSql = "SELECT * FROM accounts WHERE ardor_account_id LIKE ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
-			getAccount.setString(1, useId ? query.id : query.player);
-			ResultSet result = getAccount.executeQuery();
-			List<Account> accountsInResult = extractAccounts(result);
-			if (accountsInResult.size() == 1) {
-				Account match = accountsInResult.get(0);
-				match.rank = determineRank(match);
-				return match;
-			} else {
-				throw new AccountException("Could not find account " + (useId ? query.id : ("for username '" + query.player + "'")));
-			}
+			getAccount.setString(1, id);
+			return executeQueryForAccount(getAccount);
 		} catch (SQLException e) {
-			String error = "Database error while attempting to retrieve account " + (useId ? query.id : ("for username '" + query.player + "'"));
+			String error = "Database error while attempting to retrieve account " + id;
 			logger.error(error, e);
 			throw new AccountException(error, e);
+		}
+	}
+	
+	public Account getByUsername(String username) throws AccountException {
+		String getAccountSql = "SELECT * FROM accounts WHERE username LIKE ?";
+		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
+			getAccount.setString(1, username);
+			return executeQueryForAccount(getAccount);
+		} catch (SQLException e) {
+			String error = "Database error while attempting to retrieve account for player '" + username + "'";
+			logger.error(error, e);
+			throw new AccountException(error, e);
+		}
+	}
+	
+	private Account executeQueryForAccount(PreparedStatement getAccount) throws AccountException, SQLException {
+		ResultSet result = getAccount.executeQuery();
+		List<Account> accountsInResult = extractAccounts(result);
+		if (accountsInResult.size() == 1) {
+			Account match = accountsInResult.get(0);
+			match.rank = determineRank(match);
+			return match;
+		} else {
+			throw new AccountException("Account not found");
 		}
 	}
 	
@@ -96,7 +109,7 @@ public class Accounts implements Closeable {
 		while (queryResult.next()) {
 			accounts.add(new Account(
 					queryResult.getLong("ardor_account_id"),
-					queryResult.getString("user_name"),
+					queryResult.getString("username"),
 					queryResult.getString("public_key"),
 					queryResult.getInt("wins"),
 					queryResult.getInt("losses"),
