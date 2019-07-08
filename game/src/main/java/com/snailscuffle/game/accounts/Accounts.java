@@ -8,8 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -19,12 +17,8 @@ public class Accounts implements Closeable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Accounts.class);
 	private final Connection sqlite;
-	private Account[] accountsOrderedByRating = new Account[0];
 	
-	public Accounts(String dbPath) throws SQLException {
-		String connectionUrl = "jdbc:sqlite:" + dbPath;
-		sqlite = DriverManager.getConnection(connectionUrl);
-		
+	public Accounts(String dbPath) throws AccountException {
 		String createAccountsTableSql = "CREATE TABLE IF NOT EXISTS accounts ("
 				+ "ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
 				+ "user_name TEXT NOT NULL CHECK (length(user_name) > 0), "
@@ -35,18 +29,21 @@ public class Accounts implements Closeable {
 				+ "rating REAL NOT NULL"
 				+ ");";
 		
-		try (Statement statement = sqlite.createStatement()) {
-			statement.executeUpdate(createAccountsTableSql);
-		}
-		
 		try {
-			refreshRanking();
-		} catch (AccountsException e) {
-			logger.error("Failed to obtain account ranking on startup", e);
+			String connectionUrl = "jdbc:sqlite:" + dbPath;
+			sqlite = DriverManager.getConnection(connectionUrl);
+			
+			try (Statement statement = sqlite.createStatement()) {
+				statement.executeUpdate(createAccountsTableSql);
+			}
+		} catch (SQLException e) {
+			String error = "Database error while initializing accounts";
+			logger.error(error, e);
+			throw new AccountException(error, e);
 		}
 	}
 	
-	public void insertOrUpdate(Account account) throws AccountsException {
+	public void insertOrUpdate(Account account) throws AccountException {
 		String upsertAccountSql = "INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, ?) "
 				+ "ON CONFLICT (ardor_account_id) DO UPDATE SET "
 				+ "user_name=excluded.user_name,"
@@ -67,13 +64,11 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while attempting to insert or update account " + account.id;
 			logger.error(error, e);
-			throw new AccountsException(error, e);
+			throw new AccountException(error, e);
 		}
-		
-		refreshRanking();
 	}
 	
-	public Account get(AccountsQuery query) throws AccountNotFoundException {
+	public Account get(AccountQuery query) throws AccountException {
 		boolean useId = query.id != null;
 		String getAccountSql = "SELECT * FROM accounts WHERE "
 				+ (useId ? "ardor_account_id" : "user_name")
@@ -83,31 +78,16 @@ public class Accounts implements Closeable {
 			ResultSet result = getAccount.executeQuery();
 			List<Account> accountsInResult = extractAccounts(result);
 			if (accountsInResult.size() == 1) {
-				Account match = extractAccounts(result).get(0);
+				Account match = accountsInResult.get(0);
 				match.rank = determineRank(match);
 				return match;
 			} else {
-				throw new AccountNotFoundException("Could not find account " + (useId ? query.id : ("for username '" + query.player + "'")));
+				throw new AccountException("Could not find account " + (useId ? query.id : ("for username '" + query.player + "'")));
 			}
 		} catch (SQLException e) {
 			String error = "Database error while attempting to retrieve account " + (useId ? query.id : ("for username '" + query.player + "'"));
 			logger.error(error, e);
-			throw new AccountNotFoundException(error, e);
-		}
-	}
-	
-	private void refreshRanking() throws AccountsException {
-		String getAllAccountsSql = "SELECT * FROM accounts ORDER BY rating DESC;";
-		try (Statement statement = sqlite.createStatement()) {
-			ResultSet result = statement.executeQuery(getAllAccountsSql);
-			Account[] accountsByRating = extractAccounts(result).toArray(new Account[0]);
-			synchronized (accountsOrderedByRating) {
-				accountsOrderedByRating = accountsByRating;
-			}
-		} catch (SQLException e) {
-			String error = "Database error while determining rankings";
-			logger.error(error, e);
-			throw new AccountsException(error, e);
+			throw new AccountException(error, e);
 		}
 	}
 	
@@ -126,23 +106,17 @@ public class Accounts implements Closeable {
 		return accounts;
 	}
 	
-	private int determineRank(Account account) {
-		synchronized (accountsOrderedByRating) {
-			int index = Arrays.binarySearch(accountsOrderedByRating, account, compareByRank());
-			while (index > 0 && accountsOrderedByRating[index-1].rating == account.rating) {
-				--index;
-			}
-			return index + 1;
+	private int determineRank(Account account) throws AccountException {
+		String higherRankedAccountsSql = "SELECT COUNT(*) FROM accounts WHERE rating > ?;";
+		try (PreparedStatement higherRankedAccounts = sqlite.prepareStatement(higherRankedAccountsSql)) {
+			higherRankedAccounts.setInt(1, account.rating);
+			ResultSet result = higherRankedAccounts.executeQuery();
+			return result.next() ? (result.getInt(1) + 1) : 1;
+		} catch (SQLException e) {
+			String error = "Database error while determining rank of " + account.id;
+			logger.error(error, e);
+			throw new AccountException(error, e);
 		}
-	}
-	
-	private static Comparator<Account> compareByRank() {
-		return new Comparator<Account>() {
-			public int compare(Account a1, Account a2) {
-				// If a1 has a higher rating, it has a lower rank (i.e., closer to 1st place).
-				return a2.rating - a1.rating;
-			}
-		};
 	}
 	
 	@Override

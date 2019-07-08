@@ -31,14 +31,14 @@ public class AccountsServlet extends HttpServlet {
 		response.setContentType("application/json; charset=UTF-8");
 		
 		try {
-			AccountsQuery query = new AccountsQuery(request);
+			AccountQuery query = new AccountQuery(request);
 			Account account = blockchainSubsystem.getAccount(query);
 			JsonUtil.serialize(account, response.getWriter());
 		} catch (InvalidQueryException e) {
 			logger.error("Invalid query to /accounts", e);
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().print(ErrorResponse.invalidQuery().because(e.getMessage()));
-		} catch (AccountNotFoundException e) {
+		} catch (AccountException e) {
 			logger.error("Failed to retrieve account with query string " + request.getQueryString());
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().print(ErrorResponse.failedToRetrieveAccount().because(e.getMessage()));

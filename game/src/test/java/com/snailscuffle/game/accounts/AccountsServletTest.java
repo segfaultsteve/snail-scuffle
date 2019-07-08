@@ -1,6 +1,7 @@
 package com.snailscuffle.game.accounts;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.snailscuffle.common.ErrorResponse;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.blockchain.IgnisArchivalNodeConnection;
@@ -27,19 +29,19 @@ public class AccountsServletTest {
 	private static final Account ACCOUNT3 = new Account(3, "account3", "pubkey3", 0, 3, -3, 700, 3, 300);
 	private static final double DELTA = 0.001;		// for comparing doubles
 	
-	@Mock private IgnisArchivalNodeConnection ignisNode;
+	@Mock private IgnisArchivalNodeConnection mockIgnisNode;
 	private Accounts accounts;
 	private BlockchainSubsystem blockchainSubsystem;
 	
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-		when(ignisNode.getBalanceOf(ACCOUNT1.numericId())).thenReturn(ACCOUNT1.balance);
-		when(ignisNode.getBalanceOf(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
-		when(ignisNode.getBalanceOf(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
+		when(mockIgnisNode.getBalanceOf(ACCOUNT1.numericId())).thenReturn(ACCOUNT1.balance);
+		when(mockIgnisNode.getBalanceOf(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
+		when(mockIgnisNode.getBalanceOf(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
 		
 		accounts = new Accounts(":memory:");
-		blockchainSubsystem = new BlockchainSubsystem(ignisNode, accounts);
+		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts);
 	}
 
 	@Test
@@ -63,20 +65,7 @@ public class AccountsServletTest {
 	}
 	
 	@Test
-	public void determineCorrectRankingWithTwoAccounts() throws Exception {
-		// insertion order shouldn't matter
-		accounts.insertOrUpdate(ACCOUNT3);
-		accounts.insertOrUpdate(ACCOUNT1);
-		
-		int rank1 = getRank(ACCOUNT1);
-		int rank3 = getRank(ACCOUNT3);
-		
-		assertEquals(1, rank1);
-		assertEquals(2, rank3);
-	}
-	
-	@Test
-	public void determineCorrectRankingWithThreeAccounts() throws Exception {
+	public void determineCorrectRanking() throws Exception {
 		// insertion order shouldn't matter
 		accounts.insertOrUpdate(ACCOUNT3);
 		accounts.insertOrUpdate(ACCOUNT1);
@@ -92,21 +81,15 @@ public class AccountsServletTest {
 	}
 	
 	@Test
-	public void determineCorrectRankingWithATie() throws Exception {
-		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500, 1, 100);
-		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1500, 1, 200);
-		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 300, 3, 300);
-		accounts.insertOrUpdate(third);
-		accounts.insertOrUpdate(tiedForFirst);
-		accounts.insertOrUpdate(alsoTiedForFirst);
+	public void reportAccountNotFound() throws Exception {
+		int expectedErrorCode = ErrorResponse.failedToRetrieveAccount().errorCode;
 		
-		int rank1 = getRank(tiedForFirst);
-		int rank2 = getRank(alsoTiedForFirst);
-		int rank3 = getRank(third);
+		String response = sendGetRequest("id=123");
+		ErrorResponse error = JsonUtil.deserialize(ErrorResponse.class, response);
 		
-		assertEquals(1, rank1);
-		assertEquals(1, rank2);
-		assertEquals(3, rank3);
+		assertEquals(expectedErrorCode, error.errorCode);
+		assertNotNull(error.errorDescription);
+		assertNotNull(error.errorDetails);
 	}
 	
 	private String sendGetRequest(String queryString) throws Exception {

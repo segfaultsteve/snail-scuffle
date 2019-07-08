@@ -9,35 +9,44 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.snailscuffle.common.util.JsonUtil;
-import com.snailscuffle.game.accounts.AccountNotFoundException;
+import com.snailscuffle.game.accounts.AccountException;
 
 public class IgnisArchivalNodeConnection implements Closeable {
 	
 	private static final long NQT_PER_IGNIS = 100_000_000;
+	private static final Logger logger = LoggerFactory.getLogger(IgnisArchivalNodeConnection.class);
 	
 	private final String baseUrl;
-	private final HttpClient connection;
+	private final HttpClient httpClient;
 	
 	public IgnisArchivalNodeConnection(URL ignisArchivalNodeUrl) throws BlockchainSubsystemException {
 		baseUrl = ignisArchivalNodeUrl.toString();
-		connection = new HttpClient(new SslContextFactory());
+		httpClient = new HttpClient(new SslContextFactory());
 		try {
-			connection.start();
+			httpClient.start();
 		} catch (Exception e){
 			throw new BlockchainSubsystemException("Failed to start http(s) client: " + e.getMessage());
 		}
 	}
 	
-	public double getBalanceOf(long accountId) throws AccountNotFoundException, BlockchainSubsystemException {
+	// This constructor is for unit tests.
+	IgnisArchivalNodeConnection(String baseUrl, HttpClient httpClient) {
+		this.baseUrl = baseUrl;
+		this.httpClient = httpClient;
+	}
+	
+	public double getBalanceOf(long accountId) throws AccountException, BlockchainSubsystemException {
 		String url = baseUrl + "/nxt?requestType=getBalance&chain=2&account=" + accountId;
 		try {
-			String response = connection.GET(url).getContentAsString();
+			String response = httpClient.GET(url).getContentAsString();
 			JsonNode balanceNode = JsonUtil.deserialize(response).get("unconfirmedBalanceNQT");
 			if (balanceNode == null) {
-				throw new AccountNotFoundException("Failed to get balance of account " + accountId + "; query returned: " + response);
+				throw new AccountException("Failed to get balance of account " + accountId + "; query returned: " + response);
 			} else {
 				return nqtToDouble(balanceNode.asLong());
 			}
@@ -54,7 +63,11 @@ public class IgnisArchivalNodeConnection implements Closeable {
 	
 	@Override
 	public void close() {
-		//connection.close();
+		try {
+			httpClient.stop();
+		} catch (Exception e) {
+			logger.error("Failed to close connection to Ignis archival node");
+		}
 	}
 
 }
