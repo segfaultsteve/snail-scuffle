@@ -19,7 +19,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void initializeSnapshotTable() throws AccountException {
+	public void initializeSnapshotTable() throws AccountsException {
 		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		assertEquals(1, snapshots.size());
@@ -29,7 +29,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void storeAndRetrieveAccount() throws AccountException {
+	public void storeAndRetrieveAccount() throws AccountsException {
 		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		accounts.insertOrUpdate(storedAccount);
 		Account retrievedAccount = accounts.getById(storedAccount.id);
@@ -46,7 +46,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void updateAccount() throws AccountException {
+	public void updateAccount() throws AccountsException {
 		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		accounts.insertOrUpdate(storedAccount);
 		
@@ -62,7 +62,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void determineCorrectRanking() throws AccountException {
+	public void determineCorrectRanking() throws AccountsException {
 		Account account1 = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		Account account2 = new Account(2, "account2", "pubkey2", 2, 2, 1, 1000);
 		Account account3 = new Account(3, "account3", "pubkey3", 0, 3, -3, 700);
@@ -82,7 +82,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void determineCorrectRankingWithATie() throws AccountException {
+	public void determineCorrectRankingWithATie() throws AccountsException {
 		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1500);
 		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 300);
@@ -100,7 +100,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void takeSnapshot() throws AccountException {
+	public void takeSnapshot() throws AccountsException {
 		accounts.takeSnapshot("test");
 		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
@@ -114,7 +114,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void deleteOldSnapshots() throws AccountException {
+	public void deleteOldSnapshots() throws AccountsException {
 		accounts = new Accounts(":memory:", 3);		// keep only the three most recent snapshots
 		
 		accounts.takeSnapshot("1");

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.snailscuffle.common.util.JsonUtil;
-import com.snailscuffle.game.accounts.AccountException;
+import com.snailscuffle.game.accounts.AccountsException;
 
 public class IgnisArchivalNodeConnection implements Closeable {
 	
@@ -40,13 +40,13 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		this.httpClient = httpClient;
 	}
 	
-	public double getBalanceOf(long accountId) throws AccountException, BlockchainSubsystemException {
+	public double getBalanceOf(long accountId) throws AccountsException, BlockchainSubsystemException {
 		String url = baseUrl + "/nxt?requestType=getBalance&chain=2&account=" + accountId;
 		try {
 			String response = httpClient.GET(url).getContentAsString();
 			JsonNode balanceNode = JsonUtil.deserialize(response).get("unconfirmedBalanceNQT");
 			if (balanceNode == null) {
-				throw new AccountException("Failed to get balance of account " + accountId + "; query returned: " + response);
+				throw new AccountsException("Failed to get balance of account " + accountId + "; query returned: " + response);
 			} else {
 				return nqtToDouble(balanceNode.asLong());
 			}

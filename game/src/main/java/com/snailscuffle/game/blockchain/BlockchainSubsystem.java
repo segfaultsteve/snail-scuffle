@@ -4,7 +4,7 @@ import java.io.Closeable;
 import java.net.URL;
 
 import com.snailscuffle.game.accounts.Account;
-import com.snailscuffle.game.accounts.AccountException;
+import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.accounts.Accounts;
 
 public class BlockchainSubsystem implements Closeable {
@@ -21,13 +21,13 @@ public class BlockchainSubsystem implements Closeable {
 		this.accounts = accounts;
 	}
 	
-	public Account getAccountById(String id) throws AccountException, BlockchainSubsystemException {
+	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException {
 		Account account = accounts.getById(id);
 		account.balance = ignisNode.getBalanceOf(account.numericId());
 		return account;
 	}
 	
-	public Account getAccountByUsername(String username) throws AccountException, BlockchainSubsystemException {
+	public Account getAccountByUsername(String username) throws AccountsException, BlockchainSubsystemException {
 		Account account = accounts.getByUsername(username);
 		account.balance = ignisNode.getBalanceOf(account.numericId());
 		return account;

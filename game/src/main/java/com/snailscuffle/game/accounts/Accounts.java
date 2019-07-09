@@ -23,7 +23,7 @@ public class Accounts implements Closeable {
 	private final Connection sqlite;
 	private final int maxSnapshotCount;
 	
-	public Accounts(String dbPath, int maxSnapshotCount) throws AccountException {
+	public Accounts(String dbPath, int maxSnapshotCount) throws AccountsException {
 		this.maxSnapshotCount = maxSnapshotCount;
 		try {
 			String connectionUrl = "jdbc:sqlite:" + dbPath;
@@ -35,7 +35,7 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while initializing accounts";
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 	}
 	
@@ -83,7 +83,7 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public void insertOrUpdate(Account account) throws AccountException {
+	public void insertOrUpdate(Account account) throws AccountsException {
 		String upsertAccountSql = "INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, ?) "
 				+ "ON CONFLICT (ardor_account_id) DO UPDATE SET "
 				+ 	"username=excluded.username,"
@@ -104,11 +104,11 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while attempting to insert or update account " + account.id;
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 	}
 	
-	public Account getById(String id) throws AccountException {
+	public Account getById(String id) throws AccountsException {
 		String getAccountSql = "SELECT * FROM accounts WHERE ardor_account_id LIKE ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
 			getAccount.setString(1, id);
@@ -116,11 +116,11 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while attempting to retrieve account " + id;
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 	}
 	
-	public Account getByUsername(String username) throws AccountException {
+	public Account getByUsername(String username) throws AccountsException {
 		String getAccountSql = "SELECT * FROM accounts WHERE username LIKE ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
 			getAccount.setString(1, username);
@@ -128,11 +128,11 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while attempting to retrieve account for player '" + username + "'";
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 	}
 	
-	private Account executeQueryForAccount(PreparedStatement getAccount) throws AccountException, SQLException {
+	private Account executeQueryForAccount(PreparedStatement getAccount) throws AccountsException, SQLException {
 		ResultSet result = getAccount.executeQuery();
 		List<Account> accountsInResult = extractAccounts(result);
 		if (accountsInResult.size() == 1) {
@@ -140,7 +140,7 @@ public class Accounts implements Closeable {
 			match.rank = determineRank(match);
 			return match;
 		} else {
-			throw new AccountException("Account not found");
+			throw new AccountsException("Account not found");
 		}
 	}
 	
@@ -159,7 +159,7 @@ public class Accounts implements Closeable {
 		return accounts;
 	}
 	
-	private int determineRank(Account account) throws AccountException {
+	private int determineRank(Account account) throws AccountsException {
 		String higherRankedAccountsSql = "SELECT COUNT(*) FROM accounts WHERE rating > ?;";
 		try (PreparedStatement higherRankedAccounts = sqlite.prepareStatement(higherRankedAccountsSql)) {
 			higherRankedAccounts.setInt(1, account.rating);
@@ -168,11 +168,11 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while determining rank of " + account.id;
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 	}
 	
-	public void takeSnapshot(String nameSuffix) throws AccountException {
+	public void takeSnapshot(String nameSuffix) throws AccountsException {
 		String createSnapshotSql = "CREATE TABLE accounts_" + nameSuffix + " AS SELECT * FROM accounts;";
 		String updateSnapshotsTableSql = "INSERT INTO snapshots (table_name, sync_height, sync_block_id) "
 				+ "SELECT 'accounts_" + nameSuffix + "', sync_height, sync_block_id "
@@ -189,10 +189,10 @@ public class Accounts implements Closeable {
 				if (rowCount > maxSnapshotCount + 1) {		// +1 for the (current) accounts table
 					deleteOldSnapshots(rowCount - (maxSnapshotCount + 1), statement);
 				} else if (rowCount < 0) {
-					throw new AccountException("Database error while checking for old snapshots");
+					throw new AccountsException("Database error while checking for old snapshots");
 				}
 				sqlite.commit();
-			} catch (SQLException | AccountException e) {
+			} catch (SQLException | AccountsException e) {
 				sqlite.rollback();
 				throw e;
 			} finally {
@@ -201,11 +201,11 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while taking snapshot of accounts";
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 	}
 	
-	private static void deleteOldSnapshots(int count, Statement statement) throws SQLException, AccountException {
+	private static void deleteOldSnapshots(int count, Statement statement) throws SQLException, AccountsException {
 		String snapshotToDeleteSql = "SELECT table_name FROM snapshots ORDER BY rowid LIMIT " + count + " OFFSET 1;";
 		ResultSet result = statement.executeQuery(snapshotToDeleteSql);
 		int deleted = 0;
@@ -216,11 +216,11 @@ public class Accounts implements Closeable {
 			++deleted;
 		}
 		if (deleted != count) {
-			throw new AccountException("Database error while deleting old snapshots");
+			throw new AccountsException("Database error while deleting old snapshots");
 		}
 	}
 	
-	public Map<String, AccountsSnapshot> getAllSnapshots() throws AccountException {
+	public Map<String, AccountsSnapshot> getAllSnapshots() throws AccountsException {
 		Map<String, AccountsSnapshot> snapshots = new HashMap<>();
 		String getSnapshotsSql = "SELECT * FROM snapshots";
 		try (Statement statement = sqlite.createStatement()) {
@@ -235,7 +235,7 @@ public class Accounts implements Closeable {
 		} catch (SQLException e) {
 			String error = "Database error while getting accounts snapshots";
 			logger.error(error, e);
-			throw new AccountException(error, e);
+			throw new AccountsException(error, e);
 		}
 		return snapshots;
 	}

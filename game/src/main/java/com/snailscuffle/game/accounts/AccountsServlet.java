@@ -40,7 +40,7 @@ public class AccountsServlet extends HttpServlet {
 			logger.error("Invalid query to /accounts", e);
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().print(ErrorResponse.invalidQuery().because(e.getMessage()));
-		} catch (AccountException e) {
+		} catch (AccountsException e) {
 			logger.error("Failed to retrieve account with query string " + request.getQueryString());
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			response.getWriter().print(ErrorResponse.failedToRetrieveAccount().because(e.getMessage()));
