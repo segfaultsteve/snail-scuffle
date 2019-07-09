@@ -38,7 +38,7 @@ public class Main {
 			
 			if (settings.ignisArchivalNodeUrl != null) {
 				createAccountsDatabaseDirectory(settings.databasePath);
-				Accounts accounts = new Accounts(settings.databasePath.toString());
+				Accounts accounts = new Accounts(settings.databasePath.toString(), Constants.MAX_SNAPSHOT_COUNT);
 				blockchainSubsystem = new BlockchainSubsystem(settings.ignisArchivalNodeUrl, accounts);
 			}
 			

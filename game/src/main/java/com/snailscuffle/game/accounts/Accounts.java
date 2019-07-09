@@ -8,7 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +21,10 @@ public class Accounts implements Closeable {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Accounts.class);
 	private final Connection sqlite;
+	private final int maxSnapshotCount;
 	
-	public Accounts(String dbPath) throws AccountException {
+	public Accounts(String dbPath, int maxSnapshotCount) throws AccountException {
+		this.maxSnapshotCount = maxSnapshotCount;
 		try {
 			String connectionUrl = "jdbc:sqlite:" + dbPath;
 			sqlite = DriverManager.getConnection(connectionUrl);
@@ -141,7 +145,7 @@ public class Accounts implements Closeable {
 	}
 	
 	private static List<Account> extractAccounts(ResultSet queryResult) throws SQLException {
-		List<Account> accounts = new ArrayList<Account>();
+		List<Account> accounts = new ArrayList<>();
 		while (queryResult.next()) {
 			accounts.add(new Account(
 					queryResult.getLong("ardor_account_id"),
@@ -166,6 +170,74 @@ public class Accounts implements Closeable {
 			logger.error(error, e);
 			throw new AccountException(error, e);
 		}
+	}
+	
+	public void takeSnapshot(String nameSuffix) throws AccountException {
+		String createSnapshotSql = "CREATE TABLE accounts_" + nameSuffix + " AS SELECT * FROM accounts;";
+		String updateSnapshotsTableSql = "INSERT INTO snapshots (table_name, sync_height, sync_block_id) "
+				+ "SELECT 'accounts_" + nameSuffix + "', sync_height, sync_block_id "
+				+ "FROM snapshots WHERE table_name='accounts';";
+		String countSnapshotsSql = "SELECT COUNT(*) FROM snapshots;";
+		
+		try {
+			sqlite.setAutoCommit(false);
+			try (Statement statement = sqlite.createStatement()) {
+				statement.executeUpdate(createSnapshotSql);
+				statement.executeUpdate(updateSnapshotsTableSql);
+				ResultSet result = statement.executeQuery(countSnapshotsSql);
+				int rowCount = result.next() ? result.getInt(1) : -1;
+				if (rowCount > maxSnapshotCount + 1) {		// +1 for the (current) accounts table
+					deleteOldSnapshots(rowCount - (maxSnapshotCount + 1), statement);
+				} else if (rowCount < 0) {
+					throw new AccountException("Database error while checking for old snapshots");
+				}
+				sqlite.commit();
+			} catch (SQLException | AccountException e) {
+				sqlite.rollback();
+				throw e;
+			} finally {
+				sqlite.setAutoCommit(true);
+			}
+		} catch (SQLException e) {
+			String error = "Database error while taking snapshot of accounts";
+			logger.error(error, e);
+			throw new AccountException(error, e);
+		}
+	}
+	
+	private static void deleteOldSnapshots(int count, Statement statement) throws SQLException, AccountException {
+		String snapshotToDeleteSql = "SELECT table_name FROM snapshots ORDER BY rowid LIMIT " + count + " OFFSET 1;";
+		ResultSet result = statement.executeQuery(snapshotToDeleteSql);
+		int deleted = 0;
+		while (result.next()) {
+			String snapshotToDelete = result.getString("table_name");
+			statement.executeUpdate("DROP TABLE " + snapshotToDelete + ";");
+			statement.executeUpdate("DELETE FROM snapshots WHERE table_name='" + snapshotToDelete + "';");
+			++deleted;
+		}
+		if (deleted != count) {
+			throw new AccountException("Database error while deleting old snapshots");
+		}
+	}
+	
+	public Map<String, AccountsSnapshot> getAllSnapshots() throws AccountException {
+		Map<String, AccountsSnapshot> snapshots = new HashMap<>();
+		String getSnapshotsSql = "SELECT * FROM snapshots";
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(getSnapshotsSql);
+			while (result.next()) {
+				String name = result.getString("table_name");
+				long syncHeight = result.getLong("sync_height");
+				String syncBlockId = result.getString("sync_block_id");
+				AccountsSnapshot snapshot = new AccountsSnapshot(name, syncHeight, Long.parseUnsignedLong(syncBlockId));
+				snapshots.put(snapshot.name, snapshot);
+			}
+		} catch (SQLException e) {
+			String error = "Database error while getting accounts snapshots";
+			logger.error(error, e);
+			throw new AccountException(error, e);
+		}
+		return snapshots;
 	}
 	
 	@Override

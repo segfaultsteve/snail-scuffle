@@ -19,6 +19,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.snailscuffle.common.ErrorResponse;
 import com.snailscuffle.common.util.JsonUtil;
+import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.blockchain.IgnisArchivalNodeConnection;
 
@@ -40,7 +41,7 @@ public class AccountsServletTest {
 		when(mockIgnisNode.getBalanceOf(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
 		when(mockIgnisNode.getBalanceOf(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
 		
-		accounts = new Accounts(":memory:");
+		accounts = new Accounts(":memory:", Constants.MAX_SNAPSHOT_COUNT);
 		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts);
 	}
 
@@ -94,6 +95,7 @@ public class AccountsServletTest {
 	
 	private String sendGetRequest(String queryString) throws Exception {
 		Request request = mock(Request.class);
+		when(request.getQueryString()).thenReturn(queryString);
 		when(request.getParameterMap()).thenReturn(parameterMapFor(queryString));
 		
 		Response response = mock(Response.class);
@@ -105,7 +107,7 @@ public class AccountsServletTest {
 	}
 	
 	private static Map<String, String[]> parameterMapFor(String queryString) {
-		Map<String, String[]> parameterMap = new HashMap<String, String[]>();
+		Map<String, String[]> parameterMap = new HashMap<>();
 		String[] queryParams = queryString.split("&");
 		for (String param : queryParams) {
 			String[] kvp = param.split("=");
