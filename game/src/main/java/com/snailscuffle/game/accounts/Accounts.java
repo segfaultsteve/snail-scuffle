@@ -8,9 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,26 +48,29 @@ public class Accounts implements Closeable {
 	}
 	
 	private void initDb() throws SQLException {
-		String createAccountsTableSql = "CREATE TABLE accounts ("
-				+ "ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
-				+ "username TEXT NOT NULL CHECK (length(username) > 0), "
-				+ "public_key TEXT NOT NULL CHECK (length(public_key) > 0), "
-				+ "wins INTEGER NOT NULL CHECK (wins >= 0) DEFAULT 0, "
-				+ "losses INTEGER NOT NULL CHECK (losses >= 0) DEFAULT 0, "
-				+ "streak INTEGER NOT NULL DEFAULT 0, "		// positive for winning streak, negative for losing streak
-				+ "rating REAL NOT NULL"
+		String createAccountsTableSql =
+				  "CREATE TABLE accounts ("
+				+ 	"ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
+				+ 	"username TEXT NOT NULL CHECK (length(username) > 0), "
+				+ 	"public_key TEXT NOT NULL CHECK (length(public_key) > 0), "
+				+ 	"wins INTEGER NOT NULL CHECK (wins >= 0) DEFAULT 0, "
+				+ 	"losses INTEGER NOT NULL CHECK (losses >= 0) DEFAULT 0, "
+				+ 	"streak INTEGER NOT NULL DEFAULT 0, "		// positive for winning streak, negative for losing streak
+				+ 	"rating REAL NOT NULL"
 				+ ");";
 		
-		String createSnapshotsTableSql = "CREATE TABLE snapshots ("
-				+ "table_name TEXT PRIMARY KEY NOT NULL, "
-				+ "sync_height INTEGER NOT NULL, "
-				+ "sync_block_id TEXT NOT NULL"
+		String createSnapshotsTableSql =
+				  "CREATE TABLE snapshots ("
+				+ 	"table_name TEXT PRIMARY KEY NOT NULL, "
+				+ 	"sync_height INTEGER NOT NULL, "
+				+ 	"sync_block_id TEXT NOT NULL"
 				+ ");";
 		
-		String updateSnapshotsTableSql = "INSERT INTO snapshots VALUES ("
-				+ "'accounts', "
-				+ Constants.INITIAL_SYNC_HEIGHT + ", "
-				+ "'" + Long.toUnsignedString(Constants.INITIAL_SYNC_BLOCK_ID) + "'"
+		String updateSnapshotsTableSql =
+				  "INSERT INTO snapshots VALUES ("
+				+ 	"'accounts', "
+				+ 	Constants.INITIAL_SYNC_HEIGHT + ", "
+				+ 	"'" + Long.toUnsignedString(Constants.INITIAL_SYNC_BLOCK_ID) + "'"
 				+ ")";
 		
 		sqlite.setAutoCommit(false);
@@ -84,7 +87,8 @@ public class Accounts implements Closeable {
 	}
 	
 	public void insertOrUpdate(Account account) throws AccountsException {
-		String upsertAccountSql = "INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, ?) "
+		String upsertAccountSql =
+				  "INSERT INTO accounts VALUES (?, ?, ?, ?, ?, ?, ?) "
 				+ "ON CONFLICT (ardor_account_id) DO UPDATE SET "
 				+ 	"username=excluded.username,"
 				+ 	"wins=excluded.wins,"
@@ -108,10 +112,10 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public Account getById(String id) throws AccountsException {
+	public Account getById(long id) throws AccountsException {
 		String getAccountSql = "SELECT * FROM accounts WHERE ardor_account_id LIKE ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
-			getAccount.setString(1, id);
+			getAccount.setLong(1, id);
 			return executeQueryForAccount(getAccount);
 		} catch (SQLException e) {
 			String error = "Database error while attempting to retrieve account " + id;
@@ -172,9 +176,25 @@ public class Accounts implements Closeable {
 		}
 	}
 	
+	public void updateSyncHeight(long height, long blockId) throws AccountsException {
+		String updateHeightSql =
+				  "UPDATE snapshots "
+				+ "SET sync_height = " + height + ", sync_block_id = '" + Long.toUnsignedString(blockId) + "' "
+				+ "WHERE table_name = 'accounts';";
+		
+		try (Statement statement = sqlite.createStatement()) {
+			statement.executeUpdate(updateHeightSql);
+		} catch (SQLException e) {
+			String error = "Database error while attempting to update sync height";
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
 	public void takeSnapshot(String nameSuffix) throws AccountsException {
 		String createSnapshotSql = "CREATE TABLE accounts_" + nameSuffix + " AS SELECT * FROM accounts;";
-		String updateSnapshotsTableSql = "INSERT INTO snapshots (table_name, sync_height, sync_block_id) "
+		String updateSnapshotsTableSql =
+				  "INSERT INTO snapshots "
 				+ "SELECT 'accounts_" + nameSuffix + "', sync_height, sync_block_id "
 				+ "FROM snapshots WHERE table_name='accounts';";
 		String countSnapshotsSql = "SELECT COUNT(*) FROM snapshots;";
@@ -206,13 +226,11 @@ public class Accounts implements Closeable {
 	}
 	
 	private static void deleteOldSnapshots(int count, Statement statement) throws SQLException, AccountsException {
-		String snapshotToDeleteSql = "SELECT table_name FROM snapshots ORDER BY rowid LIMIT " + count + " OFFSET 1;";
-		ResultSet result = statement.executeQuery(snapshotToDeleteSql);
+		String snapshotsToDeleteSql = "SELECT table_name FROM snapshots ORDER BY rowid LIMIT " + count + " OFFSET 1;";
+		ResultSet result = statement.executeQuery(snapshotsToDeleteSql);
 		int deleted = 0;
 		while (result.next()) {
-			String snapshotToDelete = result.getString("table_name");
-			statement.executeUpdate("DROP TABLE " + snapshotToDelete + ";");
-			statement.executeUpdate("DELETE FROM snapshots WHERE table_name='" + snapshotToDelete + "';");
+			deleteSnapshot(result.getString("table_name"), statement);
 			++deleted;
 		}
 		if (deleted != count) {
@@ -221,23 +239,101 @@ public class Accounts implements Closeable {
 	}
 	
 	public Map<String, AccountsSnapshot> getAllSnapshots() throws AccountsException {
-		Map<String, AccountsSnapshot> snapshots = new HashMap<>();
 		String getSnapshotsSql = "SELECT * FROM snapshots";
 		try (Statement statement = sqlite.createStatement()) {
 			ResultSet result = statement.executeQuery(getSnapshotsSql);
-			while (result.next()) {
-				String name = result.getString("table_name");
-				long syncHeight = result.getLong("sync_height");
-				String syncBlockId = result.getString("sync_block_id");
-				AccountsSnapshot snapshot = new AccountsSnapshot(name, syncHeight, Long.parseUnsignedLong(syncBlockId));
-				snapshots.put(snapshot.name, snapshot);
-			}
+			return extractSnapshots(result).stream().collect(Collectors.toMap(s -> s.name, s -> s));
 		} catch (SQLException e) {
 			String error = "Database error while getting accounts snapshots";
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
+	}
+	
+	public long rollBack(long height) throws AccountsException {
+		String snapshotsToDeleteSql = "SELECT * FROM snapshots WHERE sync_height > " + height + ";";
+		
+		try {
+			sqlite.setAutoCommit(false);
+			try (Statement statement = sqlite.createStatement()) {
+				ResultSet result = statement.executeQuery(snapshotsToDeleteSql);
+				boolean accountsCleared = deleteSnapshots(extractSnapshots(result), statement);
+				
+				AccountsSnapshot mostRecent = getMostRecentSnapshot();
+				if (accountsCleared && mostRecent.height > Constants.INITIAL_SYNC_HEIGHT) {
+					restoreSnapshot(mostRecent, statement);
+				}
+				
+				return mostRecent.height;
+			} catch (SQLException e) {
+				sqlite.rollback();
+				throw e;
+			} finally {
+				sqlite.setAutoCommit(true);
+			}
+		} catch (SQLException e) {
+			String error = "Database error while rolling back snapshots";
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
+	private static boolean deleteSnapshots(List<AccountsSnapshot> snapshots, Statement statement) throws SQLException {
+		String deleteAccountsTableSql = "DELETE FROM accounts;";
+		String resetAccountsHeightSql =
+				  "UPDATE snapshots SET "
+				+ 	"sync_height = " + Constants.INITIAL_SYNC_HEIGHT + ", "
+				+ 	"sync_block_id = '" + Long.toUnsignedString(Constants.INITIAL_SYNC_BLOCK_ID) + "' "
+				+ "WHERE table_name = 'accounts';";
+		
+		boolean accountsCleared = false;
+		for (AccountsSnapshot snapshot : snapshots) {
+			if (snapshot.name.equals("accounts")) {
+				statement.executeUpdate(deleteAccountsTableSql);
+				statement.executeUpdate(resetAccountsHeightSql);
+				accountsCleared = true;
+			} else {
+				deleteSnapshot(snapshot.name, statement);
+			}
+		}
+		return accountsCleared;
+	}
+	
+	private static void deleteSnapshot(String name, Statement statement) throws SQLException {
+		statement.executeUpdate("DROP TABLE " + name + ";");
+		statement.executeUpdate("DELETE FROM snapshots WHERE table_name='" + name + "';");
+	}
+	
+	private AccountsSnapshot getMostRecentSnapshot() throws SQLException {
+		String mostRecentRemainingSnapshotSql = "SELECT * FROM snapshots ORDER BY sync_height DESC LIMIT 1;";
+		
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(mostRecentRemainingSnapshotSql);
+			return extractSnapshots(result).get(0);
+		}
+	}
+	
+	private static List<AccountsSnapshot> extractSnapshots(ResultSet queryResult) throws SQLException {
+		List<AccountsSnapshot> snapshots = new ArrayList<>();
+		while (queryResult.next()) {
+			String name = queryResult.getString("table_name");
+			long syncHeight = queryResult.getLong("sync_height");
+			String syncBlockId = queryResult.getString("sync_block_id");
+			snapshots.add(new AccountsSnapshot(name, syncHeight, Long.parseUnsignedLong(syncBlockId)));
+		}
 		return snapshots;
+	}
+	
+	private static void restoreSnapshot(AccountsSnapshot snapshot, Statement statement) throws SQLException {
+		String copyIntoAccountsSql = "INSERT INTO accounts SELECT * FROM " + snapshot.name + ";";
+		String updateSnapshotsSql =
+				  "UPDATE snapshots SET "
+				+ 	"sync_height = " + snapshot.height + ", "
+				+ 	"sync_block_id = '" + Long.toUnsignedString(snapshot.blockId) + "' "
+				+ "WHERE table_name = 'accounts';";
+		
+		statement.executeUpdate(copyIntoAccountsSql);
+		statement.executeUpdate(updateSnapshotsSql);
 	}
 	
 	@Override

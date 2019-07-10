@@ -22,7 +22,8 @@ public class BlockchainSubsystem implements Closeable {
 	}
 	
 	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException {
-		Account account = accounts.getById(id);
+		long numericId = Long.parseUnsignedLong(id);	// for now, assume 64-bit integer form
+		Account account = accounts.getById(numericId);
 		account.balance = ignisNode.getBalanceOf(account.numericId());
 		return account;
 	}
