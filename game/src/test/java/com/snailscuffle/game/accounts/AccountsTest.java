@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.util.Map;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,12 +22,12 @@ public class AccountsTest {
 	
 	@Test
 	public void initializeSnapshotTable() throws AccountsException {
-		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		assertEquals(1, snapshots.size());
-		assertEquals("accounts", snapshots.get("accounts").name);
-		assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshots.get("accounts").height);
-		assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, snapshots.get("accounts").blockId);
+		assertEquals("accounts", snapshots.get(0).name);
+		assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshots.get(0).height);
+		assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, snapshots.get(0).blockId);
 	}
 	
 	@Test
@@ -104,12 +104,12 @@ public class AccountsTest {
 	@Test
 	public void takeSnapshot() throws AccountsException {
 		accounts.takeSnapshot("test");
-		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		assertEquals(2, snapshots.size());
-		assertEquals("accounts", snapshots.get("accounts").name);
-		assertEquals("accounts_test", snapshots.get("accounts_test").name);
-		for (AccountsSnapshot snapshot : snapshots.values()) {
+		assertEquals("accounts", snapshots.get(0).name);
+		assertEquals("accounts_test", snapshots.get(1).name);
+		for (AccountsSnapshot snapshot : snapshots) {
 			assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshot.height);
 			assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, snapshot.blockId);
 		}
@@ -119,18 +119,18 @@ public class AccountsTest {
 	public void deleteOldSnapshots() throws AccountsException {
 		accounts = new Accounts(":memory:", 3);		// keep only the three most recent snapshots
 		
-		accounts.takeSnapshot("1");
-		accounts.takeSnapshot("2");
-		accounts.takeSnapshot("3");
-		accounts.takeSnapshot("4");
-		accounts.takeSnapshot("5");
-		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+		for (int i = 0; i < 5; i++) {
+			accounts.updateSyncHeight(++currentHeight, 0);
+			accounts.takeSnapshot(String.valueOf(i + 1));
+		}
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
-		assertEquals(4, snapshots.size());
-		assertEquals("accounts", snapshots.get("accounts").name);
-		assertEquals("accounts_3", snapshots.get("accounts_3").name);
-		assertEquals("accounts_4", snapshots.get("accounts_4").name);
-		assertEquals("accounts_5", snapshots.get("accounts_5").name);
+		String[] expectedNames = new String[] { "accounts", "accounts_5", "accounts_4", "accounts_3" };
+		assertEquals(expectedNames.length, snapshots.size());
+		for (int i = 0; i < expectedNames.length; i++) {
+			assertEquals(expectedNames[i], snapshots.get(i).name);
+		}
 	}
 	
 	@Test
@@ -147,14 +147,14 @@ public class AccountsTest {
 		
 		long rollbackHeight = accounts.rollBack(currentHeight);
 		Account retrieved = accounts.getById(account.numericId());
-		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		// Rolling back to the current height is a no-op, so the retrieved data for this
 		// account should match the current state.
 		assertEquals(account.wins, retrieved.wins);
 		assertEquals(2, snapshots.size());		// "accounts" and "accounts_1"
 		assertEquals(currentHeight, rollbackHeight);
-		assertEquals(currentHeight, snapshots.get("accounts").height);
+		assertEquals(currentHeight, snapshots.get(0).height);
 	}
 	
 	@Test
@@ -172,12 +172,12 @@ public class AccountsTest {
 		
 		long rollbackHeight = accounts.rollBack(currentHeight -= rollbackDepth);
 		Account retrieved = accounts.getById(account.numericId());
-		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		assertEquals(account.wins - rollbackDepth, retrieved.wins);
 		assertEquals(2, snapshots.size());
 		assertEquals(currentHeight, rollbackHeight);
-		assertEquals(currentHeight, snapshots.get("accounts").height);
+		assertEquals(currentHeight, snapshots.get(0).height);
 	}
 	
 	@Test
@@ -189,11 +189,11 @@ public class AccountsTest {
 		}
 		
 		long rollbackHeight = accounts.rollBack(Constants.INITIAL_SYNC_HEIGHT);
-		Map<String, AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		assertEquals(1, snapshots.size());
 		assertEquals(Constants.INITIAL_SYNC_HEIGHT, rollbackHeight);
-		assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshots.get("accounts").height);
+		assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshots.get(0).height);
 	}
 	
 	@Test

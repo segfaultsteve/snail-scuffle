@@ -9,8 +9,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,6 +174,18 @@ public class Accounts implements Closeable {
 		}
 	}
 	
+	public long getSyncHeight() throws AccountsException {
+		String getHeightSql = "SELECT height FROM snapshots WHERE table_name = 'accounts'";
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(getHeightSql);
+			return result.getLong("table_name");
+		} catch (SQLException e) {
+			String error = "Database error while attempting to update sync height";
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
 	public void updateSyncHeight(long height, long blockId) throws AccountsException {
 		String updateHeightSql =
 				  "UPDATE snapshots "
@@ -238,11 +248,11 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public Map<String, AccountsSnapshot> getAllSnapshots() throws AccountsException {
-		String getSnapshotsSql = "SELECT * FROM snapshots";
+	public List<AccountsSnapshot> getAllSnapshots() throws AccountsException {
+		String getSnapshotsSql = "SELECT * FROM snapshots ORDER BY sync_height DESC";
 		try (Statement statement = sqlite.createStatement()) {
 			ResultSet result = statement.executeQuery(getSnapshotsSql);
-			return extractSnapshots(result).stream().collect(Collectors.toMap(s -> s.name, s -> s));
+			return extractSnapshots(result);
 		} catch (SQLException e) {
 			String error = "Database error while getting accounts snapshots";
 			logger.error(error, e);
