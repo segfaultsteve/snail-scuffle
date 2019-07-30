@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,9 +38,9 @@ public class AccountsServletTest {
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-		when(mockIgnisNode.getBalanceOf(ACCOUNT1.numericId())).thenReturn(ACCOUNT1.balance);
-		when(mockIgnisNode.getBalanceOf(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
-		when(mockIgnisNode.getBalanceOf(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
+		when(mockIgnisNode.getBalance(ACCOUNT1.numericId())).thenReturn(ACCOUNT1.balance);
+		when(mockIgnisNode.getBalance(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
+		when(mockIgnisNode.getBalance(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
 		
 		accounts = new Accounts(":memory:", Constants.MAX_SNAPSHOT_COUNT);
 		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts);
@@ -47,7 +48,7 @@ public class AccountsServletTest {
 
 	@Test
 	public void getAccountById() throws Exception {
-		accounts.insertOrUpdate(ACCOUNT1);
+		accounts.insertOrUpdate(Arrays.asList(ACCOUNT1), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		
 		String response = sendGetRequest("id=" + ACCOUNT1.id);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
@@ -57,7 +58,7 @@ public class AccountsServletTest {
 	
 	@Test
 	public void getAccountByUsername() throws Exception {
-		accounts.insertOrUpdate(ACCOUNT1);
+		accounts.insertOrUpdate(Arrays.asList(ACCOUNT1), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		
 		String response = sendGetRequest("player=" + ACCOUNT1.username);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
@@ -68,9 +69,7 @@ public class AccountsServletTest {
 	@Test
 	public void determineCorrectRanking() throws Exception {
 		// insertion order shouldn't matter
-		accounts.insertOrUpdate(ACCOUNT3);
-		accounts.insertOrUpdate(ACCOUNT1);
-		accounts.insertOrUpdate(ACCOUNT2);
+		accounts.insertOrUpdate(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		
 		int rank1 = getRank(ACCOUNT1);
 		int rank2 = getRank(ACCOUNT2);

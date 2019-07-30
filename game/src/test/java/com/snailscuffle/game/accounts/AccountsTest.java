@@ -3,7 +3,9 @@ package com.snailscuffle.game.accounts;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -33,7 +35,7 @@ public class AccountsTest {
 	@Test
 	public void storeAndRetrieveAccount() throws AccountsException {
 		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
-		accounts.insertOrUpdate(storedAccount);
+		accounts.insertOrUpdate(Arrays.asList(storedAccount), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		Account retrievedAccount = accounts.getById(storedAccount.numericId());
 		
 		assertEquals(storedAccount.id, retrievedAccount.id);
@@ -50,12 +52,12 @@ public class AccountsTest {
 	@Test
 	public void updateAccount() throws AccountsException {
 		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
-		accounts.insertOrUpdate(storedAccount);
+		accounts.insertOrUpdate(Arrays.asList(storedAccount), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		
 		storedAccount.wins++;
 		storedAccount.losses++;
 		storedAccount.streak = -1;
-		accounts.insertOrUpdate(storedAccount);
+		accounts.insertOrUpdate(Arrays.asList(storedAccount), Constants.INITIAL_SYNC_HEIGHT + 2, 1);
 		Account retrievedAccount = accounts.getById(storedAccount.numericId());
 		
 		assertEquals(storedAccount.wins, retrievedAccount.wins);
@@ -70,9 +72,7 @@ public class AccountsTest {
 		Account account3 = new Account(3, "account3", "pubkey3", 0, 3, -3, 700);
 		
 		// insertion order shouldn't matter
-		accounts.insertOrUpdate(account3);
-		accounts.insertOrUpdate(account1);
-		accounts.insertOrUpdate(account2);
+		accounts.insertOrUpdate(Arrays.asList(account3, account1, account2), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		
 		int rank1 = accounts.getById(account1.numericId()).rank;
 		int rank2 = accounts.getById(account2.numericId()).rank;
@@ -88,9 +88,7 @@ public class AccountsTest {
 		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1500);
 		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 300);
-		accounts.insertOrUpdate(tiedForFirst);
-		accounts.insertOrUpdate(alsoTiedForFirst);
-		accounts.insertOrUpdate(third);
+		accounts.insertOrUpdate(Arrays.asList(tiedForFirst, alsoTiedForFirst, third), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
 		
 		int rank1 = accounts.getById(tiedForFirst.numericId()).rank;
 		int rank2 = accounts.getById(alsoTiedForFirst.numericId()).rank;
@@ -116,6 +114,20 @@ public class AccountsTest {
 	}
 	
 	@Test
+	public void orderSnapshotsByHeight() throws AccountsException {
+		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+		for (int i = 0; i < 5; i++) {
+			accounts.takeSnapshot(String.valueOf(i + 1));
+			accounts.updateSyncHeight(++currentHeight, 0);
+		}
+		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		
+		for (int i = 1; i < snapshots.size(); i++) {
+			assertTrue(snapshots.get(i - 1).height > snapshots.get(i).height);
+		}
+	}
+	
+	@Test
 	public void deleteOldSnapshots() throws AccountsException {
 		accounts = new Accounts(":memory:", 3);		// keep only the three most recent snapshots
 		
@@ -134,18 +146,16 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void rollBackToCurrentHeight() throws AccountsException {
+	public void rollBackTocurrentHeight() throws AccountsException {
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
 		Account account = new Account(1, "account1", "pubkey1", 0, 0, 0, 1000);
-		accounts.insertOrUpdate(account);
-		accounts.updateSyncHeight(++currentHeight, 0);
+		accounts.insertOrUpdate(Arrays.asList(account), ++currentHeight, 0);
 		accounts.takeSnapshot("1");
 		
 		account.wins++;
-		accounts.insertOrUpdate(account);
-		accounts.updateSyncHeight(++currentHeight, 0);
+		accounts.insertOrUpdate(Arrays.asList(account), ++currentHeight, 0);
 		
-		long rollbackHeight = accounts.rollBack(currentHeight);
+		int rollbackHeight = accounts.rollBackTo(currentHeight);
 		Account retrieved = accounts.getById(account.numericId());
 		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
@@ -165,12 +175,11 @@ public class AccountsTest {
 		
 		for (int i = 1; i <= rollbackDepth + 1; i++) {
 			account.wins++;
-			accounts.insertOrUpdate(account);
-			accounts.updateSyncHeight(++currentHeight, 0);
+			accounts.insertOrUpdate(Arrays.asList(account), ++currentHeight, 0);
 			accounts.takeSnapshot(String.valueOf(i));
 		}
 		
-		long rollbackHeight = accounts.rollBack(currentHeight -= rollbackDepth);
+		int rollbackHeight = accounts.rollBackTo(currentHeight -= rollbackDepth);
 		Account retrieved = accounts.getById(account.numericId());
 		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
@@ -188,7 +197,7 @@ public class AccountsTest {
 			accounts.takeSnapshot(String.valueOf(i));
 		}
 		
-		long rollbackHeight = accounts.rollBack(Constants.INITIAL_SYNC_HEIGHT);
+		int rollbackHeight = accounts.rollBackTo(Constants.INITIAL_SYNC_HEIGHT);
 		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
 		assertEquals(1, snapshots.size());
@@ -202,14 +211,12 @@ public class AccountsTest {
 		Account account1 = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		Account account2 = new Account(2, "account2", "pubkey2", 2, 2, 1, 1000);
 		
-		accounts.insertOrUpdate(account1);
-		accounts.updateSyncHeight(++currentHeight, 0);
+		accounts.insertOrUpdate(Arrays.asList(account1), ++currentHeight, 0);
 		accounts.takeSnapshot("1");
-		accounts.insertOrUpdate(account2);
-		accounts.updateSyncHeight(++currentHeight, 0);
+		accounts.insertOrUpdate(Arrays.asList(account2), ++currentHeight, 0);
 		
 		Account account2BeforeRollback = getAccountOrNull(account2.numericId());
-		accounts.rollBack(--currentHeight);
+		accounts.rollBackTo(--currentHeight);
 		Account account2AfterRollback = getAccountOrNull(account2.numericId());
 		
 		assertNotNull(account2BeforeRollback);

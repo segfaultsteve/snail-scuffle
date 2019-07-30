@@ -54,7 +54,7 @@ class Main {
 					int winnerFound = -1;
 					while (winnerFound < 0) {
 						if (simulatorSettings.goOverNetwork) {
-							BattleConfig battleConfig = new BattleConfig(battlePlans.toArray(new BattlePlan[0]));
+							BattleConfig battleConfig = new BattleConfig(battlePlans, 0);
 							jsonToSend = JsonUtil.serialize(battleConfig);
 							response = httpClient.postMessage(urlToConnectTo, jsonToSend);
 							result = JsonUtil.deserialize(BattleResult.class, response);
@@ -63,7 +63,7 @@ class Main {
 							battlePlans.addAll(Arrays.asList(generatedBattlePlans.get(i), generatedBattlePlans.get(j)));
 						} else {
 							// For now just keep sending the same one
-							BattleConfig battleConfig = new BattleConfig(battlePlans.toArray(new BattlePlan[0]));
+							BattleConfig battleConfig = new BattleConfig(battlePlans, 0);
 							result = (new Battle(battleConfig)).getResult();
 							battleResults.add(result);
 							winnerFound = result.winnerIndex;

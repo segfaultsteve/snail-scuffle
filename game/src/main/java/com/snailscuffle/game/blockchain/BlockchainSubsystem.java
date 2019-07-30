@@ -19,18 +19,19 @@ public class BlockchainSubsystem implements Closeable {
 	public BlockchainSubsystem(IgnisArchivalNodeConnection node, Accounts accounts) {
 		ignisNode = node;
 		this.accounts = accounts;
+		(new BlockchainSyncThread(ignisNode, accounts)).start();
 	}
 	
-	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException {
+	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException, InterruptedException {
 		long numericId = Long.parseUnsignedLong(id);	// for now, assume 64-bit integer form
 		Account account = accounts.getById(numericId);
-		account.balance = ignisNode.getBalanceOf(account.numericId());
+		account.balance = ignisNode.getBalance(account.numericId());
 		return account;
 	}
 	
-	public Account getAccountByUsername(String username) throws AccountsException, BlockchainSubsystemException {
+	public Account getAccountByUsername(String username) throws AccountsException, BlockchainSubsystemException, InterruptedException {
 		Account account = accounts.getByUsername(username);
-		account.balance = ignisNode.getBalanceOf(account.numericId());
+		account.balance = ignisNode.getBalance(account.numericId());
 		return account;
 	}
 
@@ -38,5 +39,5 @@ public class BlockchainSubsystem implements Closeable {
 	public void close() {
 		ignisNode.close();
 	}
-
+	
 }

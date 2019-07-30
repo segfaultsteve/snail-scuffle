@@ -2,6 +2,9 @@ package com.snailscuffle.common.battle;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,7 +17,7 @@ public class BattleConfigTest {
 		BattlePlan bp = new BattlePlan();
 		bp.snail = Snail.DALE;
 		bp.weapon = Weapon.RIFLE;
-		config = new BattleConfig(bp, bp);
+		config = new BattleConfig(Arrays.asList(bp, bp), 0);
 	}
 	
 	@Test
@@ -25,19 +28,25 @@ public class BattleConfigTest {
 	
 	@Test
 	public void failValidationOnEmptyBattlePlans() {
-		config.battlePlans = new BattlePlan[2];
+		config.battlePlans = new ArrayList<BattlePlan>();
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	
 	@Test
 	public void failValidationOnSingleBattlePlan() {
-		config.battlePlans[1] = null;
+		config.battlePlans.remove(1);
+		assertValidateThrowsInvalidBattleException(config);
+	}
+	
+	@Test
+	public void failValidationOnNullBattlePlan() {
+		config.battlePlans.set(1, null);
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	
 	@Test
 	public void failValidationOnInvalidBattlePlan() {
-		config.battlePlans[0].snail = null;
+		config.battlePlans.get(0).snail = null;
 		assertValidateThrowsInvalidBattleException(config);
 	}
 	

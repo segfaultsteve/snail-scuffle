@@ -28,7 +28,7 @@ public class IgnisArchivalNodeConnectionTest {
 	}
 	
 	@Test
-	public void getAccountBalance() throws Exception {
+	public void getAccountBalance() throws BlockchainSubsystemException, InterruptedException {
 		int accountId = 123;
 		double expectedBalance = 1234.5678;
 		String expectedBalanceNQT = new BigDecimal(expectedBalance).multiply(NQT_PER_IGNIS).toString();
@@ -40,7 +40,7 @@ public class IgnisArchivalNodeConnectionTest {
 				+ "}";
 		setGETResponse(requestUrl, responseJson);
 		
-		double returnedBalance = ignisNode.getBalanceOf(accountId);
+		double returnedBalance = ignisNode.getBalance(accountId);
 		
 		assertEquals(expectedBalance, returnedBalance, 0);
 	}

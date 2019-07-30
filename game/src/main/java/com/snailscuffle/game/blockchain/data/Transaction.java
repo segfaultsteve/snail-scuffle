@@ -1,0 +1,53 @@
+package com.snailscuffle.game.blockchain.data;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.snailscuffle.game.blockchain.BlockchainSubsystemException;
+import com.snailscuffle.game.blockchain.BlockchainUtil;
+
+public class Transaction {
+	
+	public final long sender;
+	public final long recipient;
+	public final int height;
+	public final int index;
+	public final String message;
+	
+	public Transaction(long sender, long recipient, int height, int index, String message) {
+		this.sender = sender;
+		this.recipient = recipient;
+		this.height = height;
+		this.index = index;
+		this.message = message;
+	}
+	
+	public Transaction(JsonNode txNode, String apiFunction) throws BlockchainSubsystemException {
+		JsonNode senderNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "sender", apiFunction);
+		JsonNode recipientNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "recipient", apiFunction);
+		JsonNode heightNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "height", apiFunction);
+		JsonNode indexNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "index", apiFunction);
+		
+		JsonNode attachmentNode = txNode.get("attachment");
+		JsonNode messageNode = null;
+		if (attachmentNode != null) {
+			messageNode = attachmentNode.get("message");
+		}
+		
+		sender = BlockchainUtil.parseUnsignedLong(senderNode, apiFunction + " returned invalid sender account ID '" + senderNode.textValue() + "'");
+		recipient = BlockchainUtil.parseUnsignedLong(recipientNode, apiFunction + " returned invalid recipient account ID '" + recipientNode.textValue() + "'");
+		height = heightNode.asInt();
+		index = indexNode.asInt();
+		message = (messageNode == null) ? "" : messageNode.asText();
+	}
+	
+	public static List<Transaction> parseAll(JsonNode txArray, String apiFunction) throws BlockchainSubsystemException {
+		List<Transaction> txs = new ArrayList<>();
+		for (JsonNode txNode : txArray) {
+			txs.add(new Transaction(txNode, apiFunction));
+		}
+		return txs;
+	}
+	
+}

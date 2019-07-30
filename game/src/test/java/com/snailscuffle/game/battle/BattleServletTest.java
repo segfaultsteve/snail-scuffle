@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Arrays;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -39,7 +40,7 @@ public class BattleServletTest {
 		bp.snail = Snail.DALE;
 		bp.weapon = Weapon.ROCKET;
 		bp.validate();
-		BattleConfig config = new BattleConfig(bp, bp, bp, bp, bp, bp);		// three periods
+		BattleConfig config = new BattleConfig(Arrays.asList(bp, bp, bp, bp, bp, bp), 0);	// three periods
 		
 		String response = sendPostRequest(JsonUtil.serialize(config));
 		BattleResult result = JsonUtil.deserialize(BattleResult.class, response);

@@ -24,9 +24,9 @@ public class Battle {
 		Combatant secondMover = (config.firstMover == 0) ? player1 : player0;
 		
 		int periodEnd = PERIOD;
-		for (int bpIndex = 0; bpIndex < config.battlePlans.length && player0.isAlive() && player1.isAlive(); bpIndex += 2) {
-			player0.setBattlePlan(config.battlePlans[bpIndex]);
-			player1.setBattlePlan(config.battlePlans[bpIndex + 1]);
+		for (int bpIndex = 0; bpIndex < config.battlePlans.size() && player0.isAlive() && player1.isAlive(); bpIndex += 2) {
+			player0.setBattlePlan(config.battlePlans.get(bpIndex));
+			player1.setBattlePlan(config.battlePlans.get(bpIndex + 1));
 			
 			int increment = 0;
 			while (time + increment < periodEnd && player0.isAlive() && player1.isAlive()) {
