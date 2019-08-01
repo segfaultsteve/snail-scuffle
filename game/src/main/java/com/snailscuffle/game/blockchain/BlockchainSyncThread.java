@@ -38,6 +38,7 @@ class BlockchainSyncThread extends Thread {
 	}
 	
 	private static final int SYNC_LOOP_PERIOD_MILLIS = 10000;
+	private static final int SYNC_LOOP_BLOCK_COUNT = 10;
 	private static final Logger logger = LoggerFactory.getLogger(BlockchainSyncThread.class);
 	
 	private final SyncAction CONNECT;
@@ -84,17 +85,17 @@ class BlockchainSyncThread extends Thread {
 	
 	private SyncAction validateRecentBlocks(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		try {
-			List<StateChangeFromBattle> stateChangesByHeight = accounts.getAllStateChangesInCache();
-			int lastValidHeight = Constants.INITIAL_SYNC_HEIGHT;
-			for (StateChangeFromBattle stateChange : stateChangesByHeight) {
-				Block observedBlock = ignisNode.getBlockAtHeight(stateChange.height);
-				if (observedBlock.id == stateChange.blockId) {
-					lastValidHeight = stateChange.height;
+			List<BlockSyncInfo> recentBlocks = accounts.getSyncInfoFromRecentStateChanges();
+			BlockSyncInfo lastValid = new BlockSyncInfo(Constants.INITIAL_SYNC_HEIGHT, Constants.INITIAL_SYNC_BLOCK_ID);
+			for (BlockSyncInfo block : recentBlocks) {
+				Block observedBlock = ignisNode.getBlockAtHeight(block.height);
+				if (observedBlock.id == block.blockId) {
+					lastValid = block;
 					break;
 				}
 			}
 			
-			accounts.rollBackTo(lastValidHeight);
+			accounts.rollBackTo(lastValid.height, lastValid.blockId);
 			
 			return SYNC_FROM_LAST_HEIGHT;
 		} catch (IgnisNodeCommunicationException e) {
@@ -116,7 +117,7 @@ class BlockchainSyncThread extends Thread {
 			
 			// Battles that conclude after lastSyncHeight will be used to update accounts. In
 			// order to catch battles that were in progress at lastSyncHeight, we must backtrack.
-			int lastSyncHeight = accounts.getSyncHeight();
+			int lastSyncHeight = accounts.getSyncState().height;
 			int backtrackHeight = Math.min(lastSyncHeight - Constants.SYNC_BACKTRACK, Constants.INITIAL_SYNC_HEIGHT);
 			
 			for (Account account : playerAccounts) {
@@ -135,7 +136,8 @@ class BlockchainSyncThread extends Thread {
 			if (forkCheck.id == lastBlock.id) {		// make sure there wasn't a fork while we were syncing
 				return CONTINUOUS_SYNC_LOOP;
 			} else {
-				accounts.rollBackTo(lastBlock.height);
+				accounts.rollBackTo(lastBlock.height, lastBlock.id);
+				battlesInProgress.clear();
 				return SYNC_FROM_LAST_HEIGHT;
 			}
 		} catch (IgnisNodeCommunicationException e) {

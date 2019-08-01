@@ -130,4 +130,8 @@ class BattlesInProgress {
 		);
 	}
 	
+	void clear() {
+		battlesById.clear();
+	}
+	
 }

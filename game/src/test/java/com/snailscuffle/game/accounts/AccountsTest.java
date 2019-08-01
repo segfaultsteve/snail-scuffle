@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.snailscuffle.game.Constants;
+import com.snailscuffle.game.blockchain.BlockSyncInfo;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
 import com.snailscuffle.game.ratings.RatingPair;
@@ -130,10 +131,10 @@ public class AccountsTest {
 			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i);
 			accounts.update(Arrays.asList(changes));
 		}
-		List<StateChangeFromBattle> changes = accounts.getAllStateChangesInCache();
+		List<BlockSyncInfo> blocks = accounts.getSyncInfoFromRecentStateChanges();
 		
-		for (int i = 1; i < changes.size(); i++) {
-			assertTrue(changes.get(i - 1).height >= changes.get(i).height);
+		for (int i = 1; i < blocks.size(); i++) {
+			assertTrue(blocks.get(i - 1).height >= blocks.get(i).height);
 		}
 	}
 	
@@ -151,8 +152,8 @@ public class AccountsTest {
 			accounts.update(Arrays.asList(changes));
 		}
 		
-		List<Integer> stateChangeHeights = accounts.getAllStateChangesInCache().stream()
-				.map(c -> c.height)
+		List<Integer> stateChangeHeights = accounts.getSyncInfoFromRecentStateChanges().stream()
+				.map(b -> b.height)
 				.collect(Collectors.toList());
 		List<Integer> expectedStateChangeHeights = Arrays.asList(
 				Constants.INITIAL_SYNC_HEIGHT + 5,
@@ -169,19 +170,20 @@ public class AccountsTest {
 		Account account2 = new Account(2, "account2", "pubkey2");
 		accounts.addIfNotPresent(Arrays.asList(account1, account2));
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+		long currentBlockId = Constants.INITIAL_SYNC_BLOCK_ID;
 		
 		for (int i = 0; i < 5; i++) {
-			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i + 1);
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, ++currentBlockId);
 			accounts.update(Arrays.asList(changes));
 			account1 = accounts.getById(account1.numericId());
 			account2 = accounts.getById(account2.numericId());
 		}
 		List<Account> accountsBeforeRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
 		
-		accounts.rollBackTo(currentHeight);
+		accounts.rollBackTo(currentHeight, currentBlockId);
 		
 		List<Account> accountsAfterRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
-		List<StateChangeFromBattle> changes = accounts.getAllStateChangesInCache();
+		List<BlockSyncInfo> blocks = accounts.getSyncInfoFromRecentStateChanges();
 		
 		// Rolling back to the current height is a no-op, so the retrieved data for
 		// these accounts should match their current states.
@@ -192,9 +194,10 @@ public class AccountsTest {
 			assertEquals(accountsBeforeRollback.get(i).streak, accountsAfterRollback.get(i).streak);
 		}
 		
-		assertEquals(currentHeight, accounts.getSyncHeight());
-		assertEquals(currentHeight, changes.get(0).height);
-		assertEquals(currentHeight - Constants.INITIAL_SYNC_HEIGHT, changes.size());
+		assertEquals(currentHeight, accounts.getSyncState().height);
+		assertEquals(currentBlockId, accounts.getSyncState().blockId);
+		assertEquals(currentHeight, blocks.get(0).height);
+		assertEquals(currentHeight - Constants.INITIAL_SYNC_HEIGHT, blocks.size());
 	}
 	
 	@Test
@@ -204,21 +207,22 @@ public class AccountsTest {
 		accounts.addIfNotPresent(Arrays.asList(account1, account2));
 		
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+		long currentBlockId = Constants.INITIAL_SYNC_BLOCK_ID;
 		int rollbackDepth = 3;
 		
 		for (int i = 0; i <= rollbackDepth; i++) {
-			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i + 1);
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, ++currentBlockId);
 			accounts.update(Arrays.asList(changes));
 			account1 = accounts.getById(account1.numericId());
 			account2 = accounts.getById(account2.numericId());
 		}
 		
 		// Roll back to a state that includes only the first battle.
-		accounts.rollBackTo(currentHeight -= rollbackDepth);
+		accounts.rollBackTo(currentHeight -= rollbackDepth, currentBlockId -= rollbackDepth);
 		
 		Account account1AfterRollback = accounts.getById(account1.numericId());
 		Account account2AfterRollback = accounts.getById(account2.numericId());
-		List<StateChangeFromBattle> stateChanges = accounts.getAllStateChangesInCache();
+		List<BlockSyncInfo> blocks = accounts.getSyncInfoFromRecentStateChanges();
 		
 		assertEquals(1, account1AfterRollback.wins);
 		assertEquals(0, account1AfterRollback.losses);
@@ -230,9 +234,10 @@ public class AccountsTest {
 		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, account2AfterRollback.rating);
 		assertEquals(-1, account2AfterRollback.streak);
 		
-		assertEquals(currentHeight, accounts.getSyncHeight());
-		assertEquals(currentHeight, stateChanges.get(0).height);
-		assertEquals(1, stateChanges.size());
+		assertEquals(currentHeight, accounts.getSyncState().height);
+		assertEquals(currentBlockId, accounts.getSyncState().blockId);
+		assertEquals(currentHeight, blocks.get(0).height);
+		assertEquals(1, blocks.size());
 	}
 	
 	@Test
@@ -249,7 +254,7 @@ public class AccountsTest {
 			account2 = accounts.getById(account2.numericId());
 		}
 		
-		accounts.rollBackTo(Constants.INITIAL_SYNC_HEIGHT);
+		accounts.rollBackTo(Constants.INITIAL_SYNC_HEIGHT, Constants.INITIAL_SYNC_BLOCK_ID);
 		
 		List<Account> accountsAfterRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
 		for (Account account : accountsAfterRollback) {
@@ -258,8 +263,9 @@ public class AccountsTest {
 			assertEquals(1000, account.rating);
 			assertEquals(0, account.streak);
 		}
-		assertEquals(Constants.INITIAL_SYNC_HEIGHT, accounts.getSyncHeight());
-		assertEquals(0, accounts.getAllStateChangesInCache().size());
+		assertEquals(Constants.INITIAL_SYNC_HEIGHT, accounts.getSyncState().height);
+		assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, accounts.getSyncState().blockId);
+		assertEquals(0, accounts.getSyncInfoFromRecentStateChanges().size());
 	}
 	
 	private static StateChangeFromBattle changesFromBattle(Account winner, Account loser, int height, long blockId) {

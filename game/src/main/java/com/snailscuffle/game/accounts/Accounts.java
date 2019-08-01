@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.snailscuffle.game.Constants;
+import com.snailscuffle.game.blockchain.BlockSyncInfo;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
 
@@ -32,7 +33,10 @@ public class Accounts implements Closeable {
 		try {
 			String connectionUrl = "jdbc:sqlite:" + dbPath;
 			sqlite = DriverManager.getConnection(connectionUrl);
-			initDb();
+			
+			if (!dbPreviouslyInitialized()) {
+				initDb();
+			}
 		} catch (SQLException e) {
 			String error = "Database error while initializing accounts";
 			logger.error(error, e);
@@ -40,9 +44,17 @@ public class Accounts implements Closeable {
 		}
 	}
 	
+	private boolean dbPreviouslyInitialized() throws SQLException {
+		String accountsTableExistsSql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'accounts'";
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(accountsTableExistsSql);
+			return result.next();
+		}
+	}
+	
 	private void initDb() throws SQLException {
 		String createAccountsTableSql =
-				  "CREATE TABLE IF NOT EXISTS accounts ("
+				  "CREATE TABLE accounts ("
 				+	"ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
 				+	"username TEXT NOT NULL COLLATE NOCASE CHECK (length(username) > 0), "
 				+	"public_key TEXT NOT NULL COLLATE NOCASE CHECK (length(public_key) > 0), "
@@ -53,7 +65,7 @@ public class Accounts implements Closeable {
 				+ ")";
 		
 		String createRecentBattlesTableSql =
-				  "CREATE TABLE IF NOT EXISTS recent_battles ("
+				  "CREATE TABLE recent_battles ("
 				+	"finish_height INTEGER NOT NULL CHECK (finish_height > 0), "
 				+	"finish_block_id INTEGER NOT NULL, "
 				+	"winner_id INTEGER NOT NULL, "
@@ -68,10 +80,20 @@ public class Accounts implements Closeable {
 				+	"loser_updated_streak INTEGER NOT NULL "
 				+ ")";
 		
+		String createSyncStateTableSql =
+				  "CREATE TABLE sync_state ("
+				+	"height INTEGER NOT NULL CHECK (height > 0), "
+				+	"block_id INTEGER NOT NULL"
+				+ ")";
+		
+		String initSyncStateSql = "INSERT INTO sync_state VALUES (" + Constants.INITIAL_SYNC_HEIGHT + ", " + Constants.INITIAL_SYNC_BLOCK_ID + ")";
+		
 		sqlite.setAutoCommit(false);
 		try (Statement statement = sqlite.createStatement()) {
 			statement.executeUpdate(createAccountsTableSql);
 			statement.executeUpdate(createRecentBattlesTableSql);
+			statement.executeUpdate(createSyncStateTableSql);
+			statement.executeUpdate(initSyncStateSql);
 			sqlite.commit();
 		} catch (SQLException e) {
 			sqlite.rollback();
@@ -128,12 +150,22 @@ public class Accounts implements Closeable {
 			sqlite.setAutoCommit(false);
 			try {
 				int currentHeight = 0;
+				long currentBlockId = 0;
+				
 				for (StateChangeFromBattle change : changes) {
 					updateAccountsTable(change);
 					insertIntoRecentBattlesTable(change);
-					currentHeight = Math.max(currentHeight, change.height);
+					if (change.height > currentHeight && change.blockId > 0) {
+						currentHeight = change.height;
+						currentBlockId = change.blockId;
+					}
 				}
-				purgeBattlesOlderThan(currentHeight - recentBattlesDepth + 1);
+				
+				if (currentHeight > 0) {
+					updateSyncState(currentHeight, currentBlockId);
+					purgeBattlesOlderThan(currentHeight - recentBattlesDepth + 1);
+				}
+				
 				sqlite.commit();
 			} catch (AccountsException | SQLException e) {
 				sqlite.rollback();
@@ -320,35 +352,59 @@ public class Accounts implements Closeable {
 		return matchIndex + 1;
 	}
 	
-	public int getSyncHeight() throws AccountsException {
-		String currentHeightSql = "SELECT finish_height FROM recent_battles ORDER BY finish_height DESC LIMIT 1";
+	public void updateSyncState(int height, long blockId) throws AccountsException {
+		String updateSyncStateSql = "UPDATE sync_state SET height = " + height + ", block_id = " + blockId;
 		try (Statement statement = sqlite.createStatement()) {
-			ResultSet result = statement.executeQuery(currentHeightSql);
-			return result.next() ? result.getInt(1) : Constants.INITIAL_SYNC_HEIGHT;
+			statement.executeUpdate(updateSyncStateSql);
 		} catch (SQLException e) {
-			String error = "Database error while attempting to get current height";
+			String error = "Database error while attempting to update sync state";
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
 	}
 	
-	public List<StateChangeFromBattle> getAllStateChangesInCache() throws AccountsException {
-		String currentHeightSql =
-				  "SELECT * FROM recent_battles "
+	public BlockSyncInfo getSyncState() throws AccountsException {
+		String currentSyncStateSql = "SELECT * FROM sync_state";
+		int height = Constants.INITIAL_SYNC_HEIGHT;
+		long blockId = Constants.INITIAL_SYNC_BLOCK_ID;
+		
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(currentSyncStateSql);
+			if (result.next()) {
+				height = result.getInt("height");
+				blockId = result.getLong("block_id");
+			}
+			return new BlockSyncInfo(height, blockId);
+		} catch (SQLException e) {
+			String error = "Database error while attempting to get current sync state";
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
+	public List<BlockSyncInfo> getSyncInfoFromRecentStateChanges() throws AccountsException {
+		String syncInfoSql =
+				  "SELECT finish_height, finish_block_id FROM recent_battles "
+				+ "WHERE finish_block_id != 0 "
 				+ "ORDER BY finish_height DESC";
 		try (Statement statement = sqlite.createStatement()) {
-			ResultSet result = statement.executeQuery(currentHeightSql);
-			return extractStateChanges(result);
+			ResultSet result = statement.executeQuery(syncInfoSql);
+			List<BlockSyncInfo> syncInfo = new ArrayList<>();
+			while (result.next()) {
+				syncInfo.add(new BlockSyncInfo(result.getInt("finish_height"), result.getLong("finish_block_id")));
+			}
+			return syncInfo;
 		} catch (SQLException e) {
-			String error = "Database error while attempting to get current height";
+			String error = "Database error while attempting to get sync info from recent state changes";
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
 	}
 	
-	public void rollBackTo(int height) throws AccountsException {
+	public void rollBackTo(int height, long blockId) throws AccountsException {
 		String battlesToRollBackSql = "SELECT * FROM recent_battles WHERE finish_height > " + height + " ORDER BY finish_height DESC";
 		String deleteBattlesSql = "DELETE FROM recent_battles WHERE finish_height > " + height;
+		String updateSyncStateSql = "UPDATE sync_state SET height = " + height + ", block_id = " + blockId;
 		
 		try {
 			sqlite.setAutoCommit(false);
@@ -360,6 +416,7 @@ public class Accounts implements Closeable {
 					undoChangesToAccountsTable(change);
 				}
 				statement.executeUpdate(deleteBattlesSql);
+				statement.executeUpdate(updateSyncStateSql);
 				
 				sqlite.commit();
 			} catch (SQLException e) {
