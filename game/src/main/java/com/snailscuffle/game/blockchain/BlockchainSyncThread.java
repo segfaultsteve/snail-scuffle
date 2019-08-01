@@ -84,12 +84,12 @@ class BlockchainSyncThread extends Thread {
 	
 	private SyncAction validateRecentBlocks(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		try {
-			List<Block> cachedBlocksByHeight = accounts.getAllBlocksInCache();
+			List<StateChangeFromBattle> stateChangesByHeight = accounts.getAllStateChangesInCache();
 			int lastValidHeight = Constants.INITIAL_SYNC_HEIGHT;
-			for (Block cachedBlock : cachedBlocksByHeight) {
-				Block observedBlock = ignisNode.getBlockAtHeight(cachedBlock.height);
-				if (observedBlock.id == cachedBlock.id) {
-					lastValidHeight = cachedBlock.height;
+			for (StateChangeFromBattle stateChange : stateChangesByHeight) {
+				Block observedBlock = ignisNode.getBlockAtHeight(stateChange.height);
+				if (observedBlock.id == stateChange.blockId) {
+					lastValidHeight = stateChange.height;
 					break;
 				}
 			}
@@ -131,7 +131,13 @@ class BlockchainSyncThread extends Thread {
 			Collection<StateChangeFromBattle> results = battlesInProgress.runAll(accountsToUpdate, lastSyncHeight, lastBlock.height);
 			accounts.update(results);
 			
-			return CONTINUOUS_SYNC_LOOP;
+			Block forkCheck = ignisNode.getBlockAtHeight(lastBlock.height);
+			if (forkCheck.id == lastBlock.id) {		// make sure there wasn't a fork while we were syncing
+				return CONTINUOUS_SYNC_LOOP;
+			} else {
+				accounts.rollBackTo(lastBlock.height);
+				return SYNC_FROM_LAST_HEIGHT;
+			}
 		} catch (IgnisNodeCommunicationException e) {
 			return CONNECT;
 		} catch (AccountsException | BlockchainSubsystemException e) {
@@ -140,6 +146,25 @@ class BlockchainSyncThread extends Thread {
 		} catch (InterruptedException e) {
 			return ABORT;
 		}
+	}
+	
+	private SyncAction continuousSyncLoop(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
+		try {
+			Thread.sleep(SYNC_LOOP_PERIOD_MILLIS);
+			return CONTINUOUS_SYNC_LOOP;
+		} catch (InterruptedException e) {
+			return ABORT;
+		}
+	}
+	
+	private SyncAction abort() {
+		logger.error("Sync thread interrupted");
+		return EXIT_WITH_ERROR;
+	}
+	
+	private static SyncAction exitWithError() {
+		logger.error("Fatal error; exiting sync thread");
+		return null;
 	}
 	
 	private static List<OnChain<? extends BattlePlanMessage>> parseBattlePlanMessages(List<Transaction> transactions, long sender) {
@@ -171,25 +196,6 @@ class BlockchainSyncThread extends Thread {
 	private static <T> OnChain<T> parseMessage(Class<T> type, Transaction tx) throws IOException {
 		T message = JsonUtil.deserialize(type, tx.message);
 		return new OnChain<>(tx.blockId, tx.height, tx.index, tx.sender, tx.recipient, message);
-	}
-	
-	private SyncAction continuousSyncLoop(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
-		try {
-			Thread.sleep(SYNC_LOOP_PERIOD_MILLIS);
-			return CONTINUOUS_SYNC_LOOP;
-		} catch (InterruptedException e) {
-			return ABORT;
-		}
-	}
-	
-	private SyncAction abort() {
-		logger.error("Sync thread interrupted");
-		return EXIT_WITH_ERROR;
-	}
-	
-	private static SyncAction exitWithError() {
-		logger.error("Fatal error; exiting sync thread");
-		return null;
 	}
 	
 }

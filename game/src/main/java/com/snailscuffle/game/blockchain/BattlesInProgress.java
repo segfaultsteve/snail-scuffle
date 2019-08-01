@@ -32,7 +32,7 @@ class BattlesInProgress {
 	private static class FinishHeightComparator implements Comparator<StateChangeFromBattle> {
 		@Override
 		public int compare(StateChangeFromBattle c1, StateChangeFromBattle c2) {
-			return c1.finishHeight - c2.finishHeight;
+			return c1.height - c2.height;
 		}
 	}
 	

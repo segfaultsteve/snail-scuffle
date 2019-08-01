@@ -13,7 +13,6 @@ import org.junit.Test;
 import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
-import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.ratings.RatingPair;
 import com.snailscuffle.game.ratings.Ratings;
 
@@ -121,7 +120,7 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void orderCachedBlocksByHeight() throws AccountsException {
+	public void orderStateChangesByHeight() throws AccountsException {
 		Account account1 = new Account(1, "account1", "pubkey1");
 		Account account2 = new Account(2, "account2", "pubkey2");
 		accounts.addIfNotPresent(Arrays.asList(account1, account2));
@@ -131,10 +130,10 @@ public class AccountsTest {
 			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i);
 			accounts.update(Arrays.asList(changes));
 		}
-		List<Block> blocks = accounts.getAllBlocksInCache();
+		List<StateChangeFromBattle> changes = accounts.getAllStateChangesInCache();
 		
-		for (int i = 1; i < blocks.size(); i++) {
-			assertTrue(blocks.get(i - 1).height > blocks.get(i).height);
+		for (int i = 1; i < changes.size(); i++) {
+			assertTrue(changes.get(i - 1).height >= changes.get(i).height);
 		}
 	}
 	
@@ -152,16 +151,16 @@ public class AccountsTest {
 			accounts.update(Arrays.asList(changes));
 		}
 		
-		List<Integer> cachedBlockHeights = accounts.getAllBlocksInCache().stream()
-				.map(b -> b.height)
+		List<Integer> stateChangeHeights = accounts.getAllStateChangesInCache().stream()
+				.map(c -> c.height)
 				.collect(Collectors.toList());
-		List<Integer> expectedBlockHeights = Arrays.asList(
+		List<Integer> expectedStateChangeHeights = Arrays.asList(
 				Constants.INITIAL_SYNC_HEIGHT + 5,
 				Constants.INITIAL_SYNC_HEIGHT + 4,
 				Constants.INITIAL_SYNC_HEIGHT + 3
 		);
 		
-		assertEquals(expectedBlockHeights, cachedBlockHeights);
+		assertEquals(expectedStateChangeHeights, stateChangeHeights);
 	}
 	
 	@Test
@@ -182,7 +181,7 @@ public class AccountsTest {
 		accounts.rollBackTo(currentHeight);
 		
 		List<Account> accountsAfterRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
-		List<Block> cachedBlocks = accounts.getAllBlocksInCache();
+		List<StateChangeFromBattle> changes = accounts.getAllStateChangesInCache();
 		
 		// Rolling back to the current height is a no-op, so the retrieved data for
 		// these accounts should match their current states.
@@ -194,8 +193,8 @@ public class AccountsTest {
 		}
 		
 		assertEquals(currentHeight, accounts.getSyncHeight());
-		assertEquals(currentHeight, cachedBlocks.get(0).height);
-		assertEquals(currentHeight - Constants.INITIAL_SYNC_HEIGHT, cachedBlocks.size());
+		assertEquals(currentHeight, changes.get(0).height);
+		assertEquals(currentHeight - Constants.INITIAL_SYNC_HEIGHT, changes.size());
 	}
 	
 	@Test
@@ -219,7 +218,7 @@ public class AccountsTest {
 		
 		Account account1AfterRollback = accounts.getById(account1.numericId());
 		Account account2AfterRollback = accounts.getById(account2.numericId());
-		List<Block> cachedBlocks = accounts.getAllBlocksInCache();
+		List<StateChangeFromBattle> stateChanges = accounts.getAllStateChangesInCache();
 		
 		assertEquals(1, account1AfterRollback.wins);
 		assertEquals(0, account1AfterRollback.losses);
@@ -232,8 +231,8 @@ public class AccountsTest {
 		assertEquals(-1, account2AfterRollback.streak);
 		
 		assertEquals(currentHeight, accounts.getSyncHeight());
-		assertEquals(currentHeight, cachedBlocks.get(0).height);
-		assertEquals(1, cachedBlocks.size());
+		assertEquals(currentHeight, stateChanges.get(0).height);
+		assertEquals(1, stateChanges.size());
 	}
 	
 	@Test
@@ -260,7 +259,7 @@ public class AccountsTest {
 			assertEquals(0, account.streak);
 		}
 		assertEquals(Constants.INITIAL_SYNC_HEIGHT, accounts.getSyncHeight());
-		assertEquals(0, accounts.getAllBlocksInCache().size());
+		assertEquals(0, accounts.getAllStateChangesInCache().size());
 	}
 	
 	private static StateChangeFromBattle changesFromBattle(Account winner, Account loser, int height, long blockId) {

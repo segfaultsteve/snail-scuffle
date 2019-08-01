@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
-import com.snailscuffle.game.blockchain.data.Block;
 
 public class Accounts implements Closeable {
 	
@@ -132,7 +131,7 @@ public class Accounts implements Closeable {
 				for (StateChangeFromBattle change : changes) {
 					updateAccountsTable(change);
 					insertIntoRecentBattlesTable(change);
-					currentHeight = Math.max(currentHeight, change.finishHeight);
+					currentHeight = Math.max(currentHeight, change.height);
 				}
 				purgeBattlesOlderThan(currentHeight - recentBattlesDepth + 1);
 				sqlite.commit();
@@ -181,8 +180,8 @@ public class Accounts implements Closeable {
 				+	"(finish_height, finish_block_id, winner_id, winner_previous_rating, winner_updated_rating, winner_previous_streak, winner_updated_streak,"
 				+	"loser_id, loser_previous_rating, loser_updated_rating, loser_previous_streak, loser_updated_streak) "
 				+ "VALUES ("
-				+	change.finishHeight + ", "
-				+	change.finishBlockId + ", "
+				+	change.height + ", "
+				+	change.blockId + ", "
 				+	Long.toUnsignedString(change.winner.id) + ", "
 				+	change.winner.previous.rating + ", "
 				+	change.winner.updated.rating + ", "
@@ -333,21 +332,13 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public List<Block> getAllBlocksInCache() throws AccountsException {
+	public List<StateChangeFromBattle> getAllStateChangesInCache() throws AccountsException {
 		String currentHeightSql =
-				  "SELECT DISTINCT finish_height, finish_block_id "
-				+ "FROM recent_battles "
-				+ "WHERE finish_block_id > 0 "		// finish_block_id is zero for battles where one player forfeited (see note in BattleInProgressResult)
+				  "SELECT * FROM recent_battles "
 				+ "ORDER BY finish_height DESC";
 		try (Statement statement = sqlite.createStatement()) {
 			ResultSet result = statement.executeQuery(currentHeightSql);
-			
-			List<Block> blocks = new ArrayList<>();
-			while (result.next()) {
-				blocks.add(new Block(result.getLong("finish_block_id"), result.getInt("finish_height"), 0));
-			}
-			
-			return blocks;
+			return extractStateChanges(result);
 		} catch (SQLException e) {
 			String error = "Database error while attempting to get current height";
 			logger.error(error, e);
@@ -363,7 +354,7 @@ public class Accounts implements Closeable {
 			sqlite.setAutoCommit(false);
 			try (Statement statement = sqlite.createStatement()) {
 				ResultSet result = statement.executeQuery(battlesToRollBackSql);
-				List<StateChangeFromBattle> changes = extractStatChanges(result);
+				List<StateChangeFromBattle> changes = extractStateChanges(result);
 				
 				for (StateChangeFromBattle change : changes) {
 					undoChangesToAccountsTable(change);
@@ -384,7 +375,7 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	private static List<StateChangeFromBattle> extractStatChanges(ResultSet queryResult) throws SQLException {
+	private static List<StateChangeFromBattle> extractStateChanges(ResultSet queryResult) throws SQLException {
 		List<StateChangeFromBattle> changes = new ArrayList<>();
 		while (queryResult.next()) {
 			PlayerChange winner = new PlayerChange(
