@@ -1,17 +1,20 @@
 package com.snailscuffle.game.blockchain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.snailscuffle.game.accounts.Account;
+import com.snailscuffle.game.blockchain.StatChangesFromBattle.PlayerResult;
 import com.snailscuffle.game.blockchain.data.BattlePlanMessage;
 import com.snailscuffle.game.blockchain.data.OnChain;
 import com.snailscuffle.game.ratings.RatingPair;
@@ -23,6 +26,13 @@ class BattlesInProgress {
 		@Override
 		public int compare(BattleInProgress b1, BattleInProgress b2) {
 			return b1.startHeight() - b2.startHeight();
+		}
+	}
+	
+	private static class FinishHeightComparator implements Comparator<StatChangesFromBattle> {
+		@Override
+		public int compare(StatChangesFromBattle c1, StatChangesFromBattle c2) {
+			return c1.finishHeight - c2.finishHeight;
 		}
 	}
 	
@@ -51,21 +61,23 @@ class BattlesInProgress {
 		}
 	}
 	
-	List<Long> getAllAccounts() {
+	Set<Long> getAllAccounts() {
 		return battlesById.values().stream()
 				.flatMap(b -> b.accounts().stream())
 				.distinct()
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 	
-	Map<Long, Account> runAll(Map<Long, Account> initialStateOfAccounts, int lastSyncHeight, int currentHeight) {
-		Map<Long, Account> updatedAccounts = copy(initialStateOfAccounts);
+	Collection<StatChangesFromBattle> runAll(Map<Long, Account> initialStateOfAccounts, int lastSyncHeight, int currentHeight) {
+		Map<Long, Account> currentStateOfAccounts = copy(initialStateOfAccounts);
 		List<BattleInProgress> battlesToRemove = new ArrayList<>();
+		PriorityQueue<StatChangesFromBattle> changes = new PriorityQueue<>(new FinishHeightComparator());
 		
 		for (BattleInProgress battle : battlesOrderedByHeight()) {
 			BattleInProgressResult result = battle.run(currentHeight);
 			if (result.isFinished() && result.finishHeight > lastSyncHeight) {
-				updateAccounts(result, updatedAccounts);
+				StatChangesFromBattle change = updateAccounts(result, currentStateOfAccounts);
+				changes.add(change);
 			}
 			if (result.isFinished() || result.wasAborted()) {
 				battlesToRemove.add(battle);
@@ -76,7 +88,7 @@ class BattlesInProgress {
 			battlesById.remove(battle.id);
 		}
 		
-		return updatedAccounts;
+		return changes;
 	}
 	
 	private static Map<Long, Account> copy(Map<Long, Account> accounts) {
@@ -93,18 +105,29 @@ class BattlesInProgress {
 		return battlesByHeight;
 	}
 	
-	private static void updateAccounts(BattleInProgressResult result, Map<Long, Account> accounts) {
+	private static StatChangesFromBattle updateAccounts(BattleInProgressResult result, Map<Long, Account> accounts) {
 		Account winner = accounts.get(result.winner);
+		int winnerPreviousRating = winner.rating;
+		int winnerPreviousStreak = winner.streak;
 		winner.wins++;
 		winner.streak = (winner.streak > 0) ? (winner.streak + 1) : 1;
 		
 		Account loser = accounts.get(result.loser);
+		int loserPreviousRating = loser.rating;
+		int loserPreviousStreak = loser.streak;
 		loser.losses++;
 		loser.streak = (loser.streak < 0) ? (loser.streak - 1) : -1;
 		
 		RatingPair revisedRatings = Ratings.compute(winner.rating, loser.rating);
 		winner.rating = revisedRatings.winner;
 		loser.rating = revisedRatings.loser;
+		
+		return new StatChangesFromBattle(
+				result.finishHeight,
+				result.finishBlockId,
+				new PlayerResult(winner.numericId(), winnerPreviousRating, winner.rating, winnerPreviousStreak, winner.streak),
+				new PlayerResult(loser.numericId(), loserPreviousRating, loser.rating, loserPreviousStreak, loser.streak)
+		);
 	}
 	
 }

@@ -42,13 +42,13 @@ public class AccountsServletTest {
 		when(mockIgnisNode.getBalance(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
 		when(mockIgnisNode.getBalance(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
 		
-		accounts = new Accounts(":memory:", Constants.MAX_SNAPSHOT_COUNT);
+		accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
 		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts);
 	}
 
 	@Test
 	public void getAccountById() throws Exception {
-		accounts.insertOrUpdate(Arrays.asList(ACCOUNT1), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		accounts.addIfNotPresent(Arrays.asList(ACCOUNT1));
 		
 		String response = sendGetRequest("id=" + ACCOUNT1.id);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
@@ -58,7 +58,7 @@ public class AccountsServletTest {
 	
 	@Test
 	public void getAccountByUsername() throws Exception {
-		accounts.insertOrUpdate(Arrays.asList(ACCOUNT1), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		accounts.addIfNotPresent(Arrays.asList(ACCOUNT1));
 		
 		String response = sendGetRequest("player=" + ACCOUNT1.username);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
@@ -69,7 +69,7 @@ public class AccountsServletTest {
 	@Test
 	public void determineCorrectRanking() throws Exception {
 		// insertion order shouldn't matter
-		accounts.insertOrUpdate(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		accounts.addIfNotPresent(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2));
 		
 		int rank1 = getRank(ACCOUNT1);
 		int rank2 = getRank(ACCOUNT2);

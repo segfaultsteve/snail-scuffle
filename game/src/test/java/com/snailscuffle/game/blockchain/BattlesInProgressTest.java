@@ -3,9 +3,11 @@ package com.snailscuffle.game.blockchain;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -293,13 +295,13 @@ public class BattlesInProgressTest {
 	private static OnChain<BattlePlanCommitMessage> newCommitMessage(String hash, int round, int height, long sender) {
 		long recipient = (sender == PLAYER_0_ID) ? PLAYER_1_ID : PLAYER_0_ID;
 		BattlePlanCommitMessage commitMessage = new BattlePlanCommitMessage(BATTLE_ID, round, hash);
-		return new OnChain<BattlePlanCommitMessage>(height, 0, sender, recipient, commitMessage);
+		return new OnChain<BattlePlanCommitMessage>(0, height, 0, sender, recipient, commitMessage);
 	}
 	
 	private static OnChain<BattlePlanRevealMessage> newRevealMessage(BattlePlan battlePlan, int round, int height, long sender) {
 		long recipient = (sender == PLAYER_0_ID) ? PLAYER_1_ID : PLAYER_0_ID;
 		BattlePlanRevealMessage revealMessage = new BattlePlanRevealMessage(BATTLE_ID, round, battlePlan);
-		return new OnChain<BattlePlanRevealMessage>(height, 0, sender, recipient, revealMessage);
+		return new OnChain<BattlePlanRevealMessage>(0, height, 0, sender, recipient, revealMessage);
 	}
 	
 	private Map<Long, Account> runBattle(int currentHeight) {
@@ -310,7 +312,29 @@ public class BattlesInProgressTest {
 		BattlesInProgress battles = new BattlesInProgress();
 		battles.update(player0Messages);
 		battles.update(player1Messages);
-		return battles.runAll(initialStateOfAccounts, initialHeight, currentHeight);
+		
+		Collection<StatChangesFromBattle> changes = battles.runAll(initialStateOfAccounts, initialHeight, currentHeight);
+		
+		Map<Long, Account> updatedAccounts = copy(initialStateOfAccounts);
+		for (StatChangesFromBattle change : changes) {
+			Account winner = updatedAccounts.get(change.winner.id);
+			winner.wins++;
+			winner.rating = change.winner.updated.rating;
+			winner.streak = change.winner.updated.streak;
+			
+			Account loser = updatedAccounts.get(change.loser.id);
+			loser.losses++;
+			loser.rating = change.loser.updated.rating;
+			loser.streak = change.loser.updated.streak;
+		}
+		
+		return updatedAccounts;
+	}
+	
+	private static Map<Long, Account> copy(Map<Long, Account> accounts) {
+		return accounts.entrySet()
+				.stream()
+				.collect(Collectors.toMap(kvp -> kvp.getKey(), kvp -> new Account(kvp.getValue())));
 	}
 	
 	private static void assertWinner(Account player) {

@@ -1,8 +1,8 @@
 package com.snailscuffle.game.blockchain;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -17,7 +17,6 @@ import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.Accounts;
 import com.snailscuffle.game.accounts.AccountsException;
-import com.snailscuffle.game.accounts.AccountsSnapshot;
 import com.snailscuffle.game.blockchain.data.BattlePlanCommitMessage;
 import com.snailscuffle.game.blockchain.data.BattlePlanMessage;
 import com.snailscuffle.game.blockchain.data.Block;
@@ -42,8 +41,8 @@ class BlockchainSyncThread extends Thread {
 	private static final Logger logger = LoggerFactory.getLogger(BlockchainSyncThread.class);
 	
 	private final SyncAction CONNECT;
-	private final SyncAction VALIDATE_SNAPSHOTS;
-	private final SyncAction SYNC_FROM_LAST_SNAPSHOT;
+	private final SyncAction VALIDATE_RECENT_BLOCKS;
+	private final SyncAction SYNC_FROM_LAST_HEIGHT;
 	private final SyncAction CONTINUOUS_SYNC_LOOP;
 	private final SyncAction ABORT;
 	private final SyncAction EXIT_WITH_ERROR;
@@ -52,8 +51,8 @@ class BlockchainSyncThread extends Thread {
 
 	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		CONNECT = new SyncAction(() -> connect(ignisNode));
-		VALIDATE_SNAPSHOTS = new SyncAction(() -> validateSnapshots(ignisNode, accounts));
-		SYNC_FROM_LAST_SNAPSHOT = new SyncAction(() -> syncFromLastSnapshot(ignisNode, accounts));
+		VALIDATE_RECENT_BLOCKS = new SyncAction(() -> validateRecentBlocks(ignisNode, accounts));
+		SYNC_FROM_LAST_HEIGHT = new SyncAction(() -> syncFromLastHeight(ignisNode, accounts));
 		CONTINUOUS_SYNC_LOOP = new SyncAction(() -> continuousSyncLoop(ignisNode, accounts));
 		ABORT = new SyncAction(() -> abort());
 		EXIT_WITH_ERROR = new SyncAction(() -> exitWithError());
@@ -70,7 +69,7 @@ class BlockchainSyncThread extends Thread {
 	private SyncAction connect(IgnisArchivalNodeConnection ignisNode) {
 		try {
 			if (ignisNode.isReady()) {
-				return VALIDATE_SNAPSHOTS;
+				return VALIDATE_RECENT_BLOCKS;
 			} else {
 				Thread.sleep(10000);
 				return CONNECT;
@@ -83,35 +82,37 @@ class BlockchainSyncThread extends Thread {
 		}
 	}
 	
-	private SyncAction validateSnapshots(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
+	private SyncAction validateRecentBlocks(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		try {
-			List<AccountsSnapshot> snapshotsByHeight = accounts.getAllSnapshots();
+			List<Block> cachedBlocksByHeight = accounts.getAllBlocksInCache();
 			int lastValidHeight = Constants.INITIAL_SYNC_HEIGHT;
-			for (AccountsSnapshot snapshot : snapshotsByHeight) {
-				Block observedBlock = ignisNode.getBlockAtHeight(snapshot.height);
-				if (snapshot.blockId == observedBlock.id) {
-					lastValidHeight = snapshot.height;
+			for (Block cachedBlock : cachedBlocksByHeight) {
+				Block observedBlock = ignisNode.getBlockAtHeight(cachedBlock.height);
+				if (observedBlock.id == cachedBlock.id) {
+					lastValidHeight = cachedBlock.height;
 					break;
 				}
 			}
 			
 			accounts.rollBackTo(lastValidHeight);
 			
-			return SYNC_FROM_LAST_SNAPSHOT;
+			return SYNC_FROM_LAST_HEIGHT;
 		} catch (IgnisNodeCommunicationException e) {
 			return CONNECT;
 		} catch (AccountsException | BlockchainSubsystemException e) {
-			logger.error("Unexpected error while trying to validate snapshots", e);
+			logger.error("Unexpected error while trying to validate recent blocks", e);
 			return EXIT_WITH_ERROR;
 		} catch (InterruptedException e) {
 			return ABORT;
 		}
 	}
 	
-	private SyncAction syncFromLastSnapshot(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
+	private SyncAction syncFromLastHeight(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		try {
 			Block lastBlock = ignisNode.getCurrentBlock();
 			List<Account> playerAccounts = ignisNode.getAllPlayerAccounts();
+			
+			accounts.addIfNotPresent(playerAccounts);
 			
 			// Battles that conclude after lastSyncHeight will be used to update accounts. In
 			// order to catch battles that were in progress at lastSyncHeight, we must backtrack.
@@ -127,10 +128,8 @@ class BlockchainSyncThread extends Thread {
 					.stream()
 					.collect(Collectors.toMap(a -> a.numericId(), a -> a));
 			
-			Map<Long, Account> updatedAccounts = battlesInProgress.runAll(accountsToUpdate, lastSyncHeight, lastBlock.height);
-			
-			accounts.insertOrUpdate(updatedAccounts.values(), lastBlock.height, lastBlock.id);
-			accounts.takeSnapshot(Instant.now().toString());
+			Collection<StatChangesFromBattle> results = battlesInProgress.runAll(accountsToUpdate, lastSyncHeight, lastBlock.height);
+			accounts.update(results);
 			
 			return CONTINUOUS_SYNC_LOOP;
 		} catch (IgnisNodeCommunicationException e) {
@@ -171,7 +170,7 @@ class BlockchainSyncThread extends Thread {
 	
 	private static <T> OnChain<T> parseMessage(Class<T> type, Transaction tx) throws IOException {
 		T message = JsonUtil.deserialize(type, tx.message);
-		return new OnChain<>(tx.height, tx.index, tx.sender, tx.recipient, message);
+		return new OnChain<>(tx.blockId, tx.height, tx.index, tx.sender, tx.recipient, message);
 	}
 	
 	private SyncAction continuousSyncLoop(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
