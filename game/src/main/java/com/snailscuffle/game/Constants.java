@@ -11,7 +11,7 @@ public class Constants {
 	public static final int PROTOCOL_MINOR_VERSION = 1;
 	
 	public static final int MAX_BLOCKS_PER_ROUND = 4;
-	public static final int MAX_BLOCKS_AFTER_HASHES_COMMITTED = 1;	// must broadcast battle plan within this many blocks of its hash
+	public static final int MAX_BLOCKS_AFTER_HASHES_COMMITTED = 2;	// must broadcast battle plan within this many blocks of its hash
 	
 	public static final int INITIAL_RATING = 1000;
 	public static final int MAX_RATING_CHANGE = 32;
