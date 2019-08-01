@@ -28,7 +28,8 @@ public class AccountsTest {
 	
 	@Test
 	public void storeAndRetrieveAccount() throws AccountsException {
-		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
+		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 1, 3, 1050);
+		
 		accounts.addIfNotPresent(Arrays.asList(storedAccount));
 		Account retrievedAccount = accounts.getById(storedAccount.numericId());
 		
@@ -41,6 +42,24 @@ public class AccountsTest {
 		assertEquals(storedAccount.rating, retrievedAccount.rating);
 		assertEquals(1, retrievedAccount.rank);
 		assertEquals(0, retrievedAccount.balance, 0);	// BlockchainSubsystem fills this in
+	}
+	
+	@Test
+	public void doNotOverwritePreexistingAccount() throws AccountsException {
+		Account preexistingAccount = new Account(1, "account1", "pubkey1", 3, 1, 3, 1050);
+		Account sameIdWithNoBattles = new Account(preexistingAccount.numericId(), preexistingAccount.username, preexistingAccount.publicKey);
+		
+		accounts.addIfNotPresent(Arrays.asList(preexistingAccount));
+		accounts.addIfNotPresent(Arrays.asList(sameIdWithNoBattles));
+		Account retrievedAccount = accounts.getById(preexistingAccount.numericId());
+		
+		assertEquals(preexistingAccount.id, retrievedAccount.id);
+		assertEquals(preexistingAccount.username, retrievedAccount.username);
+		assertEquals(preexistingAccount.publicKey, retrievedAccount.publicKey);
+		assertEquals(preexistingAccount.wins, retrievedAccount.wins);
+		assertEquals(preexistingAccount.losses, retrievedAccount.losses);
+		assertEquals(preexistingAccount.streak, retrievedAccount.streak);
+		assertEquals(preexistingAccount.rating, retrievedAccount.rating);
 	}
 	
 	@Test
@@ -69,9 +88,9 @@ public class AccountsTest {
 	
 	@Test
 	public void determineCorrectRanking() throws AccountsException {
-		Account account1 = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
+		Account account1 = new Account(1, "account1", "pubkey1", 3, 0, 3, 1050);
 		Account account2 = new Account(2, "account2", "pubkey2", 2, 2, 1, 1000);
-		Account account3 = new Account(3, "account3", "pubkey3", 0, 3, -3, 700);
+		Account account3 = new Account(3, "account3", "pubkey3", 0, 3, -3, 950);
 		
 		// insertion order shouldn't matter
 		accounts.addIfNotPresent(Arrays.asList(account3, account1, account2));
@@ -87,9 +106,9 @@ public class AccountsTest {
 	
 	@Test
 	public void determineCorrectRankingWithATie() throws AccountsException {
-		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
-		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1500);
-		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 300);
+		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1050);
+		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1050);
+		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 900);
 		accounts.addIfNotPresent(Arrays.asList(tiedForFirst, alsoTiedForFirst, third));
 		
 		int rank1 = accounts.getById(tiedForFirst.numericId()).rank;
@@ -158,19 +177,21 @@ public class AccountsTest {
 			account1 = accounts.getById(account1.numericId());
 			account2 = accounts.getById(account2.numericId());
 		}
+		List<Account> accountsBeforeRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
 		
 		accounts.rollBackTo(currentHeight);
 		
-		Account account1AfterRollback = accounts.getById(account1.numericId());
-		Account account2AfterRollback = accounts.getById(account2.numericId());
+		List<Account> accountsAfterRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
 		List<Block> cachedBlocks = accounts.getAllBlocksInCache();
 		
 		// Rolling back to the current height is a no-op, so the retrieved data for
 		// these accounts should match their current states.
-		assertEquals(account1.wins, account1AfterRollback.wins);
-		assertEquals(account1.losses, account1AfterRollback.losses);
-		assertEquals(account2.wins, account2AfterRollback.wins);
-		assertEquals(account2.losses, account2AfterRollback.losses);
+		for (int i = 0; i < 2; i++) {
+			assertEquals(accountsBeforeRollback.get(i).wins, accountsAfterRollback.get(i).wins);
+			assertEquals(accountsBeforeRollback.get(i).losses, accountsAfterRollback.get(i).losses);
+			assertEquals(accountsBeforeRollback.get(i).rating, accountsAfterRollback.get(i).rating);
+			assertEquals(accountsBeforeRollback.get(i).streak, accountsAfterRollback.get(i).streak);
+		}
 		
 		assertEquals(currentHeight, accounts.getSyncHeight());
 		assertEquals(currentHeight, cachedBlocks.get(0).height);
@@ -193,14 +214,23 @@ public class AccountsTest {
 			account2 = accounts.getById(account2.numericId());
 		}
 		
+		// Roll back to a state that includes only the first battle.
 		accounts.rollBackTo(currentHeight -= rollbackDepth);
 		
 		Account account1AfterRollback = accounts.getById(account1.numericId());
 		Account account2AfterRollback = accounts.getById(account2.numericId());
 		List<Block> cachedBlocks = accounts.getAllBlocksInCache();
 		
-		assertEquals(account1.wins - rollbackDepth, account1AfterRollback.wins);
-		assertEquals(account2.losses - rollbackDepth, account2AfterRollback.losses);
+		assertEquals(1, account1AfterRollback.wins);
+		assertEquals(0, account1AfterRollback.losses);
+		assertEquals(Constants.INITIAL_RATING + Constants.MAX_RATING_CHANGE / 2, account1AfterRollback.rating);
+		assertEquals(1, account1AfterRollback.streak);
+		
+		assertEquals(0, account2AfterRollback.wins);
+		assertEquals(1, account2AfterRollback.losses);
+		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, account2AfterRollback.rating);
+		assertEquals(-1, account2AfterRollback.streak);
+		
 		assertEquals(currentHeight, accounts.getSyncHeight());
 		assertEquals(currentHeight, cachedBlocks.get(0).height);
 		assertEquals(1, cachedBlocks.size());
