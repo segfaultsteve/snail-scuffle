@@ -28,6 +28,7 @@ class BattleInProgress {
 	private final Map<Long, BattleMessages> messagesByPlayer = new HashMap<>();
 	private long disqualified;
 	private int disqualificationHeight = Integer.MAX_VALUE;
+	private long disqualificationBlockId = 0;
 	
 	BattleInProgress(OnChain<? extends BattlePlanMessage> firstMessage) throws IllegalMessageException {
 		id = firstMessage.data.battleId;
@@ -51,7 +52,7 @@ class BattleInProgress {
 				throw new IllegalMessageException("Unrecognized message type");
 			}
 		} catch (DisqualifyingMessageException e) {
-			disqualify(message.sendingAccount, message.height);
+			disqualify(message.sendingAccount, message.height, message.blockId);
 			throw e;
 		}
 	}
@@ -77,7 +78,7 @@ class BattleInProgress {
 		} else if (round > committedHashes.size()) {
 			throw new IllegalMessageException("Cannot commit hash for round " + round + " before committing hash for round " + (round - 1));
 		} else if (round == committedHashes.size()) {
-			OnChain<String> wrappedHash = new OnChain<>(message.height, message.transactionIndex, message.sendingAccount, message.receivingAccount, theHash);
+			OnChain<String> wrappedHash = new OnChain<>(message.blockId, message.height, message.transactionIndex, message.sendingAccount, message.receivingAccount, theHash);
 			committedHashes.add(wrappedHash);
 		}
 	}
@@ -98,15 +99,16 @@ class BattleInProgress {
 		} else if (round > battlePlans.size()) {
 			throw new IllegalMessageException("Battle plan for round " + (round - 1) + " must precede the one for round " + round);
 		} else if (round == battlePlans.size()) {
-			OnChain<BattlePlan> wrappedBattlePlan = new OnChain<>(message.height, message.transactionIndex, message.sendingAccount, message.receivingAccount, theBattlePlan);
+			OnChain<BattlePlan> wrappedBattlePlan = new OnChain<>(message.blockId, message.height, message.transactionIndex, message.sendingAccount, message.receivingAccount, theBattlePlan);
 			battlePlans.add(wrappedBattlePlan);
 		}
 	}
 	
-	private void disqualify(long accountId, int height) {
+	private void disqualify(long accountId, int height, long blockId) {
 		if (height < disqualificationHeight && messagesByPlayer.keySet().contains(accountId)) {
 			disqualified = accountId;
 			disqualificationHeight = height;
+			disqualificationBlockId = blockId;
 		}
 	}
 	
@@ -121,7 +123,7 @@ class BattleInProgress {
 	BattleInProgressResult run(int currentHeight) {
 		if (disqualified != 0) {
 			long winner = opponentOf(disqualified);
-			return new BattleInProgressResult(winner, disqualified, disqualificationHeight);
+			return new BattleInProgressResult(winner, disqualified, disqualificationHeight, disqualificationBlockId);
 		}
 		
 		long firstMoverId = firstMover();
@@ -145,7 +147,7 @@ class BattleInProgress {
 		} else if (firstMover.battlePlans.isEmpty() || secondMover.battlePlans.isEmpty()) {
 			long loser = (firstMover.battlePlans.isEmpty()) ? firstMoverId : secondMoverId;
 			long winner = opponentOf(loser);
-			return new BattleInProgressResult(winner, loser, startOfBattle + Constants.MAX_BLOCKS_PER_ROUND);
+			return new BattleInProgressResult(winner, loser, startOfBattle + Constants.MAX_BLOCKS_PER_ROUND, 0);	// see BatleInProgressResult for explanation of finishBlockId = 0
 		}
 		
 		BattleConfig battleConfig = new BattleConfig(battlePlans, 0);
@@ -270,11 +272,11 @@ class BattleInProgress {
 			long winner = (firstMover.battlePlans.size() > secondMover.battlePlans.size()) ? firstMoverId : secondMoverId;
 			long loser = (winner == firstMoverId) ? secondMoverId : firstMoverId;
 			int lastHashHeightOfNextRound = getLastHashHeightOfRound(firstMover.committedHashes.get(rounds), secondMover.committedHashes.get(rounds));
-			return new BattleInProgressResult(winner, loser, lastHashHeightOfNextRound + Constants.MAX_BLOCKS_AFTER_HASHES_COMMITTED);
+			return new BattleInProgressResult(winner, loser, lastHashHeightOfNextRound + Constants.MAX_BLOCKS_AFTER_HASHES_COMMITTED, 0);	// see BatleInProgressResult for explanation of finishBlockId = 0
 		} else if (firstMoverCommittedHashForNextRound || secondMoverCommittedHashForNextRound) {
 			long winner = firstMoverCommittedHashForNextRound ? firstMoverId : secondMoverId;
 			long loser = firstMoverCommittedHashForNextRound ? secondMoverId : firstMoverId;
-			return new BattleInProgressResult(winner, loser, endOfMostRecentRound + Constants.MAX_BLOCKS_PER_ROUND);
+			return new BattleInProgressResult(winner, loser, endOfMostRecentRound + Constants.MAX_BLOCKS_PER_ROUND, 0);		// see BatleInProgressResult for explanation of finishBlockId = 0
 		} else {
 			return BattleInProgressResult.ABORTED;
 		}
@@ -286,8 +288,11 @@ class BattleInProgress {
 		long winner = (battleResult.winnerIndex == 0) ? firstMoverId : secondMoverId;
 		long loser = (battleResult.winnerIndex == 0) ? secondMoverId : firstMoverId;
 		int lastRound = battleResult.eventsByRound.size() - 1;
-		int finishHeight = Math.max(firstMover.battlePlans.get(lastRound).height, secondMover.battlePlans.get(lastRound).height);
-		return new BattleInProgressResult(winner, loser, finishHeight);
+		OnChain<BattlePlan> firstMoverLastBp = firstMover.battlePlans.get(lastRound);
+		OnChain<BattlePlan> secondMoverLastBp = secondMover.battlePlans.get(lastRound);
+		int finishHeight = Math.max(firstMoverLastBp.height, secondMoverLastBp.height);
+		long finishBlockId = (finishHeight == firstMoverLastBp.height) ? firstMoverLastBp.blockId : secondMoverLastBp.blockId;
+		return new BattleInProgressResult(winner, loser, finishHeight, finishBlockId);
 	}
 	
 }

@@ -1,17 +1,21 @@
 package com.snailscuffle.game.accounts;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.snailscuffle.game.Constants;
+import com.snailscuffle.game.blockchain.StateChangeFromBattle;
+import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
+import com.snailscuffle.game.blockchain.data.Block;
+import com.snailscuffle.game.ratings.RatingPair;
+import com.snailscuffle.game.ratings.Ratings;
 
 public class AccountsTest {
 	
@@ -19,23 +23,13 @@ public class AccountsTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		accounts = new Accounts(":memory:", Constants.MAX_SNAPSHOT_COUNT);
-	}
-	
-	@Test
-	public void initializeSnapshotTable() throws AccountsException {
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
-		
-		assertEquals(1, snapshots.size());
-		assertEquals("accounts", snapshots.get(0).name);
-		assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshots.get(0).height);
-		assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, snapshots.get(0).blockId);
+		accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
 	}
 	
 	@Test
 	public void storeAndRetrieveAccount() throws AccountsException {
 		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
-		accounts.insertOrUpdate(Arrays.asList(storedAccount), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		accounts.addIfNotPresent(Arrays.asList(storedAccount));
 		Account retrievedAccount = accounts.getById(storedAccount.numericId());
 		
 		assertEquals(storedAccount.id, retrievedAccount.id);
@@ -46,23 +40,31 @@ public class AccountsTest {
 		assertEquals(storedAccount.streak, retrievedAccount.streak);
 		assertEquals(storedAccount.rating, retrievedAccount.rating);
 		assertEquals(1, retrievedAccount.rank);
-		assertEquals(0, retrievedAccount.balance, 0);		// BlockchainSubsystem fills this in
+		assertEquals(0, retrievedAccount.balance, 0);	// BlockchainSubsystem fills this in
 	}
 	
 	@Test
 	public void updateAccount() throws AccountsException {
-		Account storedAccount = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
-		accounts.insertOrUpdate(Arrays.asList(storedAccount), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		Account account1 = new Account(1, "account1", "pubkey1");
+		Account account2 = new Account(2, "account2", "pubkey2");
+		accounts.addIfNotPresent(Arrays.asList(account1, account2));
 		
-		storedAccount.wins++;
-		storedAccount.losses++;
-		storedAccount.streak = -1;
-		accounts.insertOrUpdate(Arrays.asList(storedAccount), Constants.INITIAL_SYNC_HEIGHT + 2, 1);
-		Account retrievedAccount = accounts.getById(storedAccount.numericId());
+		StateChangeFromBattle changes = changesFromBattle(account1, account2, Constants.INITIAL_SYNC_HEIGHT + 1, 1);
+		accounts.update(Arrays.asList(changes));
 		
-		assertEquals(storedAccount.wins, retrievedAccount.wins);
-		assertEquals(storedAccount.losses, retrievedAccount.losses);
-		assertEquals(storedAccount.streak, retrievedAccount.streak);
+		Account account1Updated = accounts.getById(account1.numericId());
+		Account account2Updated = accounts.getById(account2.numericId());
+		int expectedRatingChange = Constants.MAX_RATING_CHANGE / 2;		// equally rated opponents
+		
+		assertEquals(1, account1Updated.wins);
+		assertEquals(0, account1Updated.losses);
+		assertEquals(account1.rating + expectedRatingChange, account1Updated.rating);
+		assertEquals(1, account1Updated.streak);
+		
+		assertEquals(0, account2Updated.wins);
+		assertEquals(1, account2Updated.losses);
+		assertEquals(account2.rating - expectedRatingChange, account2Updated.rating);
+		assertEquals(-1, account2Updated.streak);
 	}
 	
 	@Test
@@ -72,7 +74,7 @@ public class AccountsTest {
 		Account account3 = new Account(3, "account3", "pubkey3", 0, 3, -3, 700);
 		
 		// insertion order shouldn't matter
-		accounts.insertOrUpdate(Arrays.asList(account3, account1, account2), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		accounts.addIfNotPresent(Arrays.asList(account3, account1, account2));
 		
 		int rank1 = accounts.getById(account1.numericId()).rank;
 		int rank2 = accounts.getById(account2.numericId()).rank;
@@ -88,7 +90,7 @@ public class AccountsTest {
 		Account tiedForFirst = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
 		Account alsoTiedForFirst = new Account(2, "account2", "pubkey2", 3, 0, 3, 1500);
 		Account third = new Account(3, "account3", "pubkey3", 0, 6, -6, 300);
-		accounts.insertOrUpdate(Arrays.asList(tiedForFirst, alsoTiedForFirst, third), Constants.INITIAL_SYNC_HEIGHT + 1, 0);
+		accounts.addIfNotPresent(Arrays.asList(tiedForFirst, alsoTiedForFirst, third));
 		
 		int rank1 = accounts.getById(tiedForFirst.numericId()).rank;
 		int rank2 = accounts.getById(alsoTiedForFirst.numericId()).rank;
@@ -100,135 +102,148 @@ public class AccountsTest {
 	}
 	
 	@Test
-	public void takeSnapshot() throws AccountsException {
-		accounts.takeSnapshot("test");
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
-		
-		assertEquals(2, snapshots.size());
-		assertEquals("accounts", snapshots.get(0).name);
-		assertEquals("accounts_test", snapshots.get(1).name);
-		for (AccountsSnapshot snapshot : snapshots) {
-			assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshot.height);
-			assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, snapshot.blockId);
-		}
-	}
-	
-	@Test
-	public void orderSnapshotsByHeight() throws AccountsException {
+	public void orderCachedBlocksByHeight() throws AccountsException {
+		Account account1 = new Account(1, "account1", "pubkey1");
+		Account account2 = new Account(2, "account2", "pubkey2");
+		accounts.addIfNotPresent(Arrays.asList(account1, account2));
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+		
 		for (int i = 0; i < 5; i++) {
-			accounts.takeSnapshot(String.valueOf(i + 1));
-			accounts.updateSyncHeight(++currentHeight, 0);
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i);
+			accounts.update(Arrays.asList(changes));
 		}
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		List<Block> blocks = accounts.getAllBlocksInCache();
 		
-		for (int i = 1; i < snapshots.size(); i++) {
-			assertTrue(snapshots.get(i - 1).height > snapshots.get(i).height);
+		for (int i = 1; i < blocks.size(); i++) {
+			assertTrue(blocks.get(i - 1).height > blocks.get(i).height);
 		}
 	}
 	
 	@Test
-	public void deleteOldSnapshots() throws AccountsException {
-		accounts = new Accounts(":memory:", 3);		// keep only the three most recent snapshots
+	public void removeOldBlocksFromCache() throws AccountsException {
+		accounts = new Accounts(":memory:", 3);		// keep only the three most recent blocks
 		
+		Account account1 = new Account(1, "account1", "pubkey1");
+		Account account2 = new Account(2, "account2", "pubkey2");
+		accounts.addIfNotPresent(Arrays.asList(account1, account2));
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+		
 		for (int i = 0; i < 5; i++) {
-			accounts.updateSyncHeight(++currentHeight, 0);
-			accounts.takeSnapshot(String.valueOf(i + 1));
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i);
+			accounts.update(Arrays.asList(changes));
 		}
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
 		
-		String[] expectedNames = new String[] { "accounts", "accounts_5", "accounts_4", "accounts_3" };
-		assertEquals(expectedNames.length, snapshots.size());
-		for (int i = 0; i < expectedNames.length; i++) {
-			assertEquals(expectedNames[i], snapshots.get(i).name);
-		}
+		List<Integer> cachedBlockHeights = accounts.getAllBlocksInCache().stream()
+				.map(b -> b.height)
+				.collect(Collectors.toList());
+		List<Integer> expectedBlockHeights = Arrays.asList(
+				Constants.INITIAL_SYNC_HEIGHT + 5,
+				Constants.INITIAL_SYNC_HEIGHT + 4,
+				Constants.INITIAL_SYNC_HEIGHT + 3
+		);
+		
+		assertEquals(expectedBlockHeights, cachedBlockHeights);
 	}
 	
 	@Test
-	public void rollBackTocurrentHeight() throws AccountsException {
+	public void rollBackToCurrentHeight() throws AccountsException {
+		Account account1 = new Account(1, "account1", "pubkey1");
+		Account account2 = new Account(2, "account2", "pubkey2");
+		accounts.addIfNotPresent(Arrays.asList(account1, account2));
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
-		Account account = new Account(1, "account1", "pubkey1", 0, 0, 0, 1000);
-		accounts.insertOrUpdate(Arrays.asList(account), ++currentHeight, 0);
-		accounts.takeSnapshot("1");
 		
-		account.wins++;
-		accounts.insertOrUpdate(Arrays.asList(account), ++currentHeight, 0);
+		for (int i = 0; i < 5; i++) {
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i + 1);
+			accounts.update(Arrays.asList(changes));
+			account1 = accounts.getById(account1.numericId());
+			account2 = accounts.getById(account2.numericId());
+		}
 		
-		int rollbackHeight = accounts.rollBackTo(currentHeight);
-		Account retrieved = accounts.getById(account.numericId());
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		accounts.rollBackTo(currentHeight);
 		
-		// Rolling back to the current height is a no-op, so the retrieved data for this
-		// account should match the current state.
-		assertEquals(account.wins, retrieved.wins);
-		assertEquals(2, snapshots.size());		// "accounts" and "accounts_1"
-		assertEquals(currentHeight, rollbackHeight);
-		assertEquals(currentHeight, snapshots.get(0).height);
+		Account account1AfterRollback = accounts.getById(account1.numericId());
+		Account account2AfterRollback = accounts.getById(account2.numericId());
+		List<Block> cachedBlocks = accounts.getAllBlocksInCache();
+		
+		// Rolling back to the current height is a no-op, so the retrieved data for
+		// these accounts should match their current states.
+		assertEquals(account1.wins, account1AfterRollback.wins);
+		assertEquals(account1.losses, account1AfterRollback.losses);
+		assertEquals(account2.wins, account2AfterRollback.wins);
+		assertEquals(account2.losses, account2AfterRollback.losses);
+		
+		assertEquals(currentHeight, accounts.getSyncHeight());
+		assertEquals(currentHeight, cachedBlocks.get(0).height);
+		assertEquals(currentHeight - Constants.INITIAL_SYNC_HEIGHT, cachedBlocks.size());
 	}
 	
 	@Test
-	public void rollBackToSnapshot() throws AccountsException {
+	public void rollBackToEarlierHeight() throws AccountsException {
+		Account account1 = new Account(1, "account1", "pubkey1");
+		Account account2 = new Account(2, "account2", "pubkey2");
+		accounts.addIfNotPresent(Arrays.asList(account1, account2));
+		
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
 		int rollbackDepth = 3;
-		Account account = new Account(1, "account1", "pubkey1", 0, 0, 0, 1000);
 		
-		for (int i = 1; i <= rollbackDepth + 1; i++) {
-			account.wins++;
-			accounts.insertOrUpdate(Arrays.asList(account), ++currentHeight, 0);
-			accounts.takeSnapshot(String.valueOf(i));
+		for (int i = 0; i <= rollbackDepth; i++) {
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i + 1);
+			accounts.update(Arrays.asList(changes));
+			account1 = accounts.getById(account1.numericId());
+			account2 = accounts.getById(account2.numericId());
 		}
 		
-		int rollbackHeight = accounts.rollBackTo(currentHeight -= rollbackDepth);
-		Account retrieved = accounts.getById(account.numericId());
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		accounts.rollBackTo(currentHeight -= rollbackDepth);
 		
-		assertEquals(account.wins - rollbackDepth, retrieved.wins);
-		assertEquals(2, snapshots.size());
-		assertEquals(currentHeight, rollbackHeight);
-		assertEquals(currentHeight, snapshots.get(0).height);
+		Account account1AfterRollback = accounts.getById(account1.numericId());
+		Account account2AfterRollback = accounts.getById(account2.numericId());
+		List<Block> cachedBlocks = accounts.getAllBlocksInCache();
+		
+		assertEquals(account1.wins - rollbackDepth, account1AfterRollback.wins);
+		assertEquals(account2.losses - rollbackDepth, account2AfterRollback.losses);
+		assertEquals(currentHeight, accounts.getSyncHeight());
+		assertEquals(currentHeight, cachedBlocks.get(0).height);
+		assertEquals(1, cachedBlocks.size());
 	}
 	
 	@Test
-	public void rollBackAllSnapshots() throws AccountsException {
+	public void rollBackAllBlocks() throws AccountsException {
+		Account account1 = new Account(1, "account1", "pubkey1");
+		Account account2 = new Account(2, "account2", "pubkey2");
+		accounts.addIfNotPresent(Arrays.asList(account1, account2));
+		
 		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
-		for (int i = 0; i < 3; i++) {
-			accounts.updateSyncHeight(++currentHeight, 0);
-			accounts.takeSnapshot(String.valueOf(i));
+		for (int i = 0; i < 5; i++) {
+			StateChangeFromBattle changes = changesFromBattle(account1, account2, ++currentHeight, i + 1);
+			accounts.update(Arrays.asList(changes));
+			account1 = accounts.getById(account1.numericId());
+			account2 = accounts.getById(account2.numericId());
 		}
 		
-		int rollbackHeight = accounts.rollBackTo(Constants.INITIAL_SYNC_HEIGHT);
-		List<AccountsSnapshot> snapshots = accounts.getAllSnapshots();
+		accounts.rollBackTo(Constants.INITIAL_SYNC_HEIGHT);
 		
-		assertEquals(1, snapshots.size());
-		assertEquals(Constants.INITIAL_SYNC_HEIGHT, rollbackHeight);
-		assertEquals(Constants.INITIAL_SYNC_HEIGHT, snapshots.get(0).height);
-	}
-	
-	@Test
-	public void rollingBackDeletesNewAccounts() throws AccountsException {
-		int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
-		Account account1 = new Account(1, "account1", "pubkey1", 3, 0, 3, 1500);
-		Account account2 = new Account(2, "account2", "pubkey2", 2, 2, 1, 1000);
-		
-		accounts.insertOrUpdate(Arrays.asList(account1), ++currentHeight, 0);
-		accounts.takeSnapshot("1");
-		accounts.insertOrUpdate(Arrays.asList(account2), ++currentHeight, 0);
-		
-		Account account2BeforeRollback = getAccountOrNull(account2.numericId());
-		accounts.rollBackTo(--currentHeight);
-		Account account2AfterRollback = getAccountOrNull(account2.numericId());
-		
-		assertNotNull(account2BeforeRollback);
-		assertNull(account2AfterRollback);
-	}
-	
-	private Account getAccountOrNull(long id) {
-		try {
-			return accounts.getById(id);
-		} catch (AccountsException e) {
-			return null;
+		List<Account> accountsAfterRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
+		for (Account account : accountsAfterRollback) {
+			assertEquals(0, account.wins);
+			assertEquals(0, account.losses);
+			assertEquals(1000, account.rating);
+			assertEquals(0, account.streak);
 		}
+		assertEquals(Constants.INITIAL_SYNC_HEIGHT, accounts.getSyncHeight());
+		assertEquals(0, accounts.getAllBlocksInCache().size());
+	}
+	
+	private static StateChangeFromBattle changesFromBattle(Account winner, Account loser, int height, long blockId) {
+		RatingPair newRatings = Ratings.compute(winner.rating, loser.rating);
+		int newWinnerStreak = (winner.streak > 0) ? (winner.streak + 1) : 1;
+		int newLoserStreak = (loser.streak < 0) ? (loser.streak - 1) : -1;
+		
+		return new StateChangeFromBattle(
+			height,
+			blockId,
+			new PlayerChange(winner.numericId(), winner.rating, newRatings.winner, winner.streak, newWinnerStreak),
+			new PlayerChange(loser.numericId(), loser.rating, newRatings.loser, loser.streak, newLoserStreak)
+		);
 	}
 	
 }

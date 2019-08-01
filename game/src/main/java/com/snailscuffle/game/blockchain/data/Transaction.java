@@ -13,13 +13,15 @@ public class Transaction {
 	public final long recipient;
 	public final int height;
 	public final int index;
+	public final long blockId;
 	public final String message;
 	
-	public Transaction(long sender, long recipient, int height, int index, String message) {
+	public Transaction(long sender, long recipient, int height, int index, long blockId, String message) {
 		this.sender = sender;
 		this.recipient = recipient;
 		this.height = height;
 		this.index = index;
+		this.blockId = blockId;
 		this.message = message;
 	}
 	
@@ -28,6 +30,7 @@ public class Transaction {
 		JsonNode recipientNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "recipient", apiFunction);
 		JsonNode heightNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "height", apiFunction);
 		JsonNode indexNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "index", apiFunction);
+		JsonNode blockNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "block", apiFunction);
 		
 		JsonNode attachmentNode = txNode.get("attachment");
 		JsonNode messageNode = null;
@@ -39,6 +42,7 @@ public class Transaction {
 		recipient = BlockchainUtil.parseUnsignedLong(recipientNode, apiFunction + " returned invalid recipient account ID '" + recipientNode.textValue() + "'");
 		height = heightNode.asInt();
 		index = indexNode.asInt();
+		blockId = BlockchainUtil.parseUnsignedLong(blockNode, apiFunction + " returned invalid block ID '" + blockNode.textValue() + "'");
 		message = (messageNode == null) ? "" : messageNode.asText();
 	}
 	
