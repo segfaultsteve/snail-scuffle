@@ -12,7 +12,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +120,7 @@ public class Accounts implements Closeable {
 				sqlite.setAutoCommit(true);
 			}
 		} catch (SQLException e) {
-			String error = "Database error while attempting to update accounts";
+			String error = "Database error while attempting to add accounts";
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
@@ -130,7 +132,7 @@ public class Accounts implements Closeable {
 				+ "ON CONFLICT (ardor_account_id) DO NOTHING";
 		
 		try (PreparedStatement upsertAccount = sqlite.prepareStatement(insertAccountSql)) {
-			upsertAccount.setLong(1, account.numericId());
+			upsertAccount.setString(1, account.id);
 			upsertAccount.setString(2, account.username);
 			upsertAccount.setString(3, account.publicKey);
 			upsertAccount.setInt(4, account.wins);
@@ -140,6 +142,43 @@ public class Accounts implements Closeable {
 			upsertAccount.executeUpdate();
 		} catch (SQLException e) {
 			String error = "Database error while attempting to insert account " + account.id;
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
+	public void updateUsernames(List<Account> accounts) throws AccountsException {
+		try {
+			sqlite.setAutoCommit(false);
+			try {
+				for (Account account : accounts) {
+					updateUsername(account);
+				}
+				sqlite.commit();
+			} catch (AccountsException | SQLException e) {
+				sqlite.rollback();
+				throw e;
+			} finally {
+				sqlite.setAutoCommit(true);
+			}
+		} catch (SQLException e) {
+			String error = "Database error while attempting to update usernames";
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
+	public void updateUsername(Account account) throws AccountsException {
+		String updateUsernameSql =
+				  "UPDATE accounts"
+				+ "SET username = ?"
+				+ "WHERE ardor_account_id = ?";
+		try (PreparedStatement updateUsername = sqlite.prepareStatement(updateUsernameSql)) {
+			updateUsername.setString(1, account.username);
+			updateUsername.setString(2, account.id);
+			updateUsername.executeUpdate();
+		} catch (SQLException e) {
+			String error = "Database error while attempting to update username for account " + account.id;
 			logger.error(error, e);
 			throw new AccountsException(error, e);
 		}
@@ -254,7 +293,7 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public List<Account> getById(Set<Long> ids) throws AccountsException {
+	public Map<Long, Account> getById(Set<Long> ids) throws AccountsException {
 		String getAccountsSql = "SELECT * FROM accounts WHERE ardor_account_id IN (?)";
 		try (PreparedStatement getAccounts = sqlite.prepareStatement(getAccountsSql)) {
 			String idsString = ids.stream()
@@ -262,7 +301,8 @@ public class Accounts implements Closeable {
 					.reduce((result, next) -> result + ", " + next)
 					.get();
 			getAccounts.setString(1, idsString);
-			return executeQueryForAccounts(getAccounts);
+			return executeQueryForAccounts(getAccounts).stream()
+					.collect(Collectors.toMap(a -> a.numericId(), a -> a));
 		} catch (SQLException e) {
 			String error = "Database error while attempting to retrieve multiple accounts";
 			logger.error(error, e);
@@ -384,7 +424,7 @@ public class Accounts implements Closeable {
 	
 	public List<BlockSyncInfo> getSyncInfoFromRecentStateChanges() throws AccountsException {
 		String syncInfoSql =
-				  "SELECT finish_height, finish_block_id FROM recent_battles "
+				  "SELECT DISTINCT finish_height, finish_block_id FROM recent_battles "
 				+ "WHERE finish_block_id != 0 "
 				+ "ORDER BY finish_height DESC";
 		try (Statement statement = sqlite.createStatement()) {

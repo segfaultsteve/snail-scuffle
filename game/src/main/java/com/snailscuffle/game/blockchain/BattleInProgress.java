@@ -28,7 +28,7 @@ class BattleInProgress {
 	private final Map<Long, BattleMessages> messagesByPlayer = new HashMap<>();
 	private long disqualified;
 	private int disqualificationHeight = Integer.MAX_VALUE;
-	private long disqualificationBlockId = 0;
+	private long disqualificationBlockId;
 	
 	BattleInProgress(OnChain<? extends BattlePlanMessage> firstMessage) throws IllegalMessageException {
 		id = firstMessage.data.battleId;
@@ -293,6 +293,19 @@ class BattleInProgress {
 		int finishHeight = Math.max(firstMoverLastBp.height, secondMoverLastBp.height);
 		long finishBlockId = (finishHeight == firstMoverLastBp.height) ? firstMoverLastBp.blockId : secondMoverLastBp.blockId;
 		return new BattleInProgressResult(winner, loser, finishHeight, finishBlockId);
+	}
+	
+	void rollBackTo(int height) {
+		if (height < disqualificationHeight) {
+			disqualified = 0;
+			disqualificationHeight = Integer.MAX_VALUE;
+			disqualificationBlockId = 0;
+		}
+		
+		for (BattleMessages messages : messagesByPlayer.values()) {
+			messages.committedHashes.removeIf(h -> h.height > height);
+			messages.battlePlans.removeIf(bp -> bp.height > height);
+		}
 	}
 	
 }

@@ -31,8 +31,4 @@ public class Alias {
 		return aliases;
 	}
 	
-	public String toUsername() {
-		return name.replaceFirst("snailscuffle", "");
-	}
-	
 }

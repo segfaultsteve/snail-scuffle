@@ -20,7 +20,7 @@ public class BlockchainUtil {
 		}
 	}
 	
-	public static JsonNode getResponsePropertyOrThrow(JsonNode responseJson, String property, String apiFunction) throws BlockchainSubsystemException {
+	public static JsonNode getResponsePropertyOrThrow(JsonNode responseJson, String property, String apiFunction) throws BlockchainDataNotFoundException {
 		JsonNode value = responseJson.get(property);
 		if (value == null) {
 			String error = "Response from " + apiFunction + " did not contain property '" + property + "'";
@@ -28,7 +28,7 @@ public class BlockchainUtil {
 			if (errorDescription != null) {
 				error += ": " + errorDescription.textValue();
 			}
-			throw new BlockchainSubsystemException(error);
+			throw new BlockchainDataNotFoundException(error);
 		}
 		return value;
 	}

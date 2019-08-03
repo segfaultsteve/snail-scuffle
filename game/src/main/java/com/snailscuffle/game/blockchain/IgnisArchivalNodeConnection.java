@@ -4,9 +4,12 @@ import java.io.Closeable;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -62,17 +65,46 @@ public class IgnisArchivalNodeConnection implements Closeable {
 	}
 	
 	public Block getCurrentBlock() throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String url = baseUrl + "/nxt?requestType=getBlock";
+		List<Block> blocks = getRecentBlocks(1);
+		if (blocks.size() > 0) {
+			return blocks.get(0);
+		} else {
+			throw new BlockchainDataNotFoundException("Response from blockchain node contained no blocks");
+		}
+	}
+	
+	public List<Block> getRecentBlocks(int count) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String url = baseUrl + "/nxt?requestType=getBlocks&lastIndex=" + (count - 1);
 		String response = sendGETRequest(url, "Failed to get current block");
-		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getBlock");
-		return new Block(responseJson);
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getBlocks");
+		JsonNode blockArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "blocks", "getBlocks");
+		return Block.parseAll(blockArray, "getBlocks");
 	}
 	
 	public Block getBlockAtHeight(int height) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		String url = baseUrl + "/nxt?requestType=getBlock&height=" + height;
 		String response = sendGETRequest(url, "Failed to get block at height " + height);
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getBlock for height=" + height);
-		return new Block(responseJson);
+		return new Block(responseJson, "getBlock");
+	}
+	
+	public Account getPlayerAccount(long accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String accountIdString = Long.toUnsignedString(accountId);
+		String url = baseUrl + "/nxt?requestType=getAliases&chain=2&account=" + accountIdString;
+		String response = sendGETRequest(url, "Failed to get aliases for account " + accountIdString);
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getAliases");
+		JsonNode aliasArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "aliases", "getAliases");
+		List<Alias> aliases = Alias.parseAll(aliasArray, "getAliases");
+		
+		for (Alias alias : aliases) {
+			if (alias.name.startsWith("snailscuffle")) {
+				String publicKey = getPublicKey(alias.account);
+				String username = alias.name.replaceFirst("snailscuffle", "");
+				return new Account(alias.account, publicKey, username);		// use the first valid username (getAliases returns them in alphabetical order)
+			}
+		}
+		
+		throw new BlockchainDataNotFoundException("Account " + accountIdString + " does not have an alias with the prefix 'snailscuffle'");
 	}
 	
 	public List<Account> getAllPlayerAccounts() throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
@@ -82,10 +114,16 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		JsonNode aliasArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "aliases", "getAliasesLike");
 		List<Alias> aliases = Alias.parseAll(aliasArray, "getAliasesLike");
 		
+		Set<Long> accountIds = new HashSet<>();
 		List<Account> accounts = new ArrayList<>();
 		for (Alias alias : aliases) {
-			String publicKey = getPublicKey(alias.account);
-			accounts.add(new Account(alias.account, publicKey, alias.name));
+			// If an account has multiple snailscuffle aliases, use only the first. Note that
+			// getAliasesLike returns them in alphabetical order.
+			if (alias.name.startsWith("snailscuffle") && accountIds.add(alias.account)) {
+				String publicKey = getPublicKey(alias.account);
+				String username = alias.name.replaceFirst("snailscuffle", "");
+				accounts.add(new Account(alias.account, publicKey, username));
+			}
 		}
 		return accounts;
 	}
@@ -112,7 +150,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return new BigDecimal(nqt).divide(new BigDecimal(NQT_PER_IGNIS)).doubleValue();
 	}
 	
-	public List<Transaction> getTransactionsToAndFrom(long accountId, int initialHeight, int finalHeight) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+	public List<Transaction> getMessagesFrom(long accountId, int initialHeight, int finalHeight) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		String accountIdString = Long.toUnsignedString(accountId);
 		int startingTimestamp = getBlockAtHeight(initialHeight).timestamp;
 		String url = baseUrl + "/nxt?requestType=getBlockchainTransactions"
@@ -125,7 +163,9 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		String response = sendGETRequest(url, "Failed to get transactions to and from account " + accountIdString);
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response to getBlockchainTransactions inquiry for account " + accountIdString);
 		JsonNode txArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "transactions", "getBlockchainTransactions");
-		return Transaction.parseAll(txArray, "getBlockchainTransactions");
+		return Transaction.parseAll(txArray, "getBlockchainTransactions").stream()
+				.filter(t -> t.sender == accountId)
+				.collect(Collectors.toList());
 	}
 	
 	private String sendGETRequest(String url, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {

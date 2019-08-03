@@ -130,6 +130,21 @@ class BattlesInProgress {
 		);
 	}
 	
+	void rollBackTo(int height) {
+		List<String> toRemove = new ArrayList<>();
+		for (BattleInProgress battle : battlesById.values()) {
+			if (battle.startHeight() > height) {
+				toRemove.add(battle.id);
+			} else {
+				battle.rollBackTo(height);
+			}
+		}
+		
+		for (String id : toRemove) {
+			battlesById.remove(id);
+		}
+	}
+	
 	void clear() {
 		battlesById.clear();
 	}
