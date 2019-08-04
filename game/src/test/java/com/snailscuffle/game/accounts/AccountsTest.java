@@ -1,6 +1,7 @@
 package com.snailscuffle.game.accounts;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -62,6 +63,26 @@ public class AccountsTest {
 		assertEquals(preexistingAccount.rating, retrievedAccount.rating);
 	}
 	
+	@Test
+	public void updateUsername() throws AccountsException {
+		Account initial = new Account(1, "account1", "pubkey1", 3, 1, 3, 1050);
+		accounts.addIfNotPresent(Arrays.asList(initial));
+		
+		Account updated = new Account(initial.numericId(), "account1Updated", initial.publicKey);
+		accounts.updateUsernames(Arrays.asList(updated));
+		
+		Account retrieved = accounts.getByUsername(updated.username);
+		boolean initialUsernameStillExists = true;
+		try {
+			accounts.getByUsername(initial.username);
+		} catch (AccountsException e) {
+			initialUsernameStillExists = false;
+		}
+		
+		assertEquals(updated.username, retrieved.username);
+		assertFalse(initialUsernameStillExists);
+	}
+		
 	@Test
 	public void updateAccount() throws AccountsException {
 		Account account1 = new Account(1, "account1", "pubkey1");

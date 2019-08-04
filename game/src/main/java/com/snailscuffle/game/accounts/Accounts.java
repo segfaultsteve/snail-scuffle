@@ -168,10 +168,10 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public void updateUsername(Account account) throws AccountsException {
+	private void updateUsername(Account account) throws AccountsException {
 		String updateUsernameSql =
-				  "UPDATE accounts"
-				+ "SET username = ?"
+				  "UPDATE accounts "
+				+ "SET username = ? "
 				+ "WHERE ardor_account_id = ?";
 		try (PreparedStatement updateUsername = sqlite.prepareStatement(updateUsernameSql)) {
 			updateUsername.setString(1, account.username);
@@ -222,14 +222,14 @@ public class Accounts implements Closeable {
 	private void updateAccountsTable(StateChangeFromBattle change) throws AccountsException {
 		String updateWinnerSql =
 				  "UPDATE accounts SET "
-				+	"wins = wins + 1,"
+				+	"wins = wins + 1, "
 				+	"rating = " + change.winner.updated.rating + ", "
 				+	"streak = " + change.winner.updated.streak + " "
 				+ "WHERE ardor_account_id = " + Long.toUnsignedString(change.winner.id);
 		
 		String updateLoserSql =
 				  "UPDATE accounts SET "
-				+	"losses = losses + 1,"
+				+	"losses = losses + 1, "
 				+	"rating = " + change.loser.updated.rating + ", "
 				+	"streak = " + change.loser.updated.streak + " "
 				+ "WHERE ardor_account_id = " + Long.toUnsignedString(change.loser.id);
