@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.snailscuffle.game.accounts.Account;
+import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.Alias;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
@@ -88,7 +88,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return new Block(responseJson, "getBlock");
 	}
 	
-	public Account getPlayerAccount(long accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+	public AccountMetadata getPlayerAccount(long accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		String accountIdString = Long.toUnsignedString(accountId);
 		String url = baseUrl + "/nxt?requestType=getAliases&chain=2&account=" + accountIdString;
 		String response = sendGETRequest(url, "Failed to get aliases for account " + accountIdString);
@@ -100,14 +100,14 @@ public class IgnisArchivalNodeConnection implements Closeable {
 			if (alias.name.startsWith("snailscuffle")) {
 				String publicKey = getPublicKey(alias.account);
 				String username = alias.name.replaceFirst("snailscuffle", "");
-				return new Account(alias.account, publicKey, username);		// use the first valid username (getAliases returns them in alphabetical order)
+				return new AccountMetadata(alias.account, username, publicKey);		// use the first valid username (getAliases returns them in alphabetical order)
 			}
 		}
 		
 		throw new BlockchainDataNotFoundException("Account " + accountIdString + " does not have an alias with the prefix 'snailscuffle'");
 	}
 	
-	public List<Account> getAllPlayerAccounts() throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+	public List<AccountMetadata> getAllPlayerAccounts() throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		String url = baseUrl + "/nxt?requestType=getAliasesLike&chain=2&aliasPrefix=snailscuffle";
 		String response = sendGETRequest(url, "Failed to get aliases with the prefix 'snailscuffle'");
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getAliasesLike");
@@ -115,14 +115,14 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		List<Alias> aliases = Alias.parseAll(aliasArray, "getAliasesLike");
 		
 		Set<Long> accountIds = new HashSet<>();
-		List<Account> accounts = new ArrayList<>();
+		List<AccountMetadata> accounts = new ArrayList<>();
 		for (Alias alias : aliases) {
 			// If an account has multiple snailscuffle aliases, use only the first. Note that
 			// getAliasesLike returns them in alphabetical order.
 			if (alias.name.startsWith("snailscuffle") && accountIds.add(alias.account)) {
 				String publicKey = getPublicKey(alias.account);
 				String username = alias.name.replaceFirst("snailscuffle", "");
-				accounts.add(new Account(alias.account, publicKey, username));
+				accounts.add(new AccountMetadata(alias.account, username, publicKey));
 			}
 		}
 		return accounts;

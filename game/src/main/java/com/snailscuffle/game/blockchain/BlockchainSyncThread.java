@@ -18,6 +18,7 @@ import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.Accounts;
 import com.snailscuffle.game.accounts.AccountsException;
+import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.BattlePlanCommitMessage;
 import com.snailscuffle.game.blockchain.data.BattlePlanMessage;
 import com.snailscuffle.game.blockchain.data.Block;
@@ -112,7 +113,9 @@ class BlockchainSyncThread extends Thread {
 	private SyncAction syncFromLastHeight(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		try {
 			Block currentBlock = ignisNode.getCurrentBlock();
-			List<Account> playerAccounts = ignisNode.getAllPlayerAccounts();
+			List<Account> playerAccounts = ignisNode.getAllPlayerAccounts().stream()
+					.map(a -> new Account(a.id, a.username, a.publicKey))
+					.collect(Collectors.toList());
 			
 			accounts.addIfNotPresent(playerAccounts);
 			accounts.updateUsernames(playerAccounts);
@@ -245,8 +248,8 @@ class BlockchainSyncThread extends Thread {
 		
 		List<Account> accounts = new ArrayList<>();
 		for (Long accountId : accountsWithChangedAliases) {
-			Account account = ignisNode.getPlayerAccount(accountId);
-			accounts.add(account);
+			AccountMetadata account = ignisNode.getPlayerAccount(accountId);
+			accounts.add(new Account(account.id, account.username, account.publicKey));
 		}
 		return accounts;
 	}
