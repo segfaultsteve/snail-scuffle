@@ -74,7 +74,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 	}
 	
 	public List<Block> getRecentBlocks(int count) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String url = baseUrl + "/nxt?requestType=getBlocks&lastIndex=" + (count - 1);
+		String url = baseUrl + "/nxt?requestType=getBlocks&includeTransactions=true&lastIndex=" + (count - 1);
 		String response = sendGETRequest(url, "Failed to get current block");
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getBlocks");
 		JsonNode blockArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "blocks", "getBlocks");
@@ -164,7 +164,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response to getBlockchainTransactions inquiry for account " + accountIdString);
 		JsonNode txArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "transactions", "getBlockchainTransactions");
 		return Transaction.parseAll(txArray, "getBlockchainTransactions").stream()
-				.filter(t -> t.sender == accountId)
+				.filter(t -> t.sender == accountId && t.height <= finalHeight)
 				.collect(Collectors.toList());
 	}
 	

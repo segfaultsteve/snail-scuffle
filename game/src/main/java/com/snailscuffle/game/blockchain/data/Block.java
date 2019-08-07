@@ -14,6 +14,13 @@ public class Block {
 	public final int timestamp;
 	public final List<Transaction> transactions = new ArrayList<>();
 	
+	public Block(long id, int height, int timestamp, List<Transaction> transactions) {
+		this.id = id;
+		this.height = height;
+		this.timestamp = timestamp;
+		this.transactions.addAll(transactions);
+	}
+	
 	public Block(JsonNode blockJson, String apiFunction) throws BlockchainSubsystemException {
 		JsonNode blockIdNode = BlockchainUtil.getResponsePropertyOrThrow(blockJson, "block", apiFunction);
 		JsonNode heightNode = BlockchainUtil.getResponsePropertyOrThrow(blockJson, "height", apiFunction);

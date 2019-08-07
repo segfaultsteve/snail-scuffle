@@ -17,11 +17,21 @@ public class Transaction {
 	public final String message;
 	public final String alias;		// Note: This is merely the aliasName (if present) in the attachments node. It does not necessarily belong to sender.
 	
+	public Transaction(long sender, long recipient, int height, int index, int blockId, String message, String alias) {
+		this.sender = sender;
+		this.recipient = recipient;
+		this.height = height;
+		this.index = index;
+		this.blockId = blockId;
+		this.message = message;
+		this.alias = alias;
+	}
+	
 	public Transaction(JsonNode txNode, String apiFunction) throws BlockchainSubsystemException {
 		JsonNode senderNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "sender", apiFunction);
 		JsonNode recipientNode = txNode.get("recipient");
 		JsonNode heightNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "height", apiFunction);
-		JsonNode indexNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "index", apiFunction);
+		JsonNode indexNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "transactionIndex", apiFunction);
 		JsonNode blockNode = BlockchainUtil.getResponsePropertyOrThrow(txNode, "block", apiFunction);
 		
 		JsonNode attachmentNode = txNode.get("attachment");
