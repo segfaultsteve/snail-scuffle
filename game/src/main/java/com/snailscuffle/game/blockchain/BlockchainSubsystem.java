@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.net.URL;
 
 import com.snailscuffle.game.accounts.Account;
+import com.snailscuffle.game.accounts.AccountNotFoundException;
 import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.accounts.Accounts;
 
@@ -23,10 +24,23 @@ public class BlockchainSubsystem implements Closeable {
 	}
 	
 	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException, InterruptedException {
-		long numericId = Long.parseUnsignedLong(id);	// for now, assume 64-bit integer form
-		Account account = accounts.getById(numericId);
-		account.balance = ignisNode.getBalance(account.numericId());
-		return account;
+		try {
+			long numericId = Long.parseUnsignedLong(id);	// for now, assume 64-bit integer form
+			
+			Account account = null;
+			try {
+				account = accounts.getById(numericId);
+			} catch (AccountNotFoundException e) {
+				account = new Account(numericId, "", "", 0, 0, 0, 0, 0, 0);
+			}
+			
+			account.balance = ignisNode.getBalance(numericId);
+			return account;
+		} catch (NumberFormatException e) {
+			throw new AccountNotFoundException("'" + id + "' is not a valid account ID");
+		} catch (BlockchainDataNotFoundException e) {
+			throw new AccountNotFoundException("Account " + id + " not found: " + e.getMessage());
+		}
 	}
 	
 	public Account getAccountByUsername(String username) throws AccountsException, BlockchainSubsystemException, InterruptedException {

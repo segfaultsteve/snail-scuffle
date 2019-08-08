@@ -16,11 +16,13 @@ import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import com.snailscuffle.common.ErrorResponse;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.Constants;
+import com.snailscuffle.game.blockchain.BlockchainDataNotFoundException;
 import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.blockchain.IgnisArchivalNodeConnection;
 
@@ -81,10 +83,22 @@ public class AccountsServletTest {
 	}
 	
 	@Test
+	public void getBalanceOfUntrackedAccount() throws Exception {
+		String response = sendGetRequest("id=" + ACCOUNT1.id);
+		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
+		
+		assertEquals(ACCOUNT1.id, retrievedAccount.id);
+		assertEquals(ACCOUNT1.balance, retrievedAccount.balance, DELTA);
+		assertEquals("", retrievedAccount.username);
+		assertEquals("", retrievedAccount.publicKey);
+	}
+	
+	@Test
 	public void reportAccountNotFound() throws Exception {
+		Mockito.doThrow(BlockchainDataNotFoundException.class).when(mockIgnisNode).getBalance(ACCOUNT1.numericId());
 		int expectedErrorCode = ErrorResponse.failedToRetrieveAccount().errorCode;
 		
-		String response = sendGetRequest("id=123");
+		String response = sendGetRequest("id=" + ACCOUNT1.id);
 		ErrorResponse error = JsonUtil.deserialize(ErrorResponse.class, response);
 		
 		assertEquals(expectedErrorCode, error.errorCode);

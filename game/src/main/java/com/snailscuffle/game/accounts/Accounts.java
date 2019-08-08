@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -47,16 +49,22 @@ public class Accounts implements Closeable {
 	}
 	
 	private boolean dbPreviouslyInitialized() throws SQLException {
-		String accountsTableExistsSql = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'accounts'";
+		Function<String, String> tableExistsSql = (table) -> "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '" + table + "'";
+		String accountsTableExistsSql = tableExistsSql.apply("accounts");
+		String recentBattlesTableExistsSql = tableExistsSql.apply("recent_battles");
+		String syncStateTableExistsSql = tableExistsSql.apply("sync_state");
+		
 		try (Statement statement = sqlite.createStatement()) {
-			ResultSet result = statement.executeQuery(accountsTableExistsSql);
-			return result.next();
+			ResultSet accountsResult = statement.executeQuery(accountsTableExistsSql);
+			ResultSet recentBattlesResult = statement.executeQuery(recentBattlesTableExistsSql);
+			ResultSet syncStateResult = statement.executeQuery(syncStateTableExistsSql);
+			return accountsResult.next() && recentBattlesResult.next() && syncStateResult.next();
 		}
 	}
 	
 	private void initDb() throws SQLException {
 		String createAccountsTableSql =
-				  "CREATE TABLE accounts ("
+				  "CREATE TABLE IF NOT EXISTS accounts ("
 				+	"ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
 				+	"username TEXT NOT NULL COLLATE NOCASE CHECK (length(username) > 0), "
 				+	"public_key TEXT NOT NULL COLLATE NOCASE CHECK (length(public_key) > 0), "
@@ -67,7 +75,7 @@ public class Accounts implements Closeable {
 				+ ")";
 		
 		String createRecentBattlesTableSql =
-				  "CREATE TABLE recent_battles ("
+				  "CREATE TABLE IF NOT EXISTS recent_battles ("
 				+	"finish_height INTEGER NOT NULL CHECK (finish_height > 0), "
 				+	"finish_block_id INTEGER NOT NULL, "
 				+	"winner_id INTEGER NOT NULL, "
@@ -83,11 +91,12 @@ public class Accounts implements Closeable {
 				+ ")";
 		
 		String createSyncStateTableSql =
-				  "CREATE TABLE sync_state ("
+				  "CREATE TABLE IF NOT EXISTS sync_state ("
 				+	"height INTEGER NOT NULL CHECK (height > 0), "
 				+	"block_id INTEGER NOT NULL"
 				+ ")";
 		
+		String clearSyncStateSql = "DELETE FROM sync_state";
 		String initSyncStateSql = "INSERT INTO sync_state VALUES (" + Constants.INITIAL_SYNC_HEIGHT + ", " + Constants.INITIAL_SYNC_BLOCK_ID + ")";
 		
 		sqlite.setAutoCommit(false);
@@ -95,6 +104,7 @@ public class Accounts implements Closeable {
 			statement.executeUpdate(createAccountsTableSql);
 			statement.executeUpdate(createRecentBattlesTableSql);
 			statement.executeUpdate(createSyncStateTableSql);
+			statement.executeUpdate(clearSyncStateSql);
 			statement.executeUpdate(initSyncStateSql);
 			sqlite.commit();
 		} catch (SQLException e) {
@@ -276,13 +286,13 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public Account getById(long id) throws AccountsException {
+	public Account getById(long id) throws AccountNotFoundException, AccountsException {
 		String getAccountSql = "SELECT * FROM accounts WHERE ardor_account_id = ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
 			getAccount.setString(1, Long.toUnsignedString(id));
 			List<Account> match = executeQueryForAccounts(getAccount);
 			if (match.isEmpty()) {
-				throw new AccountsException("Account(s) not found");
+				throw new AccountNotFoundException("Account(s) not found");
 			} else {
 				return match.get(0);
 			}
@@ -294,6 +304,10 @@ public class Accounts implements Closeable {
 	}
 	
 	public Map<Long, Account> getById(Set<Long> ids) throws AccountsException {
+		if (ids.isEmpty()) {
+			return new HashMap<Long, Account>();
+		}
+		
 		String getAccountsSql = "SELECT * FROM accounts WHERE ardor_account_id IN (?)";
 		try (PreparedStatement getAccounts = sqlite.prepareStatement(getAccountsSql)) {
 			String idsString = ids.stream()
@@ -310,13 +324,13 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	public Account getByUsername(String username) throws AccountsException {
+	public Account getByUsername(String username) throws AccountNotFoundException, AccountsException {
 		String getAccountSql = "SELECT * FROM accounts WHERE username = ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
 			getAccount.setString(1, username);
 			List<Account> match = executeQueryForAccounts(getAccount);
 			if (match.isEmpty()) {
-				throw new AccountsException("Account(s) not found");
+				throw new AccountNotFoundException("Account(s) not found");
 			} else {
 				return match.get(0);
 			}

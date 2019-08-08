@@ -199,7 +199,7 @@ public class AccountsTest {
 			account1 = accounts.getById(account1.numericId());
 			account2 = accounts.getById(account2.numericId());
 		}
-		List<Account> accountsBeforeRollback = Arrays.asList(accounts.getById(account1.numericId()), accounts.getById(account2.numericId()));
+		List<Account> accountsBeforeRollback = Arrays.asList(account1, account2);
 		
 		accounts.rollBackTo(currentHeight, currentBlockId);
 		
