@@ -43,7 +43,7 @@ public class AccountsServletTest {
 		when(mockIgnisNode.getBalance(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
 		
 		accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
-		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts);
+		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
 	}
 
 	@Test

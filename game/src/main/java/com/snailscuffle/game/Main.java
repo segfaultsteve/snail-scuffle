@@ -39,7 +39,7 @@ public class Main {
 			if (settings.ignisArchivalNodeUrl != null) {
 				createAccountsDatabaseDirectory(settings.databasePath);
 				Accounts accounts = new Accounts(settings.databasePath.toString(), Constants.RECENT_BATTLES_DEPTH);
-				blockchainSubsystem = new BlockchainSubsystem(settings.ignisArchivalNodeUrl, accounts);
+				blockchainSubsystem = new BlockchainSubsystem(settings.ignisArchivalNodeUrl, accounts, Constants.RECENT_BATTLES_DEPTH);
 			}
 			
 			Server server = configureJettyServer(settings, blockchainSubsystem);

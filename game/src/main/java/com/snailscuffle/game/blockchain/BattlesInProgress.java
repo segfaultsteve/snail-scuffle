@@ -38,6 +38,11 @@ class BattlesInProgress {
 	
 	private static final Logger logger = LoggerFactory.getLogger(BattlesInProgress.class);
 	private final Map<String, BattleInProgress> battlesById = new HashMap<>();
+	private final int recentBattlesDepth;
+	
+	BattlesInProgress(int recentBattlesDepth) {
+		this.recentBattlesDepth = recentBattlesDepth;
+	}
 	
 	void update(Iterable<OnChain<? extends BattlePlanMessage>> battlePlanMessages) {
 		for (OnChain<? extends BattlePlanMessage> message : battlePlanMessages) {
@@ -79,7 +84,7 @@ class BattlesInProgress {
 				StateChangeFromBattle change = updateAccounts(result, currentStateOfAccounts);
 				changes.add(change);
 			}
-			if (result.isFinished() || result.wasAborted()) {
+			if ((result.isFinished() || result.wasAborted()) && currentHeight - result.finishHeight >= recentBattlesDepth) {
 				battlesToRemove.add(battle);
 			}
 		}

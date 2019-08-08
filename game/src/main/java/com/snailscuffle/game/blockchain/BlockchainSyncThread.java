@@ -50,15 +50,17 @@ class BlockchainSyncThread extends Thread {
 	private final SyncAction ABORT;
 	private final SyncAction EXIT_WITH_ERROR;
 	
-	private final BattlesInProgress battlesInProgress = new BattlesInProgress();
+	private final BattlesInProgress battlesInProgress;
 
-	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
+	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts, int recentBattlesDepth) {
 		CONNECT = new SyncAction(() -> connect(ignisNode));
 		VALIDATE_RECENT_BLOCKS = new SyncAction(() -> validateRecentBlocks(ignisNode, accounts));
 		SYNC_FROM_LAST_HEIGHT = new SyncAction(() -> syncFromLastHeight(ignisNode, accounts));
 		CONTINUOUS_SYNC_LOOP = new SyncAction(() -> continuousSyncLoop(ignisNode, accounts));
 		ABORT = new SyncAction(() -> abort());
 		EXIT_WITH_ERROR = new SyncAction(() -> exitWithError());
+		
+		battlesInProgress = new BattlesInProgress(recentBattlesDepth);
 	}
 	
 	@Override

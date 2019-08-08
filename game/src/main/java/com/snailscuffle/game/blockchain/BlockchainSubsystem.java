@@ -12,14 +12,14 @@ public class BlockchainSubsystem implements Closeable {
 	private final IgnisArchivalNodeConnection ignisNode;
 	private final Accounts accounts;
 	
-	public BlockchainSubsystem(URL ignisArchivalNodeUrl, Accounts accounts) throws BlockchainSubsystemException {
-		this(new IgnisArchivalNodeConnection(ignisArchivalNodeUrl), accounts);
+	public BlockchainSubsystem(URL ignisArchivalNodeUrl, Accounts accounts, int recentBattlesDepth) throws BlockchainSubsystemException {
+		this(new IgnisArchivalNodeConnection(ignisArchivalNodeUrl), accounts, recentBattlesDepth);
 	}
 	
-	public BlockchainSubsystem(IgnisArchivalNodeConnection node, Accounts accounts) {
+	public BlockchainSubsystem(IgnisArchivalNodeConnection node, Accounts accounts, int recentBattlesDepth) {
 		ignisNode = node;
 		this.accounts = accounts;
-		(new BlockchainSyncThread(ignisNode, accounts)).start();
+		(new BlockchainSyncThread(ignisNode, accounts, recentBattlesDepth)).start();
 	}
 	
 	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException, InterruptedException {

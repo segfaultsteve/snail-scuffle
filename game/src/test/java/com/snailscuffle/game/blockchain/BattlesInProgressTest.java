@@ -3,10 +3,12 @@ package com.snailscuffle.game.blockchain;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 import org.junit.Before;
@@ -75,7 +77,7 @@ public class BattlesInProgressTest {
 			player1Messages.add(newRevealMessage(losingBp, i, i * BLOCKS_PER_ROUND + 2, PLAYER_1_ID));
 		}
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(ROUNDS * BLOCKS_PER_ROUND);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(ROUNDS * BLOCKS_PER_ROUND);
 		
 		Account player0 = finalStateOfAccounts.get(PLAYER_0_ID);
 		Account player1 = finalStateOfAccounts.get(PLAYER_1_ID);
@@ -90,7 +92,7 @@ public class BattlesInProgressTest {
 		
 		player0Messages.add(newCommitMessage(winningBpHash, 0, 0, PLAYER_0_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(CURRENT_HEIGHT);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(CURRENT_HEIGHT);
 		
 		assertNoChange(finalStateOfAccounts.get(PLAYER_0_ID));
 		assertNoChange(finalStateOfAccounts.get(PLAYER_1_ID));
@@ -103,7 +105,7 @@ public class BattlesInProgressTest {
 		player0Messages.add(newCommitMessage(winningBpHash, 0, 0, PLAYER_0_ID));
 		player1Messages.add(newCommitMessage(losingBpHash, 0, 1, PLAYER_1_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(CURRENT_HEIGHT);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(CURRENT_HEIGHT);
 		
 		assertNoChange(finalStateOfAccounts.get(PLAYER_0_ID));
 		assertNoChange(finalStateOfAccounts.get(PLAYER_1_ID));
@@ -119,7 +121,7 @@ public class BattlesInProgressTest {
 		player0Messages.add(newRevealMessage(winningBp, 0, 2, PLAYER_0_ID));
 		player1Messages.add(newRevealMessage(losingBp, 0, 2, PLAYER_1_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(CURRENT_HEIGHT);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(CURRENT_HEIGHT);
 		
 		assertNoChange(finalStateOfAccounts.get(PLAYER_0_ID));
 		assertNoChange(finalStateOfAccounts.get(PLAYER_1_ID));
@@ -131,7 +133,7 @@ public class BattlesInProgressTest {
 		
 		player0Messages.add(newCommitMessage(winningBpHash, 0, 0, PLAYER_0_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(CURRENT_HEIGHT);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(CURRENT_HEIGHT);
 		
 		assertNoChange(finalStateOfAccounts.get(PLAYER_0_ID));
 		assertNoChange(finalStateOfAccounts.get(PLAYER_1_ID));
@@ -147,7 +149,7 @@ public class BattlesInProgressTest {
 		// player 0 doesn't reveal
 		player1Messages.add(newRevealMessage(losingBp, 0, 2, PLAYER_1_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(CURRENT_HEIGHT);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(CURRENT_HEIGHT);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_1_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_0_ID));
@@ -169,7 +171,7 @@ public class BattlesInProgressTest {
 		
 		player0Messages.remove(player0Messages.size() - 1);		// remove last commit message
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_1_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_0_ID));
@@ -189,7 +191,7 @@ public class BattlesInProgressTest {
 		
 		player0Messages.remove(player0Messages.size() - 1);
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_1_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_0_ID));
@@ -210,7 +212,7 @@ public class BattlesInProgressTest {
 		OnChain<BattlePlanCommitMessage> committedTooLate = newCommitMessage(winningBpHash, ROUNDS - 1, ROUNDS * BLOCKS_PER_ROUND, PLAYER_0_ID);
 		player0Messages.set(2*ROUNDS - 2, committedTooLate);
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_1_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_0_ID));
@@ -228,7 +230,7 @@ public class BattlesInProgressTest {
 		player0Messages.add(newRevealMessage(winningBp, 0, REVEAL_TOO_LATE_HEIGHT, PLAYER_0_ID));
 		player1Messages.add(newRevealMessage(losingBp, 0, REVEAL_IN_TIME_HEIGHT, PLAYER_1_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(2 * Constants.MAX_BLOCKS_PER_ROUND);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(2 * Constants.MAX_BLOCKS_PER_ROUND);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_1_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_0_ID));
@@ -249,7 +251,7 @@ public class BattlesInProgressTest {
 		OnChain<BattlePlanRevealMessage> revealedTooLate = newRevealMessage(winningBp, ROUNDS - 1, ROUNDS * BLOCKS_PER_ROUND, PLAYER_0_ID);
 		player0Messages.set(2*ROUNDS - 1, revealedTooLate);
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(ROUNDS * BLOCKS_PER_ROUND + Constants.MAX_BLOCKS_PER_ROUND);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_1_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_0_ID));
@@ -265,7 +267,7 @@ public class BattlesInProgressTest {
 		player0Messages.add(newRevealMessage(winningBp, 0, 2, PLAYER_0_ID));
 		player1Messages.add(newRevealMessage(losingBp, 0, 2, PLAYER_1_ID));
 		
-		Map<Long, Account> finalStateOfAccounts = runBattle(CURRENT_HEIGHT);
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(CURRENT_HEIGHT);
 		
 		assertWinner(finalStateOfAccounts.get(PLAYER_0_ID));
 		assertLoser(finalStateOfAccounts.get(PLAYER_1_ID));
@@ -284,12 +286,63 @@ public class BattlesInProgressTest {
 		}
 		
 		int finishHeight = player0Messages.get(2 * ROUNDS - 1).height;
-		Map<Long, Account> finalStateOfAccounts = runBattle(finishHeight, finishHeight + 10);	// initial height is finishHeight
+		Map<Long, Account> finalStateOfAccounts = runBattleAndUpdateAccounts(finishHeight, finishHeight + 10);	// initial height is finishHeight
 		
 		// First mover won, but we shouldn't record any change because the battle concluded
 		// on a block (finishHeight) that we said we had already synced.
 		assertNoChange(finalStateOfAccounts.get(PLAYER_0_ID));
 		assertNoChange(finalStateOfAccounts.get(PLAYER_1_ID));
+	}
+	
+	@Test
+	public void rollBack() {
+		final int ROUNDS = 3;
+		
+		IntFunction<List<OnChain<? extends BattlePlanMessage>>> messagesForRound = (round) -> {
+			return Arrays.asList(
+				newCommitMessage(winningBpHash, round, round * BLOCKS_PER_ROUND, PLAYER_0_ID),
+				newCommitMessage(losingBpHash, round, round * BLOCKS_PER_ROUND + 1, PLAYER_1_ID),
+				newRevealMessage(winningBp, round, round * BLOCKS_PER_ROUND + 2, PLAYER_0_ID),
+				newRevealMessage(losingBp, round, round * BLOCKS_PER_ROUND + 2, PLAYER_1_ID)
+			);
+		};
+		
+		List<OnChain<? extends BattlePlanMessage>> messages = new ArrayList<>();
+		for (int i = 0; i < ROUNDS; i++) {
+			messages.addAll(messagesForRound.apply(i));
+		}
+		
+		BattlesInProgress battles = new BattlesInProgress(Constants.RECENT_BATTLES_DEPTH);
+		battles.update(messages);
+		
+		// Run a full battle.
+		Collection<StateChangeFromBattle> changes = battles.runAll(initialStateOfAccounts, 0, ROUNDS * BLOCKS_PER_ROUND);
+		Map<Long, Account> accountsBeforeRollback = updateAccounts(changes, initialStateOfAccounts);
+		
+		// Roll back the final round.
+		int justBeforeFinalRound = (ROUNDS - 1) * BLOCKS_PER_ROUND - 1;
+		battles.rollBackTo(justBeforeFinalRound);
+		
+		changes = battles.runAll(initialStateOfAccounts, 0, justBeforeFinalRound);
+		Map<Long, Account> accountsAfterRollback = updateAccounts(changes, initialStateOfAccounts);
+		
+		// Redo *just* the final round.
+		List<OnChain<? extends BattlePlanMessage>> messagesForFinalRound = messagesForRound.apply(ROUNDS - 1);
+		battles.update(messagesForFinalRound);
+		
+		changes = battles.runAll(initialStateOfAccounts, 0, ROUNDS * BLOCKS_PER_ROUND);
+		Map<Long, Account> accountsAfterRedo = updateAccounts(changes, initialStateOfAccounts);
+		
+		// We should observe the result of the battle before rolling back and after redoing the
+		// final round, but not immediately after the rollback.
+		assertWinner(accountsBeforeRollback.get(PLAYER_0_ID));
+		assertLoser(accountsBeforeRollback.get(PLAYER_1_ID));
+		
+		assertNoChange(accountsAfterRollback.get(PLAYER_0_ID));
+		assertNoChange(accountsAfterRollback.get(PLAYER_1_ID));
+		
+		assertWinner(accountsAfterRedo.get(PLAYER_0_ID));
+		assertLoser(accountsAfterRedo.get(PLAYER_1_ID));
 	}
 	
 	private static OnChain<BattlePlanCommitMessage> newCommitMessage(String hash, int round, int height, long sender) {
@@ -304,17 +357,24 @@ public class BattlesInProgressTest {
 		return new OnChain<BattlePlanRevealMessage>(0, height, 0, sender, recipient, revealMessage);
 	}
 	
-	private Map<Long, Account> runBattle(int currentHeight) {
-		return runBattle(0, currentHeight);
+	private Map<Long, Account> runBattleAndUpdateAccounts(int currentHeight) {
+		return runBattleAndUpdateAccounts(0, currentHeight);
 	}
 	
-	private Map<Long, Account> runBattle(int initialHeight, int currentHeight) {
-		BattlesInProgress battles = new BattlesInProgress();
+	private Map<Long, Account> runBattleAndUpdateAccounts(int initialHeight, int currentHeight) {
+		Collection<StateChangeFromBattle> changes = runBattle(initialHeight, currentHeight);
+		return updateAccounts(changes, initialStateOfAccounts);
+	}
+	
+	private Collection<StateChangeFromBattle> runBattle(int initialHeight, int currentHeight) {
+		BattlesInProgress battles = new BattlesInProgress(Constants.RECENT_BATTLES_DEPTH);
 		battles.update(player0Messages);
 		battles.update(player1Messages);
 		
-		Collection<StateChangeFromBattle> changes = battles.runAll(initialStateOfAccounts, initialHeight, currentHeight);
-		
+		return battles.runAll(initialStateOfAccounts, initialHeight, currentHeight);
+	}
+	
+	private static Map<Long, Account> updateAccounts(Collection<StateChangeFromBattle> changes, Map<Long, Account> initialStateOfAccounts) {
 		Map<Long, Account> updatedAccounts = copy(initialStateOfAccounts);
 		for (StateChangeFromBattle change : changes) {
 			Account winner = updatedAccounts.get(change.winner.id);
@@ -327,7 +387,6 @@ public class BattlesInProgressTest {
 			loser.rating = change.loser.updated.rating;
 			loser.streak = change.loser.updated.streak;
 		}
-		
 		return updatedAccounts;
 	}
 	
