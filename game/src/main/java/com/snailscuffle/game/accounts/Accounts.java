@@ -55,14 +55,19 @@ public class Accounts implements Closeable {
 		String syncStateTableExistsSql = tableExistsSql.apply("sync_state");
 		
 		try (Statement statement = sqlite.createStatement()) {
-			ResultSet accountsResult = statement.executeQuery(accountsTableExistsSql);
-			ResultSet recentBattlesResult = statement.executeQuery(recentBattlesTableExistsSql);
-			ResultSet syncStateResult = statement.executeQuery(syncStateTableExistsSql);
-			return accountsResult.next() && recentBattlesResult.next() && syncStateResult.next();
+			boolean accountsExists = statement.executeQuery(accountsTableExistsSql).next();
+			boolean recentBattlesExists = statement.executeQuery(recentBattlesTableExistsSql).next();
+			boolean syncStateExists = statement.executeQuery(syncStateTableExistsSql).next();
+			return accountsExists && recentBattlesExists && syncStateExists;
 		}
 	}
 	
 	private void initDb() throws SQLException {
+		String clearTablesSql =
+				  "DROP TABLE IF EXISTS accounts; "
+				+ "DROP TABLE IF EXISTS recent_battles; "
+				+ "DROP TABLE IF EXISTS sync_state";
+		
 		String createAccountsTableSql =
 				  "CREATE TABLE IF NOT EXISTS accounts ("
 				+	"ardor_account_id INTEGER PRIMARY KEY NOT NULL CHECK (ardor_account_id > 0), "
@@ -96,15 +101,14 @@ public class Accounts implements Closeable {
 				+	"block_id INTEGER NOT NULL"
 				+ ")";
 		
-		String clearSyncStateSql = "DELETE FROM sync_state";
 		String initSyncStateSql = "INSERT INTO sync_state VALUES (" + Constants.INITIAL_SYNC_HEIGHT + ", " + Constants.INITIAL_SYNC_BLOCK_ID + ")";
 		
 		sqlite.setAutoCommit(false);
 		try (Statement statement = sqlite.createStatement()) {
+			statement.executeUpdate(clearTablesSql);
 			statement.executeUpdate(createAccountsTableSql);
 			statement.executeUpdate(createRecentBattlesTableSql);
 			statement.executeUpdate(createSyncStateTableSql);
-			statement.executeUpdate(clearSyncStateSql);
 			statement.executeUpdate(initSyncStateSql);
 			sqlite.commit();
 		} catch (SQLException e) {
