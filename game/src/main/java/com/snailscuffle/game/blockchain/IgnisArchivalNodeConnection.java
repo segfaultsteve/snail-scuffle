@@ -82,7 +82,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 	}
 	
 	public Block getBlockAtHeight(int height) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String url = baseUrl + "/nxt?requestType=getBlock&height=" + height;
+		String url = baseUrl + "/nxt?requestType=getBlock&includeTransactions=true&height=" + height;
 		String response = sendGETRequest(url, "Failed to get block at height " + height);
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getBlock for height=" + height);
 		return new Block(responseJson, "getBlock");
