@@ -286,7 +286,7 @@ public class AccountsTest {
 		}
 		assertEquals(Constants.INITIAL_SYNC_HEIGHT, accounts.getSyncState().height);
 		assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, accounts.getSyncState().blockId);
-		assertEquals(0, accounts.getSyncInfoFromRecentStateChanges().size());
+		assertEquals(1, accounts.getSyncInfoFromRecentStateChanges().size());	// includes data from sync_state table
 	}
 	
 	private static StateChangeFromBattle changesFromBattle(Account winner, Account loser, int height, long blockId) {

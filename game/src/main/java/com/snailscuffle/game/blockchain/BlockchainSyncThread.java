@@ -21,6 +21,7 @@ import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.BattlePlanCommitMessage;
 import com.snailscuffle.game.blockchain.data.BattlePlanMessage;
+import com.snailscuffle.game.blockchain.data.BattlePlanRevealMessage;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.OnChain;
 import com.snailscuffle.game.blockchain.data.Transaction;
@@ -268,7 +269,7 @@ class BlockchainSyncThread extends Thread {
 				if (battlePlanHashNode != null) {
 					battlePlanMessages.add(parseMessage(BattlePlanCommitMessage.class, tx));
 				} else if (battlePlanNode != null) {
-					battlePlanMessages.add(parseMessage(BattlePlanMessage.class, tx));
+					battlePlanMessages.add(parseMessage(BattlePlanRevealMessage.class, tx));
 				}
 			} catch (IOException e) {
 				// not a relevant message, so skip it

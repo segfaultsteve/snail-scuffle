@@ -17,7 +17,7 @@ public class Transaction {
 	public final String message;
 	public final String alias;		// Note: This is merely the aliasName (if present) in the attachments node. It does not necessarily belong to sender.
 	
-	public Transaction(long sender, long recipient, int height, int index, int blockId, String message, String alias) {
+	public Transaction(long sender, long recipient, int height, int index, long blockId, String message, String alias) {
 		this.sender = sender;
 		this.recipient = recipient;
 		this.height = height;

@@ -265,7 +265,7 @@ public class IgnisArchivalNodeConnectionTest {
 				.flatMap(b -> b.transactions.stream())
 				.collect(Collectors.toList());
 		
-		String getBlockUrl = BASE_URL + "/nxt?requestType=getBlock&height=" + INITIAL_HEIGHT;
+		String getBlockUrl = BASE_URL + "/nxt?requestType=getBlock&includeTransactions=true&height=" + INITIAL_HEIGHT;
 		String getBlockResponse = blockToJson(blocks.get(0), null);
 		
 		String getBlockchainTransactionsUrl = BASE_URL + "/nxt?requestType=getBlockchainTransactions"

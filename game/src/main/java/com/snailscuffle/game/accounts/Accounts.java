@@ -291,10 +291,10 @@ public class Accounts implements Closeable {
 	}
 	
 	public Account getById(long id) throws AccountNotFoundException, AccountsException {
-		String getAccountSql = "SELECT * FROM accounts WHERE ardor_account_id = ?";
-		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
-			getAccount.setString(1, Long.toUnsignedString(id));
-			List<Account> match = executeQueryForAccounts(getAccount);
+		String getAccountSql = "SELECT * FROM accounts WHERE ardor_account_id = " + Long.toUnsignedString(id);
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(getAccountSql);
+			List<Account> match = extractAccounts(result);
 			if (match.isEmpty()) {
 				throw new AccountNotFoundException("Account(s) not found");
 			} else {
@@ -312,14 +312,15 @@ public class Accounts implements Closeable {
 			return new HashMap<Long, Account>();
 		}
 		
-		String getAccountsSql = "SELECT * FROM accounts WHERE ardor_account_id IN (?)";
-		try (PreparedStatement getAccounts = sqlite.prepareStatement(getAccountsSql)) {
-			String idsString = ids.stream()
-					.map(id -> Long.toUnsignedString(id))
-					.reduce((result, next) -> result + ", " + next)
-					.get();
-			getAccounts.setString(1, idsString);
-			return executeQueryForAccounts(getAccounts).stream()
+		String idsString = ids.stream()
+				.map(id -> Long.toUnsignedString(id))
+				.reduce((result, next) -> result + ", " + next)
+				.get();
+		String getAccountsSql = "SELECT * FROM accounts WHERE ardor_account_id IN (" + idsString + ")";
+		
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(getAccountsSql);
+			return extractAccounts(result).stream()
 					.collect(Collectors.toMap(a -> a.numericId(), a -> a));
 		} catch (SQLException e) {
 			String error = "Database error while attempting to retrieve multiple accounts";
@@ -332,7 +333,8 @@ public class Accounts implements Closeable {
 		String getAccountSql = "SELECT * FROM accounts WHERE username = ?";
 		try (PreparedStatement getAccount = sqlite.prepareStatement(getAccountSql)) {
 			getAccount.setString(1, username);
-			List<Account> match = executeQueryForAccounts(getAccount);
+			ResultSet result = getAccount.executeQuery();
+			List<Account> match = extractAccounts(result);
 			if (match.isEmpty()) {
 				throw new AccountNotFoundException("Account(s) not found");
 			} else {
@@ -345,30 +347,25 @@ public class Accounts implements Closeable {
 		}
 	}
 	
-	private List<Account> executeQueryForAccounts(PreparedStatement getAccount) throws AccountsException, SQLException {
-		ResultSet result = getAccount.executeQuery();
-		List<Account> matchedAccounts = extractAccounts(result);
+	private List<Account> extractAccounts(ResultSet result) throws AccountsException, SQLException {
+		List<Account> accounts = new ArrayList<>();
+		
+		while (result.next()) {
+			accounts.add(new Account(
+					result.getLong("ardor_account_id"),
+					result.getString("username"),
+					result.getString("public_key"),
+					result.getInt("wins"),
+					result.getInt("losses"),
+					result.getInt("streak"),
+					result.getInt("rating")));
+		}
 		
 		List<Integer> allRatings = accountRatingsInDescendingOrder();
-		for (Account account : matchedAccounts) {
+		for (Account account : accounts) {
 			account.rank = determineRank(account.rating, allRatings);
 		}
 		
-		return matchedAccounts;
-	}
-	
-	private static List<Account> extractAccounts(ResultSet queryResult) throws SQLException {
-		List<Account> accounts = new ArrayList<>();
-		while (queryResult.next()) {
-			accounts.add(new Account(
-					queryResult.getLong("ardor_account_id"),
-					queryResult.getString("username"),
-					queryResult.getString("public_key"),
-					queryResult.getInt("wins"),
-					queryResult.getInt("losses"),
-					queryResult.getInt("streak"),
-					queryResult.getInt("rating")));
-		}
 		return accounts;
 	}
 	
@@ -444,6 +441,8 @@ public class Accounts implements Closeable {
 		String syncInfoSql =
 				  "SELECT DISTINCT finish_height, finish_block_id FROM recent_battles "
 				+ "WHERE finish_block_id != 0 "
+				+ "UNION "
+				+ "SELECT height, block_id FROM sync_state "
 				+ "ORDER BY finish_height DESC";
 		try (Statement statement = sqlite.createStatement()) {
 			ResultSet result = statement.executeQuery(syncInfoSql);

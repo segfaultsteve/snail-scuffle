@@ -12,6 +12,7 @@ public class BlockchainSubsystem implements Closeable {
 	
 	private final IgnisArchivalNodeConnection ignisNode;
 	private final Accounts accounts;
+	private final BlockchainSyncThread blockchainSyncThread;
 	
 	public BlockchainSubsystem(URL ignisArchivalNodeUrl, Accounts accounts, int recentBattlesDepth) throws BlockchainSubsystemException {
 		this(new IgnisArchivalNodeConnection(ignisArchivalNodeUrl), accounts, recentBattlesDepth);
@@ -20,7 +21,9 @@ public class BlockchainSubsystem implements Closeable {
 	public BlockchainSubsystem(IgnisArchivalNodeConnection node, Accounts accounts, int recentBattlesDepth) {
 		ignisNode = node;
 		this.accounts = accounts;
-		(new BlockchainSyncThread(ignisNode, accounts, recentBattlesDepth)).start();
+		blockchainSyncThread = new BlockchainSyncThread(ignisNode, accounts, recentBattlesDepth);
+		
+		blockchainSyncThread.start();
 	}
 	
 	public Account getAccountById(String id) throws AccountsException, BlockchainSubsystemException, InterruptedException {
@@ -51,6 +54,7 @@ public class BlockchainSubsystem implements Closeable {
 
 	@Override
 	public void close() {
+		blockchainSyncThread.interrupt();
 		ignisNode.close();
 	}
 	
