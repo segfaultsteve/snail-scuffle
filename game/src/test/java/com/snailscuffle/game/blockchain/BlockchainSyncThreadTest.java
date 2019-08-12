@@ -1,5 +1,6 @@
 package com.snailscuffle.game.blockchain;
 
+import static com.snailscuffle.game.accounts.AccountsTestUtil.changesFromBattle;
 import static java.lang.System.currentTimeMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,6 +31,7 @@ import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.Accounts;
+import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
@@ -40,9 +43,10 @@ interface ThrowingSupplier<T> {
 
 public class BlockchainSyncThreadTest {
 	
-	private static final int TIMEOUT_IN_MILLISECONDS = 1000;
 	private static final long PLAYER_0_ID = 1;
 	private static final long PLAYER_1_ID = 2;
+	private static final int ROUNDS_TO_FINISH_BATTLE = 3;
+	private static final int TIMEOUT_IN_MILLISECONDS = 1000;
 	
 	@Mock private IgnisArchivalNodeConnection ignisNode;
 	private List<AccountMetadata> accountsOnBlockchain;
@@ -96,7 +100,7 @@ public class BlockchainSyncThreadTest {
 			}
 		});
 		
-		addBlocks(new Block(Constants.INITIAL_SYNC_BLOCK_ID, Constants.INITIAL_SYNC_HEIGHT, 0, new ArrayList<>()));
+		recentBlocks.add(new Block(Constants.INITIAL_SYNC_BLOCK_ID, Constants.INITIAL_SYNC_HEIGHT, 0, new ArrayList<>()));
 		
 		winningBp = new BattlePlan();
 		winningBp.snail = Snail.DALE;
@@ -120,28 +124,27 @@ public class BlockchainSyncThreadTest {
 	@Test
 	public void syncPreexistingAccounts() throws Exception {
 		accountsOnBlockchain.addAll(Arrays.asList(
-			new AccountMetadata(PLAYER_0_ID, "player1", "pubkey1"),
-			new AccountMetadata(PLAYER_1_ID, "player2", "pubkey2")
+			new AccountMetadata(PLAYER_0_ID, "player0", "pubkey0"),
+			new AccountMetadata(PLAYER_1_ID, "player1", "pubkey1")
 		));
 		
 		startBlockchainSyncThread();
-		Account player1 = waitForValue(() -> accountsDb.getById(1));
-		Account player2 = waitForValue(() -> accountsDb.getById(2));
+		Account player0 = waitForValue(() -> accountsDb.getById(PLAYER_0_ID));
+		Account player1 = accountsDb.getById(PLAYER_1_ID);
 		
+		assertEquals("player0", player0.username);
+		assertEquals("pubkey0", player0.publicKey);
 		assertEquals("player1", player1.username);
 		assertEquals("pubkey1", player1.publicKey);
-		assertEquals("player2", player2.username);
-		assertEquals("pubkey2", player2.publicKey);
 	}
 	
 	@Test
 	public void updateUsername() throws Exception {
-		int accountId = 1;
 		accountsDb.addIfNotPresent(Arrays.asList(
-			new Account(accountId, "oldname", "pubkey")
+			new Account(PLAYER_0_ID, "oldname", "pubkey")
 		));
 		accountsOnBlockchain.addAll(Arrays.asList(
-			new AccountMetadata(accountId, "newname", "pubkey")
+			new AccountMetadata(PLAYER_0_ID, "newname", "pubkey")
 		));
 		
 		startBlockchainSyncThread();
@@ -153,29 +156,28 @@ public class BlockchainSyncThreadTest {
 	@Test
 	public void backtrackPastLastSyncHeightToFindBattleInProgress() throws Exception {
 		accountsOnBlockchain.addAll(Arrays.asList(
-			new AccountMetadata(PLAYER_0_ID, "player1", "pubkey1"),
-			new AccountMetadata(PLAYER_1_ID, "player2", "pubkey2")
+			new AccountMetadata(PLAYER_0_ID, "player0", "pubkey0"),
+			new AccountMetadata(PLAYER_1_ID, "player1", "pubkey1")
 		));
 		
 		String battleId = "battle1";
 		int height = Constants.INITIAL_SYNC_HEIGHT;
 		long blockId = Constants.INITIAL_SYNC_BLOCK_ID;
 		
-		addBlocks(
-			newCommitBlock(battleId, 0, ++blockId, ++height, winningBpHash, null),
-			newCommitBlock(battleId, 0, ++blockId, ++height, null, losingBpHash),
-			newRevealBlock(battleId, 0, ++blockId, ++height, winningBp, losingBp),
-			newCommitBlock(battleId, 1, ++blockId, ++height, winningBpHash, losingBpHash),
-			newRevealBlock(battleId, 1, ++blockId, ++height, null, losingBp),
-			newRevealBlock(battleId, 1, ++blockId, ++height, winningBp, null)
-		);
+		for (int round = 0; round < ROUNDS_TO_FINISH_BATTLE - 1; round++) {
+			recentBlocks.addAll(Arrays.asList(
+				newCommitBlock(battleId, round, ++blockId, ++height, winningBpHash, null),
+				newCommitBlock(battleId, round, ++blockId, ++height, null, losingBpHash),
+				newRevealBlock(battleId, round, ++blockId, ++height, winningBp, losingBp)
+			));
+		}
 		
 		accountsDb.updateSyncState(height, blockId);	// battle still in progress at this height
 		
-		addBlocks(
-			newCommitBlock(battleId, 2, ++blockId, ++height, winningBpHash, losingBpHash),
-			newRevealBlock(battleId, 2, ++blockId, ++height, winningBp, losingBp)
-		);
+		recentBlocks.addAll(Arrays.asList(
+			newCommitBlock(battleId, ROUNDS_TO_FINISH_BATTLE - 1, ++blockId, ++height, winningBpHash, losingBpHash),
+			newRevealBlock(battleId, ROUNDS_TO_FINISH_BATTLE - 1, ++blockId, ++height, winningBp, losingBp)
+		));
 		
 		startBlockchainSyncThread();
 		
@@ -196,12 +198,161 @@ public class BlockchainSyncThreadTest {
 		assertEquals(-1, player1.streak);
 	}
 	
-	private void addBlocks(Block... blocks) {
+	@Test
+	public void rollBackAllBlocks() throws Exception {
+		Account player0 = new Account(PLAYER_0_ID, "player0", "pubkey0");
+		Account player1 = new Account(PLAYER_1_ID, "player1", "pubkey1");
+		String battleId = "battle1";
+		
+		startWithAccounts(Arrays.asList(player0, player1));
+		int finalHeight = startWithBattle(player0, player1, battleId, Constants.INITIAL_SYNC_HEIGHT + 1, Constants.INITIAL_SYNC_BLOCK_ID + 1);
+		
+		long mismatchedBlockId = 999;
+		recentBlocks.remove(recentBlocks.size() - 1);
+		recentBlocks.add(newRevealBlock(battleId, ROUNDS_TO_FINISH_BATTLE - 1, mismatchedBlockId, finalHeight, winningBp, losingBp));
+		
+		Account player0BeforeRollback = accountsDb.getById(player0.numericId());
+		Account player1BeforeRollback = accountsDb.getById(player1.numericId());
+		
+		startBlockchainSyncThread();
+		
+		Account player0AfterRollback = waitForValue(() -> {
+			Account p0 = accountsDb.getById(PLAYER_0_ID);
+			return (p0.wins == 0) ? p0 : null;
+		});
+		Account player1AfterRollback = accountsDb.getById(player1.numericId());
+		
+		assertEquals(1, player0BeforeRollback.wins);
+		assertEquals(0, player0BeforeRollback.losses);
+		assertEquals(1, player0BeforeRollback.streak);
+		assertEquals(Constants.INITIAL_RATING + Constants.MAX_RATING_CHANGE / 2, player0BeforeRollback.rating);
+		assertEquals(1, player0BeforeRollback.rank);
+		
+		assertEquals(0, player1BeforeRollback.wins);
+		assertEquals(1, player1BeforeRollback.losses);
+		assertEquals(-1, player1BeforeRollback.streak);
+		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, player1BeforeRollback.rating);
+		assertEquals(2, player1BeforeRollback.rank);
+		
+		for (Account player : Arrays.asList(player0AfterRollback, player1AfterRollback)) {
+			assertEquals(0, player.wins);
+			assertEquals(0, player.losses);
+			assertEquals(0, player.streak);
+			assertEquals(Constants.INITIAL_RATING, player.rating);
+			assertEquals(1, player.rank);
+		}
+	}
+	
+	@Test
+	public void rollBackSomeBlocks() throws Exception {
+		Account player0 = new Account(PLAYER_0_ID, "player0", "pubkey0");
+		Account player1 = new Account(PLAYER_1_ID, "player1", "pubkey1");
+		
+		startWithAccounts(Arrays.asList(player0, player1));
+		int firstBattleFinishHeight = startWithBattle(player0, player1, "battle1", Constants.INITIAL_SYNC_HEIGHT + 1, 1);
+		int secondBattleFinishHeight = startWithBattle(accountsDb.getById(player0.numericId()), accountsDb.getById(player1.numericId()), "battle2", firstBattleFinishHeight + 1, firstBattleFinishHeight - Constants.INITIAL_SYNC_HEIGHT + 1);
+		
+		long mismatchedBlockId = 999;
+		recentBlocks.remove(recentBlocks.size() - 1);
+		recentBlocks.add(newRevealBlock("battle2", ROUNDS_TO_FINISH_BATTLE - 1, mismatchedBlockId, secondBattleFinishHeight, winningBp, losingBp));
+		
+		Account player0BeforeRollback = accountsDb.getById(player0.numericId());
+		Account player1BeforeRollback = accountsDb.getById(player1.numericId());
+		
+		startBlockchainSyncThread();
+		
+		Account player0AfterRollback = waitForValue(() -> {
+			Account p0 = accountsDb.getById(PLAYER_0_ID);
+			return (p0.wins == 1) ? p0 : null;
+		});
+		Account player1AfterRollback = accountsDb.getById(player1.numericId());
+		
+		assertEquals(2, player0BeforeRollback.wins);
+		assertEquals(0, player0BeforeRollback.losses);
+		assertEquals(2, player0BeforeRollback.streak);
+		assertEquals(1, player0BeforeRollback.rank);
+		
+		assertEquals(0, player1BeforeRollback.wins);
+		assertEquals(2, player1BeforeRollback.losses);
+		assertEquals(-2, player1BeforeRollback.streak);
+		assertEquals(2, player1BeforeRollback.rank);
+		
+		assertEquals(1, player0AfterRollback.wins);
+		assertEquals(0, player0AfterRollback.losses);
+		assertEquals(1, player0AfterRollback.streak);
+		assertEquals(1, player0AfterRollback.rank);
+		
+		assertEquals(0, player1AfterRollback.wins);
+		assertEquals(1, player1AfterRollback.losses);
+		assertEquals(-1, player1AfterRollback.streak);
+		assertEquals(2, player1AfterRollback.rank);
+	}
+	
+	@Test
+	public void runBattleDuringContinuousSync() throws Exception {
+		Account player0 = new Account(PLAYER_0_ID, "player0", "pubkey0");
+		Account player1 = new Account(PLAYER_1_ID, "player1", "pubkey1");
+		int height = Constants.INITIAL_SYNC_HEIGHT;
+		long blockId = Constants.INITIAL_SYNC_BLOCK_ID;
+		
+		startWithAccounts(Arrays.asList(player0, player1));
+		
+		startBlockchainSyncThread();
+		
 		synchronized (recentBlocks) {
-			for (Block block : blocks) {
-				recentBlocks.add(block);
+			for (int round = 0; round < ROUNDS_TO_FINISH_BATTLE; round++) {
+				recentBlocks.addAll(Arrays.asList(
+					newCommitBlock("battle1", round, ++blockId, ++height, winningBpHash, null),
+					newCommitBlock("battle1", round, ++blockId, ++height, null, losingBpHash),
+					newRevealBlock("battle1", round, ++blockId, ++height, winningBp, losingBp)
+				));
 			}
 		}
+		
+		Account player0AfterSync = waitForValue(() -> {
+			Account p0 = accountsDb.getById(PLAYER_0_ID);
+			return (p0.wins == 1) ? p0 : null;
+		});
+		Account player1AfterSync = accountsDb.getById(player1.numericId());
+		
+		assertEquals(1, player0AfterSync.wins);
+		assertEquals(0, player0AfterSync.losses);
+		assertEquals(1, player0AfterSync.streak);
+		assertEquals(Constants.INITIAL_RATING + Constants.MAX_RATING_CHANGE / 2, player0AfterSync.rating);
+		assertEquals(1, player0AfterSync.rank);
+		
+		assertEquals(0, player1AfterSync.wins);
+		assertEquals(1, player1AfterSync.losses);
+		assertEquals(-1, player1AfterSync.streak);
+		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, player1AfterSync.rating);
+		assertEquals(2, player1AfterSync.rank);
+	}
+	
+	private void startWithAccounts(Collection<Account> accounts) throws AccountsException {
+		accountsDb.addIfNotPresent(accounts);
+		
+		accountsOnBlockchain.addAll(
+			accounts.stream()
+				.map(a -> new AccountMetadata(a.numericId(), a.username, a.publicKey))
+				.collect(Collectors.toList())
+		);
+	}
+	
+	private int startWithBattle(Account winner, Account loser, String battleId, int startingHeight, long startingBlockId) throws AccountsException {
+		int height = startingHeight;
+		long blockId = startingBlockId;
+		
+		for (int round = 0; round < ROUNDS_TO_FINISH_BATTLE; round++) {
+			recentBlocks.addAll(Arrays.asList(
+				newCommitBlock(battleId, round, blockId++, height++, winningBpHash, null),
+				newCommitBlock(battleId, round, blockId++, height++, null, losingBpHash),
+				newRevealBlock(battleId, round, blockId++, height++, winningBp, losingBp)
+			));
+		}
+		
+		accountsDb.update(Arrays.asList(changesFromBattle(winner, loser, --height, --blockId)));
+		
+		return height;
 	}
 	
 	private static Block newCommitBlock(String battleId, int round, long blockId, int height, String player0Hash, String player1Hash) {

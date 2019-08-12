@@ -1,5 +1,6 @@
 package com.snailscuffle.game.accounts;
 
+import static com.snailscuffle.game.accounts.AccountsTestUtil.changesFromBattle;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -14,9 +15,6 @@ import org.junit.Test;
 import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.blockchain.BlockSyncInfo;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle;
-import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
-import com.snailscuffle.game.ratings.RatingPair;
-import com.snailscuffle.game.ratings.Ratings;
 
 public class AccountsTest {
 	
@@ -287,19 +285,6 @@ public class AccountsTest {
 		assertEquals(Constants.INITIAL_SYNC_HEIGHT, accounts.getSyncState().height);
 		assertEquals(Constants.INITIAL_SYNC_BLOCK_ID, accounts.getSyncState().blockId);
 		assertEquals(1, accounts.getSyncInfoFromRecentStateChanges().size());	// includes data from sync_state table
-	}
-	
-	private static StateChangeFromBattle changesFromBattle(Account winner, Account loser, int height, long blockId) {
-		RatingPair newRatings = Ratings.compute(winner.rating, loser.rating);
-		int newWinnerStreak = (winner.streak > 0) ? (winner.streak + 1) : 1;
-		int newLoserStreak = (loser.streak < 0) ? (loser.streak - 1) : -1;
-		
-		return new StateChangeFromBattle(
-			height,
-			blockId,
-			new PlayerChange(winner.numericId(), winner.rating, newRatings.winner, winner.streak, newWinnerStreak),
-			new PlayerChange(loser.numericId(), loser.rating, newRatings.loser, loser.streak, newLoserStreak)
-		);
 	}
 	
 }
