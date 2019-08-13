@@ -46,7 +46,8 @@ public class BlockchainSyncThreadTest {
 	private static final long PLAYER_0_ID = 1;
 	private static final long PLAYER_1_ID = 2;
 	private static final int ROUNDS_TO_FINISH_BATTLE = 3;
-	private static final int TIMEOUT_IN_MILLISECONDS = 1000;
+	private static final int SYNC_LOOP_PERIOD_MILLIS = 100;
+	private static final int TIMEOUT_MILLIS = 1000;
 	
 	@Mock private IgnisArchivalNodeConnection ignisNode;
 	private List<AccountMetadata> accountsOnBlockchain;
@@ -57,6 +58,8 @@ public class BlockchainSyncThreadTest {
 	private String winningBpHash;
 	private BattlePlan losingBp;
 	private String losingBpHash;
+	
+	private BlockchainSyncThread blockchainSyncThread;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -72,8 +75,8 @@ public class BlockchainSyncThreadTest {
 			}
 		});
 		when(ignisNode.getRecentBlocks(anyInt())).thenAnswer(invocation -> {
-			int count = invocation.getArgument(0);
 			synchronized (recentBlocks) {
+				int count = Math.min(invocation.getArgument(0), recentBlocks.size());
 				return new ArrayList<>(recentBlocks.subList(recentBlocks.size() - count, recentBlocks.size()));
 			}
 		});
@@ -119,6 +122,8 @@ public class BlockchainSyncThreadTest {
 		losingBp.validate();
 		
 		losingBpHash = BlockchainUtil.sha256Hash(losingBp);
+		
+		blockchainSyncThread = new BlockchainSyncThread(ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH, SYNC_LOOP_PERIOD_MILLIS);
 	}
 	
 	@Test
@@ -128,7 +133,7 @@ public class BlockchainSyncThreadTest {
 			new AccountMetadata(PLAYER_1_ID, "player1", "pubkey1")
 		));
 		
-		startBlockchainSyncThread();
+		blockchainSyncThread.start();
 		Account player0 = waitForValue(() -> accountsDb.getById(PLAYER_0_ID));
 		Account player1 = accountsDb.getById(PLAYER_1_ID);
 		
@@ -147,7 +152,7 @@ public class BlockchainSyncThreadTest {
 			new AccountMetadata(PLAYER_0_ID, "newname", "pubkey")
 		));
 		
-		startBlockchainSyncThread();
+		blockchainSyncThread.start();
 		Account player = waitForValue(() -> accountsDb.getByUsername("newname"));
 		
 		assertNotNull(player);
@@ -179,7 +184,7 @@ public class BlockchainSyncThreadTest {
 			newRevealBlock(battleId, ROUNDS_TO_FINISH_BATTLE - 1, ++blockId, ++height, winningBp, losingBp)
 		));
 		
-		startBlockchainSyncThread();
+		blockchainSyncThread.start();
 		
 		Account player0 = waitForValue(() -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
@@ -199,7 +204,7 @@ public class BlockchainSyncThreadTest {
 	}
 	
 	@Test
-	public void rollBackAllBlocks() throws Exception {
+	public void rollBackAllBlocksDuringInitialSync() throws Exception {
 		Account player0 = new Account(PLAYER_0_ID, "player0", "pubkey0");
 		Account player1 = new Account(PLAYER_1_ID, "player1", "pubkey1");
 		String battleId = "battle1";
@@ -214,7 +219,7 @@ public class BlockchainSyncThreadTest {
 		Account player0BeforeRollback = accountsDb.getById(player0.numericId());
 		Account player1BeforeRollback = accountsDb.getById(player1.numericId());
 		
-		startBlockchainSyncThread();
+		blockchainSyncThread.start();
 		
 		Account player0AfterRollback = waitForValue(() -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
@@ -244,7 +249,7 @@ public class BlockchainSyncThreadTest {
 	}
 	
 	@Test
-	public void rollBackSomeBlocks() throws Exception {
+	public void rollBackSomeBlocksDuringInitialSync() throws Exception {
 		Account player0 = new Account(PLAYER_0_ID, "player0", "pubkey0");
 		Account player1 = new Account(PLAYER_1_ID, "player1", "pubkey1");
 		
@@ -259,7 +264,7 @@ public class BlockchainSyncThreadTest {
 		Account player0BeforeRollback = accountsDb.getById(player0.numericId());
 		Account player1BeforeRollback = accountsDb.getById(player1.numericId());
 		
-		startBlockchainSyncThread();
+		blockchainSyncThread.start();
 		
 		Account player0AfterRollback = waitForValue(() -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
@@ -297,7 +302,8 @@ public class BlockchainSyncThreadTest {
 		
 		startWithAccounts(Arrays.asList(player0, player1));
 		
-		startBlockchainSyncThread();
+		blockchainSyncThread.start();
+		waitForContinuousSyncLoop();
 		
 		synchronized (recentBlocks) {
 			for (int round = 0; round < ROUNDS_TO_FINISH_BATTLE; round++) {
@@ -326,6 +332,47 @@ public class BlockchainSyncThreadTest {
 		assertEquals(-1, player1AfterSync.streak);
 		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, player1AfterSync.rating);
 		assertEquals(2, player1AfterSync.rank);
+	}
+	
+	@Test
+	public void resolveForkDuringContinuousSync() throws Exception {
+		Account player0 = new Account(PLAYER_0_ID, "player0", "pubkey0");
+		Account player1 = new Account(PLAYER_1_ID, "player1", "pubkey1");
+		String battleId = "battle1";
+		
+		startWithAccounts(Arrays.asList(player0, player1));
+		startWithBattle(player0, player1, battleId, Constants.INITIAL_SYNC_HEIGHT + 1, Constants.INITIAL_SYNC_BLOCK_ID + 1);
+		
+		Account player0BeforeRollback = accountsDb.getById(player0.numericId());
+		Account player1BeforeRollback = accountsDb.getById(player1.numericId());
+		
+		blockchainSyncThread.start();
+		waitForContinuousSyncLoop();
+		
+		synchronized (recentBlocks) {
+			long mismatchedBlockId = 999;
+			int height = recentBlocks.remove(recentBlocks.size() - 1).height;
+			recentBlocks.add(new Block(mismatchedBlockId, height, height, new ArrayList<Transaction>()));
+			recentBlocks.add(new Block(mismatchedBlockId + 1, height + 1, height + 1, new ArrayList<Transaction>()));
+		}
+		
+		Account player0AfterRollback = waitForValue(() -> {
+			Account p0 = accountsDb.getById(PLAYER_0_ID);
+			return (p0.wins == 0) ? p0 : null;
+		});
+		Account player1AfterRollback = accountsDb.getById(player1.numericId());
+		Account[] playersAfterRollback = new Account[] { player0AfterRollback, player1AfterRollback };
+		
+		assertEquals(1, player0BeforeRollback.wins);
+		assertEquals(1, player1BeforeRollback.losses);
+		
+		for (Account player : playersAfterRollback) {
+			assertEquals(0, player.wins);
+			assertEquals(0, player.losses);
+			assertEquals(0, player.streak);
+			assertEquals(Constants.INITIAL_RATING, player.rating);
+			assertEquals(1, player.rank);
+		}
 	}
 	
 	private void startWithAccounts(Collection<Account> accounts) throws AccountsException {
@@ -396,14 +443,17 @@ public class BlockchainSyncThreadTest {
 		return new Block(blockId, height, height, txs);
 	}
 	
-	private void startBlockchainSyncThread() {
-		(new BlockchainSyncThread(ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH)).start();
+	private void waitForContinuousSyncLoop() throws InterruptedException {
+		long startTime = currentTimeMillis();
+		while (!blockchainSyncThread.isCaughtUp() && currentTimeMillis() - startTime < TIMEOUT_MILLIS) {
+			Thread.sleep(10);
+		}
 	}
 	
 	private static <T> T waitForValue(ThrowingSupplier<T> func) throws InterruptedException {
 		T value = null;
 		long startTime = currentTimeMillis();
-		while (value == null && currentTimeMillis() - startTime < TIMEOUT_IN_MILLISECONDS) {
+		while (value == null && currentTimeMillis() - startTime < TIMEOUT_MILLIS) {
 			Thread.sleep(10);
 			try {
 				value = func.get();

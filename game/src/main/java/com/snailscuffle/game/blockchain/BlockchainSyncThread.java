@@ -40,7 +40,7 @@ class BlockchainSyncThread extends Thread {
 		}
 	}
 	
-	private static final int SYNC_LOOP_PERIOD_MILLIS = 10000;
+	private static final int DEFAULT_SYNC_LOOP_PERIOD_MILLIS = 10000;
 	private static final int SYNC_LOOP_EXTRA_BLOCKS = 10;
 	private static final Logger logger = LoggerFactory.getLogger(BlockchainSyncThread.class);
 	
@@ -52,8 +52,15 @@ class BlockchainSyncThread extends Thread {
 	private final SyncAction EXIT_WITH_ERROR;
 	
 	private final BattlesInProgress battlesInProgress;
-
+	private final int syncLoopPeriodMillis;
+	
+	private boolean caughtUp;
+	
 	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts, int recentBattlesDepth) {
+		this(ignisNode, accounts, recentBattlesDepth, DEFAULT_SYNC_LOOP_PERIOD_MILLIS);
+	}
+	
+	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts, int recentBattlesDepth, int syncLoopPeriodMillis) {
 		CONNECT = new SyncAction(() -> connect(ignisNode));
 		VALIDATE_RECENT_BLOCKS = new SyncAction(() -> validateRecentBlocks(ignisNode, accounts));
 		SYNC_FROM_LAST_HEIGHT = new SyncAction(() -> syncFromLastHeight(ignisNode, accounts));
@@ -62,6 +69,7 @@ class BlockchainSyncThread extends Thread {
 		EXIT_WITH_ERROR = new SyncAction(() -> exitWithError());
 		
 		battlesInProgress = new BattlesInProgress(recentBattlesDepth);
+		this.syncLoopPeriodMillis = syncLoopPeriodMillis;
 	}
 	
 	@Override
@@ -70,6 +78,14 @@ class BlockchainSyncThread extends Thread {
 		while (nextAction != null) {
 			nextAction = nextAction.run();
 		}
+	}
+	
+	public synchronized boolean isCaughtUp() {
+		return caughtUp;
+	}
+	
+	private synchronized void setCaughtUp(boolean value) {
+		caughtUp = value;
 	}
 	
 	private SyncAction connect(IgnisArchivalNodeConnection ignisNode) {
@@ -157,12 +173,13 @@ class BlockchainSyncThread extends Thread {
 	}
 	
 	private SyncAction continuousSyncLoop(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
+		setCaughtUp(true);
 		try {
 			BlockSyncInfo currentSyncState = accounts.getSyncState();
 			Block currentBlock = ignisNode.getCurrentBlock();
 			
 			if (currentBlock.height == currentSyncState.height) {
-				Thread.sleep(SYNC_LOOP_PERIOD_MILLIS);
+				Thread.sleep(syncLoopPeriodMillis);
 				return CONTINUOUS_SYNC_LOOP;
 			}
 			
@@ -175,6 +192,7 @@ class BlockchainSyncThread extends Thread {
 				List<BlockSyncInfo> recentSyncInfo = accounts.getSyncInfoFromRecentStateChanges();
 				BlockSyncInfo lastMatchingBlock = findBeginningOfFork(recentSyncInfo, ignisNode);
 				if (lastMatchingBlock == null) {
+					setCaughtUp(false);
 					return VALIDATE_RECENT_BLOCKS;
 				} else {
 					accounts.rollBackTo(lastMatchingBlock.height, lastMatchingBlock.blockId);
@@ -186,11 +204,14 @@ class BlockchainSyncThread extends Thread {
 				return CONTINUOUS_SYNC_LOOP;
 			}
 		} catch (IgnisNodeCommunicationException e) {
+			setCaughtUp(false);
 			return CONNECT;
 		} catch (AccountsException | BlockchainSubsystemException e) {
 			logger.error("Unexpected error while doing full sync to blockchain", e);
+			setCaughtUp(false);
 			return EXIT_WITH_ERROR;
 		} catch (InterruptedException e) {
+			setCaughtUp(false);
 			return ABORT;
 		}
 	}
