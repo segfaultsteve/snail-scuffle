@@ -93,7 +93,7 @@ class BlockchainSyncThread extends Thread {
 			if (ignisNode.isReady()) {
 				return VALIDATE_RECENT_BLOCKS;
 			} else {
-				Thread.sleep(10000);
+				Thread.sleep(DEFAULT_SYNC_LOOP_PERIOD_MILLIS);
 				return CONNECT;
 			}
 		} catch (BlockchainSubsystemException e) {
