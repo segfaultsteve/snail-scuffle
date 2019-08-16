@@ -52,7 +52,7 @@ public class AccountsServletTest {
 	public void getAccountById() throws Exception {
 		accounts.addIfNotPresent(Arrays.asList(ACCOUNT1));
 		
-		String response = sendGetRequest("id=" + ACCOUNT1.id);
+		String response = sendGETRequest("id=" + ACCOUNT1.id);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
 		
 		assertAccountsAreEqual(ACCOUNT1, retrievedAccount);
@@ -62,7 +62,7 @@ public class AccountsServletTest {
 	public void getAccountByUsername() throws Exception {
 		accounts.addIfNotPresent(Arrays.asList(ACCOUNT1));
 		
-		String response = sendGetRequest("player=" + ACCOUNT1.username);
+		String response = sendGETRequest("player=" + ACCOUNT1.username);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
 		
 		assertAccountsAreEqual(ACCOUNT1, retrievedAccount);
@@ -84,7 +84,7 @@ public class AccountsServletTest {
 	
 	@Test
 	public void getBalanceOfUntrackedAccount() throws Exception {
-		String response = sendGetRequest("id=" + ACCOUNT1.id);
+		String response = sendGETRequest("id=" + ACCOUNT1.id);
 		Account retrievedAccount = JsonUtil.deserialize(Account.class, response);
 		
 		assertEquals(ACCOUNT1.id, retrievedAccount.id);
@@ -98,7 +98,7 @@ public class AccountsServletTest {
 		Mockito.doThrow(BlockchainDataNotFoundException.class).when(mockIgnisNode).getBalance(ACCOUNT1.numericId());
 		int expectedErrorCode = ErrorResponse.failedToRetrieveAccount().errorCode;
 		
-		String response = sendGetRequest("id=" + ACCOUNT1.id);
+		String response = sendGETRequest("id=" + ACCOUNT1.id);
 		ErrorResponse error = JsonUtil.deserialize(ErrorResponse.class, response);
 		
 		assertEquals(expectedErrorCode, error.errorCode);
@@ -106,7 +106,7 @@ public class AccountsServletTest {
 		assertNotNull(error.errorDetails);
 	}
 	
-	private String sendGetRequest(String queryString) throws Exception {
+	private String sendGETRequest(String queryString) throws Exception {
 		Request request = mock(Request.class);
 		when(request.getQueryString()).thenReturn(queryString);
 		when(request.getParameterMap()).thenReturn(parameterMapFor(queryString));
@@ -130,7 +130,7 @@ public class AccountsServletTest {
 	}
 	
 	private int getRank(Account account) throws Exception {
-		String response = sendGetRequest("id=" + account.id);
+		String response = sendGETRequest("id=" + account.id);
 		return JsonUtil.deserialize(Account.class, response).rank;
 	}
 	
