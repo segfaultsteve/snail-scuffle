@@ -4,14 +4,18 @@ import java.io.Closeable;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +25,8 @@ import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.Alias;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
+import com.snailscuffle.game.tx.TransactionStatus;
+import com.snailscuffle.game.tx.UnsignedTransaction;
 
 public class IgnisArchivalNodeConnection implements Closeable {
 	
@@ -176,6 +182,52 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		} catch (ExecutionException e) {
 			throw new BlockchainSubsystemException(errorString + ": " + e.getMessage());
 		}
+	}
+	
+	public UnsignedTransaction createNewAccountTransaction(String username, String publicKey) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		Map<String, String> parameters = new HashMap<String, String>();
+		parameters.put("requestType", "setAlias");
+		parameters.put("aliasName", username);
+		parameters.put("publicKey", publicKey);
+		
+		String response = sendPOSTRequest(parameters, "Failed to create alias 'snailscuffle" + username + "'");
+		
+		JsonNode parsedResponse = BlockchainUtil.parseJson(response, "Failed to deserialize response to setAlias");
+		JsonNode txJson = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "transactionJSON", "setAlias");
+		JsonNode txBytes = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "unsignedTransactionBytes", "setAlias");
+		
+		return new UnsignedTransaction(txJson.asText(), txBytes.asText());
+	}
+	
+	private String sendPOSTRequest(Map<String, String> parameters, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		Map<String, String> parametersCopy = new HashMap<String, String>(parameters);
+		parametersCopy.put("chain", "2");		// Ignis
+		parametersCopy.put("feeNQT", "-1");		// calculate the fee for us
+		
+		try {
+			Request request = httpClient.POST(baseUrl + "/nxt");
+			for (Entry<String, String> kvp : parametersCopy.entrySet()) {
+				request.param(kvp.getKey(), kvp.getValue());
+			}
+			return request.send().getContentAsString();
+		} catch (TimeoutException e) {
+			throw new IgnisNodeCommunicationException(errorString + ": " + e.getMessage());
+		} catch (ExecutionException e) {
+			throw new BlockchainSubsystemException(errorString + ": " + e.getMessage());
+		}
+	}
+	
+	public TransactionStatus getTransactionStatus(String txid) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String url = baseUrl + "/nxt?requestType=getTransaction&chain=2&fullHash=" + txid;
+		String response = sendGETRequest(url, "Failed to get status of transaction '" + txid + "'");
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getTransaction for transaction '" + txid + "'");
+		JsonNode block = responseJson.get("block");
+		JsonNode confirmationsNode = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "confirmations", "getTransaction");
+		
+		boolean confirmed = block != null;
+		int confirmations = (confirmed && confirmationsNode != null) ? confirmationsNode.asInt() : 0;
+		
+		return new TransactionStatus(txid, confirmed, confirmations);
 	}
 	
 	@Override

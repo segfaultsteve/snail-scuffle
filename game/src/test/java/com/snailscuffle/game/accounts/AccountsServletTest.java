@@ -2,14 +2,10 @@ package com.snailscuffle.game.accounts;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
@@ -25,6 +21,7 @@ import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.blockchain.BlockchainDataNotFoundException;
 import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.blockchain.IgnisArchivalNodeConnection;
+import com.snailscuffle.game.testutil.ServletUtil;
 
 public class AccountsServletTest {
 	
@@ -106,32 +103,21 @@ public class AccountsServletTest {
 		assertNotNull(error.errorDetails);
 	}
 	
-	private String sendGETRequest(String queryString) throws Exception {
-		Request request = mock(Request.class);
-		when(request.getQueryString()).thenReturn(queryString);
-		when(request.getParameterMap()).thenReturn(parameterMapFor(queryString));
-		
-		Response response = mock(Response.class);
-		StringWriter responseBuffer = new StringWriter();
-		when(response.getWriter()).thenReturn(new PrintWriter(responseBuffer));
-		
-		(new AccountsServlet(blockchainSubsystem)).doGet(request, response);
-		return responseBuffer.toString();
-	}
-	
-	private static Map<String, String[]> parameterMapFor(String queryString) {
-		Map<String, String[]> parameterMap = new HashMap<>();
-		String[] queryParams = queryString.split("&");
-		for (String param : queryParams) {
-			String[] kvp = param.split("=");
-			parameterMap.put(kvp[0], new String[] { kvp[1] });
-		}
-		return parameterMap;
-	}
-	
 	private int getRank(Account account) throws Exception {
 		String response = sendGETRequest("id=" + account.id);
 		return JsonUtil.deserialize(Account.class, response).rank;
+	}
+	
+	private String sendGETRequest(String queryString) {
+		BiConsumer<Request, Response> doGetNothrow = (req, resp) -> {
+			try {
+				(new AccountsServlet(blockchainSubsystem)).doGet(req, resp);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		};
+		
+		return ServletUtil.sendGETRequest(doGetNothrow, "", queryString);
 	}
 	
 	private static void assertAccountsAreEqual(Account expected, Account actual) {

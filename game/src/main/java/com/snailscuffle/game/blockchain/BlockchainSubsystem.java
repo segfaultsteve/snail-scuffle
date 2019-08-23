@@ -6,6 +6,8 @@ import java.net.URL;
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.AccountNotFoundException;
 import com.snailscuffle.game.accounts.AccountsException;
+import com.snailscuffle.game.tx.TransactionStatus;
+import com.snailscuffle.game.tx.UnsignedTransaction;
 import com.snailscuffle.game.accounts.Accounts;
 
 public class BlockchainSubsystem implements Closeable {
@@ -51,7 +53,22 @@ public class BlockchainSubsystem implements Closeable {
 		account.balance = ignisNode.getBalance(account.numericId());
 		return account;
 	}
-
+	
+	public UnsignedTransaction createNewAccountTransaction(String username, String publicKey) throws AccountsException, BlockchainSubsystemException, InterruptedException {
+		try {
+			Account account = accounts.getByUsername(username);
+			if (!account.publicKey.equalsIgnoreCase(publicKey)) {
+				throw new AccountsException("Another account has already registered the username '" + username + "'");
+			}
+		} catch (AccountNotFoundException e) { }
+		
+		return ignisNode.createNewAccountTransaction(username, publicKey);
+	}
+	
+	public TransactionStatus getTransactionStatus(String txid) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		return ignisNode.getTransactionStatus(txid);
+	}
+	
 	@Override
 	public void close() {
 		blockchainSyncThread.interrupt();
