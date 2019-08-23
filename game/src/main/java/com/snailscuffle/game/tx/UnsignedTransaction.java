@@ -2,15 +2,17 @@ package com.snailscuffle.game.tx;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public class UnsignedTransaction implements Serializable {
 	
-	public String asJson;
+	public JsonNode asJson;
 	public String asHex;
 	
 	@SuppressWarnings("unused")
 	private UnsignedTransaction() {}	// needed for deserialization via jackson
 	
-	public UnsignedTransaction(String txJson, String txBytes) {
+	public UnsignedTransaction(JsonNode txJson, String txBytes) {
 		asJson = txJson;
 		asHex = txBytes;
 	}

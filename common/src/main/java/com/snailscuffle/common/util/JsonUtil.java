@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class JsonUtil {
 	
 	public static String serialize(Serializable data) throws IOException {
-		return (new ObjectMapper())
+		return new ObjectMapper()
 				.setSerializationInclusion(Include.NON_NULL)
 				.writer()
 				.with(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
@@ -25,14 +25,14 @@ public class JsonUtil {
 	}
 	
 	public static <T> T deserialize(Class<T> type, String json) throws IOException {
-		return (new ObjectMapper())
+		return new ObjectMapper()
 				.readerFor(type)
 				.with(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
 				.readValue(json);
 	}
 	
 	public static JsonNode deserialize(String json) throws IOException {
-		return (new ObjectMapper()).readTree(json);
+		return new ObjectMapper().readTree(json);
 	}
 
 }

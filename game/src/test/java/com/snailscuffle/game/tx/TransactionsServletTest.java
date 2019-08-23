@@ -24,29 +24,25 @@ import com.snailscuffle.game.testutil.ServletUtil;
 public class TransactionsServletTest {
 	
 	@Mock private IgnisArchivalNodeConnection mockIgnisNode;
-	private BlockchainSubsystem blockchainSubsystem;
 	
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 		when(mockIgnisNode.isReady()).thenReturn(false);	// keep sync loop happy
-		
-		Accounts accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
-		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
 	}
 	
 	@Test
 	public void createNewAccount() throws Exception {
-		String txJson = "txJson";
+		String txJson = "{\"txJson\":\"value\"}";
 		String txBytes = "txBytes";
 		
 		when(mockIgnisNode.createNewAccountTransaction(anyString(), anyString()))
-			.thenReturn(new UnsignedTransaction(txJson, txBytes));
+			.thenReturn(new UnsignedTransaction(JsonUtil.deserialize(txJson), txBytes));
 		
 		String response = sendGETRequest("/newaccount", "player=newplayer&publicKey=pubkey");
 		UnsignedTransaction tx = JsonUtil.deserialize(UnsignedTransaction.class, response);
 		
-		assertEquals(txJson, tx.asJson);
+		assertEquals(txJson, tx.asJson.toString());
 		assertEquals(txBytes, tx.asHex);
 	}
 	
@@ -68,7 +64,7 @@ public class TransactionsServletTest {
 	
 	private ErrorResponse createNewAccountWithInvalidQuery(String queryString) throws Exception {
 		when(mockIgnisNode.createNewAccountTransaction(anyString(), anyString()))
-			.thenReturn(new UnsignedTransaction("txJson", "txBytes"));
+			.thenReturn(new UnsignedTransaction(null, "txBytes"));
 	
 		String response = sendGETRequest("/newaccount", queryString);
 		return JsonUtil.deserialize(ErrorResponse.class, response);
@@ -77,6 +73,8 @@ public class TransactionsServletTest {
 	private String sendGETRequest(String path, String queryString) throws Exception {
 		BiConsumer<Request, Response> doGetNothrow = (req, resp) -> {
 			try {
+				Accounts accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
+				BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
 				(new TransactionsServlet(blockchainSubsystem)).doGet(req, resp);
 			} catch (Exception e) {
 				throw new RuntimeException(e);

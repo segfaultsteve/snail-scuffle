@@ -15,7 +15,6 @@ import com.snailscuffle.common.InvalidQueryException;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.common.util.ServletUtil;
 import com.snailscuffle.game.accounts.AccountsException;
-import com.snailscuffle.game.accounts.AccountsServlet;
 import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.blockchain.BlockchainSubsystemException;
 import com.snailscuffle.game.blockchain.IgnisNodeCommunicationException;
@@ -23,7 +22,7 @@ import com.snailscuffle.game.blockchain.IgnisNodeCommunicationException;
 public class TransactionsServlet extends HttpServlet {
 	
 	private static final String NEW_ACCOUNT_PATH = "newaccount";
-	private static final Logger logger = LoggerFactory.getLogger(AccountsServlet.class);
+	private static final Logger logger = LoggerFactory.getLogger(TransactionsServlet.class);
 	
 	private final BlockchainSubsystem blockchain;
 	

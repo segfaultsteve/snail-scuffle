@@ -196,7 +196,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		JsonNode txJson = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "transactionJSON", "setAlias");
 		JsonNode txBytes = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "unsignedTransactionBytes", "setAlias");
 		
-		return new UnsignedTransaction(txJson.asText(), txBytes.asText());
+		return new UnsignedTransaction(txJson, txBytes.asText());
 	}
 	
 	private String sendPOSTRequest(Map<String, String> parameters, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
