@@ -91,7 +91,7 @@ public class InfoServlet extends HttpServlet {
 		ServletUtil.markHandled(request);
 	}
 
-	private static String describeSnails() throws IOException {
+	private static String describeSnails() {
 		List<EquipmentInfo> snails = new ArrayList<>();
 		for (Snail snail : Snail.values()) {
 			EquipmentInfo info = new EquipmentInfo(snail.name().toLowerCase(), snail.displayName, snail.description,
@@ -101,7 +101,7 @@ public class InfoServlet extends HttpServlet {
 		return JsonUtil.serialize((Serializable) snails);
 	}
 
-	private static String describeWeapons() throws IOException {
+	private static String describeWeapons() {
 		List<EquipmentInfo> weapons = new ArrayList<>();
 		for (Weapon weapon : Weapon.values()) {
 			EquipmentInfo info = new EquipmentInfo(weapon.name().toLowerCase(), weapon.displayName, "", weapon.attack, 0, 0);
@@ -111,7 +111,7 @@ public class InfoServlet extends HttpServlet {
 		return JsonUtil.serialize((Serializable) weapons);
 	}
 
-	private static String describeShells() throws IOException {
+	private static String describeShells() {
 		List<EquipmentInfo> shells = new ArrayList<>();
 		for (Shell shell: Shell.values()) {
 			EquipmentInfo info = new EquipmentInfo(shell.name().toLowerCase(), shell.displayName, "", 0, shell.defense, shell.speed);
@@ -120,7 +120,7 @@ public class InfoServlet extends HttpServlet {
 		return JsonUtil.serialize((Serializable) shells);
 	}
 
-	private static String describeAccessories() throws IOException {
+	private static String describeAccessories() {
 		List<EquipmentInfo> accessories = new ArrayList<>();
 		for (Accessory accessory : Accessory.values()) {
 			EquipmentInfo info = new EquipmentInfo(accessory.name().toLowerCase(), accessory.displayName, accessory.description,
@@ -136,7 +136,7 @@ public class InfoServlet extends HttpServlet {
 		return JsonUtil.serialize((Serializable) accessories);
 	}
 
-	private static String describeItems() throws IOException {
+	private static String describeItems() {
 		List<EquipmentInfo> items = new ArrayList<>();
 		for (Item item : Item.values()) {
 			EquipmentInfo info = new EquipmentInfo(item.name().toLowerCase(), item.displayName, item.description, 0, 0, 0);
@@ -145,7 +145,7 @@ public class InfoServlet extends HttpServlet {
 		return JsonUtil.serialize((Serializable) items);
 	}
 	
-	private String describeServers() throws IOException {
+	private String describeServers() {
 		Map<String, String> servers = new HashMap<>();
 		servers.put("matchmaker", matchmakerUrl.toString());
 		if (delegateGameServerUrl != null) {

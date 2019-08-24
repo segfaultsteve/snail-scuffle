@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -507,18 +506,10 @@ public class BlockchainSyncThreadTest {
 	}
 	
 	private static Block newRevealBlock(String battleId, int round, long blockId, int height, BattlePlan player0Bp, BattlePlan player1Bp) {
-		Function<BattlePlan, String> serializeNoThrow = (bp) -> {
-			try {
-				return JsonUtil.serialize(bp);
-			} catch (IOException e) {
-				return null;
-			}
-		};
-		
 		Function<BattlePlan, String> toRevealMessage = (bp) -> "{"
 			+	"\"battleId\": \"" + battleId + "\", "
 			+	"\"round\": " + round + ", "
-			+	"\"battlePlan\": " + serializeNoThrow.apply(bp)
+			+	"\"battlePlan\": " + JsonUtil.serialize(bp)
 			+ "}";
 		
 		return newMessageBlock(blockId, height, player0Bp, player1Bp, toRevealMessage);

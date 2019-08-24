@@ -12,15 +12,19 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class JsonUtil {
 	
-	public static String serialize(Serializable data) throws IOException {
-		return new ObjectMapper()
-				.setSerializationInclusion(Include.NON_NULL)
-				.writer()
-				.with(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
-				.writeValueAsString(data);
+	public static String serialize(Serializable data) {
+		try {
+			return new ObjectMapper()
+					.setSerializationInclusion(Include.NON_NULL)
+					.writer()
+					.with(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
+					.writeValueAsString(data);
+		} catch (IOException e) {
+			throw new RuntimeException("Unexpected serialization error");	// this generally shouldn't happen
+		}
 	}
 	
-	public static void serialize(Serializable data, PrintWriter writer) throws IOException {
+	public static void serialize(Serializable data, PrintWriter writer) {
 		writer.print(serialize(data));
 	}
 	

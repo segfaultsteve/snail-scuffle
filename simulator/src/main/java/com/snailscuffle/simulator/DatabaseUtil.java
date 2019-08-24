@@ -1,6 +1,5 @@
 package com.snailscuffle.simulator;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -13,7 +12,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.snailscuffle.common.battle.*;
+import com.snailscuffle.common.battle.BattlePlan;
+import com.snailscuffle.common.battle.Instruction;
 import com.snailscuffle.common.util.JsonUtil;
 
 public class DatabaseUtil {
@@ -92,13 +92,10 @@ public class DatabaseUtil {
 			}
 		} catch (SQLException e) {
 			logger.error("Error when trying to write result to database: " + e.getMessage());
-		} catch (IOException e) {
-			logger.error("Could not deserialize instructions while storing battleplan in database. Error: "
-					+ e.getMessage());
 		}
 	}
 
-	private static String convertInstructionsArrayToString(BattlePlan battlePlan) throws IOException {
+	private static String convertInstructionsArrayToString(BattlePlan battlePlan) {
 
 		StringBuilder stringOfInstructions = new StringBuilder();
 		int instructionNumber = 1;

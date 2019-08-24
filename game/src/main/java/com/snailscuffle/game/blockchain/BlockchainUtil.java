@@ -52,12 +52,8 @@ public class BlockchainUtil {
 	
 	public static String sha256Hash(BattlePlan battlePlan) {
 		String bpJson;
-		try {
-			bpJson = JsonUtil.serialize(battlePlan);
-			return sha256Hash(bpJson);
-		} catch (IOException e) {
-			throw new RuntimeException("Unexpected error serializing battle plan", e);		// this should never happen
-		}
+		bpJson = JsonUtil.serialize(battlePlan);
+		return sha256Hash(bpJson);
 	}
 	
 }

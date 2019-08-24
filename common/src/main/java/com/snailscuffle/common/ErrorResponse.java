@@ -1,9 +1,6 @@
 package com.snailscuffle.common;
 
-import java.io.IOException;
 import java.io.Serializable;
-
-import org.slf4j.LoggerFactory;
 
 import com.snailscuffle.common.util.JsonUtil;
 
@@ -43,13 +40,6 @@ public class ErrorResponse implements Serializable {
 	
 	@Override
 	public String toString() {
-		String json = "{}";
-		try {
-			json = JsonUtil.serialize(this);
-		} catch (IOException e) {
-			assert(false);
-			LoggerFactory.getLogger(ErrorResponse.class).error("Failed to serialize error message", e);
-		}
-		return json;
+		return JsonUtil.serialize(this);
 	}
 }
