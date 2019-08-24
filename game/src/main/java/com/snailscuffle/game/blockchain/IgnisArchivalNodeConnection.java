@@ -30,6 +30,8 @@ import com.snailscuffle.game.tx.UnsignedTransaction;
 
 public class IgnisArchivalNodeConnection implements Closeable {
 	
+	private static final String PARAM_IGNIS_CHAIN = "2";
+	private static final String PARAM_CALCULATE_FEE = "-1";
 	private static final long NQT_PER_IGNIS = 100_000_000;
 	private static final Logger logger = LoggerFactory.getLogger(IgnisArchivalNodeConnection.class);
 	
@@ -174,19 +176,11 @@ public class IgnisArchivalNodeConnection implements Closeable {
 				.collect(Collectors.toList());
 	}
 	
-	private String sendGETRequest(String url, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		try {
-			return httpClient.GET(url).getContentAsString();
-		} catch (TimeoutException e) {
-			throw new IgnisNodeCommunicationException(errorString + ": " + e.getMessage());
-		} catch (ExecutionException e) {
-			throw new BlockchainSubsystemException(errorString + ": " + e.getMessage());
-		}
-	}
-	
 	public UnsignedTransaction createNewAccountTransaction(String username, String publicKey) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("requestType", "setAlias");
+		parameters.put("chain", PARAM_IGNIS_CHAIN);
+		parameters.put("feeNQT", PARAM_CALCULATE_FEE);
 		parameters.put("aliasName", username);
 		parameters.put("publicKey", publicKey);
 		
@@ -199,14 +193,45 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return new UnsignedTransaction(txJson, txBytes.asText());
 	}
 	
-	private String sendPOSTRequest(Map<String, String> parameters, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		Map<String, String> parametersCopy = new HashMap<String, String>(parameters);
-		parametersCopy.put("chain", "2");		// Ignis
-		parametersCopy.put("feeNQT", "-1");		// calculate the fee for us
+	public TransactionStatus broadcastTransaction(String txJson) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		Map<String, String> parameters = new HashMap<String, String>();
+		parameters.put("requestType", "broadcastTransaction");
+		parameters.put("transactionJSON", txJson);
 		
+		String response = sendPOSTRequest(parameters, "Failed to broadcast transaction");
+		
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from broadcastTransaction");
+		JsonNode fullHash = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "fullHash", "broadcastTransaction");
+		return getTransactionStatus(fullHash.asText());
+	}
+	
+	public TransactionStatus getTransactionStatus(String fullHash) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String url = baseUrl + "/nxt?requestType=getTransaction&chain=2&fullHash=" + fullHash;
+		String response = sendGETRequest(url, "Failed to get status of transaction '" + fullHash + "'");
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getTransaction for transaction '" + fullHash + "'");
+		JsonNode block = responseJson.get("block");
+		JsonNode confirmationsNode = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "confirmations", "getTransaction");
+		
+		boolean confirmed = block != null;
+		int confirmations = (confirmed && confirmationsNode != null) ? confirmationsNode.asInt() : 0;
+		
+		return new TransactionStatus(fullHash, confirmed, confirmations);
+	}
+	
+	private String sendGETRequest(String url, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		try {
+			return httpClient.GET(url).getContentAsString();
+		} catch (TimeoutException e) {
+			throw new IgnisNodeCommunicationException(errorString + ": " + e.getMessage());
+		} catch (ExecutionException e) {
+			throw new BlockchainSubsystemException(errorString + ": " + e.getMessage());
+		}
+	}
+	
+	private String sendPOSTRequest(Map<String, String> parameters, String errorString) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		try {
 			Request request = httpClient.POST(baseUrl + "/nxt");
-			for (Entry<String, String> kvp : parametersCopy.entrySet()) {
+			for (Entry<String, String> kvp : parameters.entrySet()) {
 				request.param(kvp.getKey(), kvp.getValue());
 			}
 			return request.send().getContentAsString();
@@ -215,19 +240,6 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		} catch (ExecutionException e) {
 			throw new BlockchainSubsystemException(errorString + ": " + e.getMessage());
 		}
-	}
-	
-	public TransactionStatus getTransactionStatus(String txid) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String url = baseUrl + "/nxt?requestType=getTransaction&chain=2&fullHash=" + txid;
-		String response = sendGETRequest(url, "Failed to get status of transaction '" + txid + "'");
-		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getTransaction for transaction '" + txid + "'");
-		JsonNode block = responseJson.get("block");
-		JsonNode confirmationsNode = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "confirmations", "getTransaction");
-		
-		boolean confirmed = block != null;
-		int confirmations = (confirmed && confirmationsNode != null) ? confirmationsNode.asInt() : 0;
-		
-		return new TransactionStatus(txid, confirmed, confirmations);
 	}
 	
 	@Override

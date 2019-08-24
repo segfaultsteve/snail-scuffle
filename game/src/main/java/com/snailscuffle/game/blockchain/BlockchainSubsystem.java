@@ -65,8 +65,12 @@ public class BlockchainSubsystem implements Closeable {
 		return ignisNode.createNewAccountTransaction(username, publicKey);
 	}
 	
-	public TransactionStatus getTransactionStatus(String txid) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		return ignisNode.getTransactionStatus(txid);
+	public TransactionStatus broadcastTransaction(String txJson) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		return ignisNode.broadcastTransaction(txJson);
+	}
+	
+	public TransactionStatus getTransactionStatus(String fullHash) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		return ignisNode.getTransactionStatus(fullHash);
 	}
 	
 	@Override
