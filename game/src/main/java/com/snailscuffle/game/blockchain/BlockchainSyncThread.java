@@ -284,6 +284,10 @@ class BlockchainSyncThread extends Thread {
 		for (Transaction tx : transactions) {
 			try {
 				JsonNode messageNode = JsonUtil.deserialize(tx.message);
+				if (messageNode == null) {
+					continue;
+				}
+				
 				JsonNode battlePlanHashNode = messageNode.get("battlePlanHash");
 				JsonNode battlePlanNode = messageNode.get("battlePlan");
 				
