@@ -24,6 +24,7 @@ import com.snailscuffle.common.battle.Item;
 import com.snailscuffle.common.battle.Shell;
 import com.snailscuffle.common.battle.Snail;
 import com.snailscuffle.common.battle.Weapon;
+import com.snailscuffle.common.util.HttpUtil;
 import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.common.util.ServletUtil;
 import com.snailscuffle.game.GameSettings;
@@ -31,12 +32,12 @@ import com.snailscuffle.game.battle.EquipmentInfo;
 
 public class InfoServlet extends HttpServlet {
 
-	private static final String SNAILS_PATH = "/snails";
-	private static final String WEAPONS_PATH = "/weapons";
-	private static final String SHELLS_PATH = "/shells";
-	private static final String ACCESSORIES_PATH = "/accessories";
-	private static final String ITEMS_PATH = "/items";
-	private static final String SERVERS_PATH = "/servers";
+	private static final String SNAILS_PATH = "snails";
+	private static final String WEAPONS_PATH = "weapons";
+	private static final String SHELLS_PATH = "shells";
+	private static final String ACCESSORIES_PATH = "accessories";
+	private static final String ITEMS_PATH = "items";
+	private static final String SERVERS_PATH = "servers";
 	
 	private static final Logger logger = LoggerFactory.getLogger(InfoServlet.class);
 	
@@ -52,14 +53,15 @@ public class InfoServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.setContentType("application/json; charset=UTF-8");
 		
-		if (request.getPathInfo() == null) {
+		String path = HttpUtil.extractPath(request);
+		if (path.isEmpty()) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			ServletUtil.markHandled(request);
 			return;
 		}
 		
 		try {
-			switch (request.getPathInfo()) {
+			switch (path) {
 			case SNAILS_PATH:
 				response.getWriter().write(describeSnails());
 				break;

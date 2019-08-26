@@ -32,9 +32,9 @@ public class SkirmishServlet extends HttpServlet {
 		response.addHeader("Cache-Control","no-store");
 		
 		try {
-			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
+			String skirmishId = HttpUtil.extractPath(request);
 			PlayerData player = (PlayerData) request.getSession().getAttribute(PlayerData.ATTRIBUTE_KEY);
-			if (skirmishId == null) {
+			if (skirmishId.isEmpty()) {
 				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			} else if (player == null || !skirmishId.equals(player.skirmish.getId().toString())) {
 				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -74,8 +74,8 @@ public class SkirmishServlet extends HttpServlet {
 		try {
 			PlayerData player = GetOrCreatePlayerData(request);
 			
-			String skirmishId = tryExtractSkirmishId(request.getPathInfo());
-			if (skirmishId == null) {
+			String skirmishId = HttpUtil.extractPath(request);
+			if (skirmishId.isEmpty()) {
 				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 			} else {
 				throwIfNotAuthorized(player, skirmishId);
@@ -135,14 +135,6 @@ public class SkirmishServlet extends HttpServlet {
 			session.setAttribute(PlayerData.ATTRIBUTE_KEY, player);
 		}
 		return player;
-	}
-	
-	private static String tryExtractSkirmishId(String urlPathInfo) {
-		if (urlPathInfo == null || urlPathInfo.length() <= 1) {
-			return null;
-		} else {
-			return urlPathInfo.substring(1);
-		}
 	}
 	
 	private static void throwIfNotAuthorized(PlayerData player, String skirmishId) throws NotAuthorizedException {
