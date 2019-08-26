@@ -37,9 +37,9 @@ public class AccountsServletTest {
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
-		when(mockIgnisNode.getBalance(ACCOUNT1.numericId())).thenReturn(ACCOUNT1.balance);
-		when(mockIgnisNode.getBalance(ACCOUNT2.numericId())).thenReturn(ACCOUNT2.balance);
-		when(mockIgnisNode.getBalance(ACCOUNT3.numericId())).thenReturn(ACCOUNT3.balance);
+		when(mockIgnisNode.getBalance(ACCOUNT1.id)).thenReturn(ACCOUNT1.balance);
+		when(mockIgnisNode.getBalance(ACCOUNT2.id)).thenReturn(ACCOUNT2.balance);
+		when(mockIgnisNode.getBalance(ACCOUNT3.id)).thenReturn(ACCOUNT3.balance);
 		
 		accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
 		blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
@@ -92,7 +92,7 @@ public class AccountsServletTest {
 	
 	@Test
 	public void reportAccountNotFound() throws Exception {
-		Mockito.doThrow(BlockchainDataNotFoundException.class).when(mockIgnisNode).getBalance(ACCOUNT1.numericId());
+		Mockito.doThrow(BlockchainDataNotFoundException.class).when(mockIgnisNode).getBalance(ACCOUNT1.id);
 		int expectedErrorCode = ErrorResponse.failedToRetrieveAccount().errorCode;
 		
 		String response = sendGETRequest("id=" + ACCOUNT1.id);

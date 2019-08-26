@@ -157,7 +157,7 @@ public class IgnisArchivalNodeConnectionTest {
 		setGETResponse(getAliasesUrl, getAliasesResponse);
 		setGETResponse(getAccountPublicKeyUrl, getAccountPublicKeyResponse);
 		
-		AccountMetadata retrieved = ignisNode.getPlayerAccount(account.id);
+		AccountMetadata retrieved = ignisNode.getPlayerAccount(Long.toUnsignedString(account.id));
 		
 		assertEquals(account.id, retrieved.id);
 		assertEquals(account.username, retrieved.username);
@@ -237,7 +237,7 @@ public class IgnisArchivalNodeConnectionTest {
 				+ "}";
 		setGETResponse(requestUrl, responseJson);
 		
-		double returnedBalance = ignisNode.getBalance(accountId);
+		double returnedBalance = ignisNode.getBalance(String.valueOf(accountId));
 		
 		assertEquals(expectedBalance, returnedBalance, 0);
 	}
@@ -283,7 +283,7 @@ public class IgnisArchivalNodeConnectionTest {
 		setGETResponse(getBlockUrl, getBlockResponse);
 		setGETResponse(getBlockchainTransactionsUrl, getBlockchainTransactionsResponse);
 		
-		List<Transaction> retrieved = ignisNode.getMessagesFrom(SENDER, INITIAL_HEIGHT, FINAL_HEIGHT);
+		List<Transaction> retrieved = ignisNode.getMessagesFrom(Long.toUnsignedString(SENDER), INITIAL_HEIGHT, FINAL_HEIGHT);
 		Transaction tx0 = retrieved.get(0);
 		Transaction tx1 = retrieved.get(1);
 		

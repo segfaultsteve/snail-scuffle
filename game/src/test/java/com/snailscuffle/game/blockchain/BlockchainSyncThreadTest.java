@@ -5,7 +5,7 @@ import static java.lang.System.currentTimeMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -87,12 +87,12 @@ public class BlockchainSyncThreadTest {
 			}
 		});
 		when(ignisNode.getAllPlayerAccounts()).thenReturn(accountsOnBlockchain);
-		when(ignisNode.getPlayerAccount(anyLong())).thenAnswer(invocation -> {
-			long id = invocation.getArgument(0);
+		when(ignisNode.getPlayerAccount(anyString())).thenAnswer(invocation -> {
+			long id = Long.parseUnsignedLong(invocation.getArgument(0));
 			return accountsOnBlockchain.stream().filter(a -> a.id == id).findFirst().get();
 		});
-		when(ignisNode.getMessagesFrom(anyLong(), anyInt(), anyInt())).thenAnswer(invocation -> {
-			long id = invocation.getArgument(0);
+		when(ignisNode.getMessagesFrom(anyString(), anyInt(), anyInt())).thenAnswer(invocation -> {
+			long id = Long.parseUnsignedLong(invocation.getArgument(0));
 			int initialHeight = invocation.getArgument(1);
 			int finalHeight = invocation.getArgument(2);
 			synchronized (recentBlocks) {
