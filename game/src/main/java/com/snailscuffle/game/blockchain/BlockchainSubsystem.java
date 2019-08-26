@@ -40,7 +40,7 @@ public class BlockchainSubsystem implements Closeable {
 				account = new Account(numericId, "", "", 0, 0, 0, 0, 0, 0);
 			}
 			
-			account.balance = ignisNode.getBalance(numericId);
+			account.balance = ignisNode.getBalance(id);
 			return account;
 		} catch (NumberFormatException e) {
 			throw new AccountNotFoundException("'" + id + "' is not a valid account ID");
@@ -51,7 +51,7 @@ public class BlockchainSubsystem implements Closeable {
 	
 	public Account getAccountByUsername(String username) throws AccountsException, BlockchainSubsystemException, InterruptedException {
 		Account account = accounts.getByUsername(username);
-		account.balance = ignisNode.getBalance(account.numericId());
+		account.balance = ignisNode.getBalance(account.id);
 		return account;
 	}
 	

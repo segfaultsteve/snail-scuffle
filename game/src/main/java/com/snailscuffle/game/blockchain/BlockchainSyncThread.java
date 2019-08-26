@@ -146,7 +146,7 @@ class BlockchainSyncThread extends Thread {
 			
 			battlesInProgress.clear();
 			for (Account account : playerAccounts) {
-				List<Transaction> messageTxs = ignisNode.getMessagesFrom(account.numericId(), backtrackHeight, currentBlock.height);
+				List<Transaction> messageTxs = ignisNode.getMessagesFrom(account.id, backtrackHeight, currentBlock.height);
 				List<OnChain<? extends BattlePlanMessage>> battlePlanMessages = parseBattlePlanMessages(messageTxs);
 				battlesInProgress.update(battlePlanMessages);
 			}
@@ -272,7 +272,7 @@ class BlockchainSyncThread extends Thread {
 		
 		List<Account> accounts = new ArrayList<>();
 		for (Long accountId : accountsWithChangedAliases) {
-			AccountMetadata account = ignisNode.getPlayerAccount(accountId);
+			AccountMetadata account = ignisNode.getPlayerAccount(Long.toUnsignedString(accountId));
 			accounts.add(new Account(account.id, account.username, account.publicKey));
 		}
 		return accounts;

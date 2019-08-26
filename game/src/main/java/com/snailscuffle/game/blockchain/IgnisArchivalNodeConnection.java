@@ -98,23 +98,22 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return new Block(responseJson, "getBlock");
 	}
 	
-	public AccountMetadata getPlayerAccount(long accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String accountIdString = Long.toUnsignedString(accountId);
-		String url = baseUrl + "/nxt?requestType=getAliases&chain=2&account=" + accountIdString;
-		String response = sendGETRequest(url, "Failed to get aliases for account " + accountIdString);
+	public AccountMetadata getPlayerAccount(String accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String url = baseUrl + "/nxt?requestType=getAliases&chain=2&account=" + accountId;
+		String response = sendGETRequest(url, "Failed to get aliases for account " + accountId);
 		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response from getAliases");
 		JsonNode aliasArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "aliases", "getAliases");
 		List<Alias> aliases = Alias.parseAll(aliasArray, "getAliases");
 		
 		for (Alias alias : aliases) {
 			if (alias.name.startsWith("snailscuffle")) {
-				String publicKey = getPublicKey(alias.account);
+				String publicKey = getPublicKey(Long.toUnsignedString(alias.account));
 				String username = alias.name.replaceFirst("snailscuffle", "");
 				return new AccountMetadata(alias.account, username, publicKey);		// use the first valid username (getAliases returns them in alphabetical order)
 			}
 		}
 		
-		throw new BlockchainDataNotFoundException("Account " + accountIdString + " does not have an alias with the prefix 'snailscuffle'");
+		throw new BlockchainDataNotFoundException("Account " + accountId + " does not have an alias with the prefix 'snailscuffle'");
 	}
 	
 	public List<AccountMetadata> getAllPlayerAccounts() throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
@@ -130,7 +129,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 			// If an account has multiple snailscuffle aliases, use only the first. Note that
 			// getAliasesLike returns them in alphabetical order.
 			if (alias.name.startsWith("snailscuffle") && accountIds.add(alias.account)) {
-				String publicKey = getPublicKey(alias.account);
+				String publicKey = getPublicKey(Long.toUnsignedString(alias.account));
 				String username = alias.name.replaceFirst("snailscuffle", "");
 				accounts.add(new AccountMetadata(alias.account, username, publicKey));
 			}
@@ -138,20 +137,18 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return accounts;
 	}
 	
-	private String getPublicKey(long accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String accountIdString = Long.toUnsignedString(accountId);
-		String url = baseUrl + "/nxt?requestType=getAccountPublicKey&account=" + accountIdString;
-		String response = sendGETRequest(url, "Failed to get public key for account " + accountIdString);
-		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response to getAccountPublicKey inquiry for account " + accountIdString);
+	private String getPublicKey(String accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String url = baseUrl + "/nxt?requestType=getAccountPublicKey&account=" + accountId;
+		String response = sendGETRequest(url, "Failed to get public key for account " + accountId);
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response to getAccountPublicKey inquiry for account " + accountId);
 		JsonNode publicKey = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "publicKey", "getAccountPublicKey");
 		return publicKey.asText();
 	}
 	
-	public double getBalance(long accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String accountIdString = Long.toUnsignedString(accountId);
-		String url = baseUrl + "/nxt?requestType=getBalance&chain=2&account=" + accountIdString;
-		String response = sendGETRequest(url, "Failed to get balance of account " + accountIdString);
-		JsonNode parsedResponse = BlockchainUtil.parseJson(response, "Failed to deserialize response to getBalance inquiry for account " + accountIdString);
+	public double getBalance(String accountId) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String url = baseUrl + "/nxt?requestType=getBalance&chain=2&account=" + accountId;
+		String response = sendGETRequest(url, "Failed to get balance of account " + accountId);
+		JsonNode parsedResponse = BlockchainUtil.parseJson(response, "Failed to deserialize response to getBalance inquiry for account " + accountId);
 		JsonNode balance = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "unconfirmedBalanceNQT", "getBalance");
 		return nqtToDouble(balance.asLong());
 	}
@@ -160,21 +157,20 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return new BigDecimal(nqt).divide(new BigDecimal(NQT_PER_IGNIS)).doubleValue();
 	}
 	
-	public List<Transaction> getMessagesFrom(long accountId, int initialHeight, int finalHeight) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
-		String accountIdString = Long.toUnsignedString(accountId);
+	public List<Transaction> getMessagesFrom(String accountId, int initialHeight, int finalHeight) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		int startingTimestamp = getBlockAtHeight(initialHeight).timestamp;
 		String url = baseUrl + "/nxt?requestType=getBlockchainTransactions"
 				+ "&chain=2"
-				+ "&account=" + accountIdString
+				+ "&account=" + accountId
 				+ "&timestamp=" + startingTimestamp
 				+ "&type=1"
 				+ "&subtype=0"
 				+ "&includeExpiredPrunable=true";
-		String response = sendGETRequest(url, "Failed to get transactions to and from account " + accountIdString);
-		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response to getBlockchainTransactions inquiry for account " + accountIdString);
+		String response = sendGETRequest(url, "Failed to get transactions to and from account " + accountId);
+		JsonNode responseJson = BlockchainUtil.parseJson(response, "Failed to deserialize response to getBlockchainTransactions inquiry for account " + accountId);
 		JsonNode txArray = BlockchainUtil.getResponsePropertyOrThrow(responseJson, "transactions", "getBlockchainTransactions");
 		return Transaction.parseAll(txArray, "getBlockchainTransactions").stream()
-				.filter(t -> t.sender == accountId && t.height <= finalHeight)
+				.filter(t -> t.sender == Long.parseUnsignedLong(accountId) && t.height <= finalHeight)
 				.collect(Collectors.toList());
 	}
 	
