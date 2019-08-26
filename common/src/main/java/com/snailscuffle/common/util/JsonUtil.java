@@ -28,6 +28,10 @@ public class JsonUtil {
 		writer.print(serialize(data));
 	}
 	
+	public static JsonNode deserialize(String json) throws IOException {
+		return new ObjectMapper().readTree(json);
+	}
+	
 	public static <T> T deserialize(Class<T> type, String json) throws IOException {
 		return new ObjectMapper()
 				.readerFor(type)
@@ -35,8 +39,11 @@ public class JsonUtil {
 				.readValue(json);
 	}
 	
-	public static JsonNode deserialize(String json) throws IOException {
-		return new ObjectMapper().readTree(json);
+	public static <T> T deserialize(Class<T> type, JsonNode json) throws IOException {
+		return new ObjectMapper()
+				.readerFor(type)
+				.with(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
+				.readValue(json);
 	}
 
 }

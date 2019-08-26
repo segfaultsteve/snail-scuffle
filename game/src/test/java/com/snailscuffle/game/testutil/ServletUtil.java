@@ -3,8 +3,10 @@ package com.snailscuffle.game.testutil;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +34,23 @@ public class ServletUtil {
 		
 		doGet.accept(request, response);
 		return responseBuffer.toString();
+	}
+	
+	public static String sendPUTRequest(BiConsumer<Request, Response> doPut, String path, String body) {
+		try {
+			Request request = mock(Request.class);
+			when(request.getPathInfo()).thenReturn(path);
+			when(request.getReader()).thenReturn(new BufferedReader(new StringReader(body)));
+			
+			Response response = mock(Response.class);
+			StringWriter responseBuffer = new StringWriter();
+			when(response.getWriter()).thenReturn(new PrintWriter(responseBuffer));
+			
+			doPut.accept(request, response);
+			return responseBuffer.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	private static Map<String, String[]> parameterMapFor(String queryString) {

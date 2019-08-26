@@ -17,10 +17,16 @@ import com.snailscuffle.common.util.ServletUtil;
 import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.blockchain.BlockchainSubsystem;
 import com.snailscuffle.game.blockchain.BlockchainSubsystemException;
+import com.snailscuffle.game.blockchain.BlockchainUtil;
+import com.snailscuffle.game.blockchain.IgnisNodeCommunicationException;
+import com.snailscuffle.game.blockchain.data.BattlePlanCommitMessage;
+import com.snailscuffle.game.blockchain.data.BattlePlanRevealMessage;
 
 public class TransactionsServlet extends HttpServlet {
 	
-	private static final String NEW_ACCOUNT_PATH = "newaccount";
+	private static final String NEW_ACCOUNT_PATH = "new-account";
+	private static final String BP_COMMIT_PATH = "battle-plan-commit";
+	private static final String BP_REVEAL_PATH = "battle-plan-reveal";
 	private static final Logger logger = LoggerFactory.getLogger(TransactionsServlet.class);
 	
 	private final BlockchainSubsystem blockchain;
@@ -30,13 +36,17 @@ public class TransactionsServlet extends HttpServlet {
 	}
 	
 	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		response.setContentType("application/json; charset=UTF-8");
 		
 		try {
-			String path = extractPath(request);
+			String path = HttpUtil.extractPath(request);
 			if (path.equalsIgnoreCase(NEW_ACCOUNT_PATH)) {
 				response.getWriter().write(newAccountResponse(request));
+			} else if (path.equalsIgnoreCase(BP_COMMIT_PATH)) {
+				response.getWriter().write(bpCommitResponse(request));
+			} else if (path.equalsIgnoreCase(BP_REVEAL_PATH)) {
+				response.getWriter().write(bpRevealResponse(request));
 			} else if (path.length() > 0) {
 				TransactionStatus status = blockchain.getTransactionStatus(path);
 				response.getWriter().write(JsonUtil.serialize(status));
@@ -61,7 +71,7 @@ public class TransactionsServlet extends HttpServlet {
 		response.setContentType("application/json; charset=UTF-8");
 		
 		try {
-			if (extractPath(request).length() > 0) {
+			if (HttpUtil.extractPath(request).length() > 0) {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			} else {
 				String txJson = HttpUtil.extractBody(request);
@@ -77,17 +87,23 @@ public class TransactionsServlet extends HttpServlet {
 		ServletUtil.markHandled(request);
 	}
 	
-	private static String extractPath(HttpServletRequest request) {
-		String path = request.getPathInfo();
-		if (path == null) {
-			path = "";
-		}
-		return path.replaceAll("^/|/$", "");
-	}
-	
 	private String newAccountResponse(HttpServletRequest request) throws InvalidQueryException, AccountsException, BlockchainSubsystemException, InterruptedException {
 		NewAccountTransactionQuery query = new NewAccountTransactionQuery(request);
-		UnsignedTransaction tx = blockchain.createNewAccountTransaction(query.player, query.publicKey);
+		UnsignedTransaction tx = blockchain.createNewAccountTransaction(query.publicKey, query.player);
+		return JsonUtil.serialize(tx);
+	}
+	
+	private String bpCommitResponse(HttpServletRequest request) throws InvalidQueryException, IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		BattlePlanTransactionQuery query = new BattlePlanTransactionQuery(request);
+		BattlePlanCommitMessage bpCommitMessage = new BattlePlanCommitMessage(query.battleId, query.round, BlockchainUtil.sha256Hash(query.battlePlan));
+		UnsignedTransaction tx = blockchain.createArbitraryMessageTransaction(query.publicKey, query.recipient, bpCommitMessage);
+		return JsonUtil.serialize(tx);
+	}
+	
+	private String bpRevealResponse(HttpServletRequest request) throws InvalidQueryException, IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		BattlePlanTransactionQuery query = new BattlePlanTransactionQuery(request);
+		BattlePlanRevealMessage bpCommitMessage = new BattlePlanRevealMessage(query.battleId, query.round, query.battlePlan);
+		UnsignedTransaction tx = blockchain.createArbitraryMessageTransaction(query.publicKey, query.recipient, bpCommitMessage);
 		return JsonUtil.serialize(tx);
 	}
 	

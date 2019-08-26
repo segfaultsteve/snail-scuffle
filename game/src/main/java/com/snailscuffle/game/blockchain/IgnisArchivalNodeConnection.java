@@ -21,9 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.Alias;
 import com.snailscuffle.game.blockchain.data.Block;
+import com.snailscuffle.game.blockchain.data.SnailScuffleMessage;
 import com.snailscuffle.game.blockchain.data.Transaction;
 import com.snailscuffle.game.tx.TransactionStatus;
 import com.snailscuffle.game.tx.UnsignedTransaction;
@@ -176,21 +178,32 @@ public class IgnisArchivalNodeConnection implements Closeable {
 				.collect(Collectors.toList());
 	}
 	
-	public UnsignedTransaction createNewAccountTransaction(String username, String publicKey) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+	public UnsignedTransaction createNewAccountTransaction(String publicKey, String username) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("requestType", "setAlias");
 		parameters.put("chain", PARAM_IGNIS_CHAIN);
 		parameters.put("feeNQT", PARAM_CALCULATE_FEE);
-		parameters.put("aliasName", username);
 		parameters.put("publicKey", publicKey);
+		parameters.put("aliasName", username);
 		
 		String response = sendPOSTRequest(parameters, "Failed to create alias 'snailscuffle" + username + "'");
 		
-		JsonNode parsedResponse = BlockchainUtil.parseJson(response, "Failed to deserialize response to setAlias");
-		JsonNode txJson = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "transactionJSON", "setAlias");
-		JsonNode txBytes = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "unsignedTransactionBytes", "setAlias");
+		return unsignedTxFromPOSTResponse(response, "setAlias");
+	}
+	
+	public UnsignedTransaction createArbitraryMessageTransaction(String publicKey, String recipient, SnailScuffleMessage message) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		Map<String, String> parameters = new HashMap<String, String>();
+		parameters.put("requestType", "sendMessage");
+		parameters.put("chain", PARAM_IGNIS_CHAIN);
+		parameters.put("feeNQT", PARAM_CALCULATE_FEE);
+		parameters.put("message", JsonUtil.serialize(message));
+		parameters.put("messageIsPrunable", "true");
+		parameters.put("publicKey", publicKey);
+		parameters.put("recipient", recipient);
 		
-		return new UnsignedTransaction(txJson, txBytes.asText());
+		String response = sendPOSTRequest(parameters, "Failed to create message");
+		
+		return unsignedTxFromPOSTResponse(response, "sendMessage");
 	}
 	
 	public TransactionStatus broadcastTransaction(String txJson) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
@@ -240,6 +253,14 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		} catch (ExecutionException e) {
 			throw new BlockchainSubsystemException(errorString + ": " + e.getMessage());
 		}
+	}
+	
+	private static UnsignedTransaction unsignedTxFromPOSTResponse(String response, String apiFunction) throws BlockchainSubsystemException {
+		JsonNode parsedResponse = BlockchainUtil.parseJson(response, "Failed to deserialize response to " + apiFunction);
+		JsonNode txJson = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "transactionJSON", apiFunction);
+		JsonNode txBytes = BlockchainUtil.getResponsePropertyOrThrow(parsedResponse, "unsignedTransactionBytes", apiFunction);
+		
+		return new UnsignedTransaction(txJson, txBytes.asText());
 	}
 	
 	@Override

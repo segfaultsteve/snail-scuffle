@@ -5,10 +5,11 @@ import java.net.URL;
 
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.AccountNotFoundException;
+import com.snailscuffle.game.accounts.Accounts;
 import com.snailscuffle.game.accounts.AccountsException;
+import com.snailscuffle.game.blockchain.data.SnailScuffleMessage;
 import com.snailscuffle.game.tx.TransactionStatus;
 import com.snailscuffle.game.tx.UnsignedTransaction;
-import com.snailscuffle.game.accounts.Accounts;
 
 public class BlockchainSubsystem implements Closeable {
 	
@@ -54,7 +55,7 @@ public class BlockchainSubsystem implements Closeable {
 		return account;
 	}
 	
-	public UnsignedTransaction createNewAccountTransaction(String username, String publicKey) throws AccountsException, BlockchainSubsystemException, InterruptedException {
+	public UnsignedTransaction createNewAccountTransaction(String publicKey, String username) throws AccountsException, BlockchainSubsystemException, InterruptedException {
 		try {
 			Account account = accounts.getByUsername(username);
 			if (!account.publicKey.equalsIgnoreCase(publicKey)) {
@@ -62,7 +63,11 @@ public class BlockchainSubsystem implements Closeable {
 			}
 		} catch (AccountNotFoundException e) { }
 		
-		return ignisNode.createNewAccountTransaction(username, publicKey);
+		return ignisNode.createNewAccountTransaction(publicKey, username);
+	}
+	
+	public UnsignedTransaction createArbitraryMessageTransaction(String publicKey, String recipient, SnailScuffleMessage message) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		return ignisNode.createArbitraryMessageTransaction(publicKey, recipient, message);
 	}
 	
 	public TransactionStatus broadcastTransaction(String txJson) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
