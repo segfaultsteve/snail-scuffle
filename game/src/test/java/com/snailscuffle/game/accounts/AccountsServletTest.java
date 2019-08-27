@@ -117,7 +117,7 @@ public class AccountsServletTest {
 			}
 		};
 		
-		return ServletUtil.sendGETRequest(doGetNothrow, "", queryString);
+		return ServletUtil.sendHttpRequest(doGetNothrow, "", queryString);
 	}
 	
 	private static void assertAccountsAreEqual(Account expected, Account actual) {

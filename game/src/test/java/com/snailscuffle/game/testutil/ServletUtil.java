@@ -17,36 +17,23 @@ import org.eclipse.jetty.server.Response;
 
 public class ServletUtil {
 	
-	public static String sendGETRequest(BiConsumer<Request, Response> doGet, String path, String queryString) {
-		Request request = mock(Request.class);
-		when(request.getPathInfo()).thenReturn(path);
-		when(request.getQueryString()).thenReturn(queryString);
-		when(request.getParameterMap()).thenReturn(parameterMapFor(queryString));
-		
-		Response response = mock(Response.class);
-		StringWriter responseBuffer = new StringWriter();
-		
-		try {
-			when(response.getWriter()).thenReturn(new PrintWriter(responseBuffer));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		
-		doGet.accept(request, response);
-		return responseBuffer.toString();
+	public static String sendHttpRequest(BiConsumer<Request, Response> doRequest, String path, String queryString) {
+		return sendHttpRequest(doRequest, path, queryString, "");
 	}
 	
-	public static String sendPUTRequest(BiConsumer<Request, Response> doPut, String path, String body) {
+	public static String sendHttpRequest(BiConsumer<Request, Response> doRequest, String path, String queryString, String body) {
 		try {
 			Request request = mock(Request.class);
 			when(request.getPathInfo()).thenReturn(path);
+			when(request.getQueryString()).thenReturn(queryString);
+			when(request.getParameterMap()).thenReturn(parameterMapFor(queryString));
 			when(request.getReader()).thenReturn(new BufferedReader(new StringReader(body)));
 			
 			Response response = mock(Response.class);
 			StringWriter responseBuffer = new StringWriter();
 			when(response.getWriter()).thenReturn(new PrintWriter(responseBuffer));
 			
-			doPut.accept(request, response);
+			doRequest.accept(request, response);
 			return responseBuffer.toString();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -58,7 +45,9 @@ public class ServletUtil {
 		String[] queryParams = queryString.split("&");
 		for (String param : queryParams) {
 			String[] kvp = param.split("=");
-			parameterMap.put(kvp[0], new String[] { kvp[1] });
+			if (kvp.length > 1) {
+				parameterMap.put(kvp[0], new String[] { kvp[1] });
+			}
 		}
 		return parameterMap;
 	}

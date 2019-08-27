@@ -82,7 +82,7 @@ public class TransactionsServletTest {
 	}
 	
 	private String sendPUTRequest(String path, HashMap<String, Object> body) throws Exception {
-		BiConsumer<Request, Response> doGetNothrow = (req, resp) -> {
+		BiConsumer<Request, Response> doPutNothrow = (req, resp) -> {
 			try {
 				Accounts accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
 				BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
@@ -92,7 +92,7 @@ public class TransactionsServletTest {
 			}
 		};
 		
-		return ServletUtil.sendPUTRequest(doGetNothrow, path, JsonUtil.serialize(body));
+		return ServletUtil.sendHttpRequest(doPutNothrow, path, "", JsonUtil.serialize(body));
 	}
 	
 }
