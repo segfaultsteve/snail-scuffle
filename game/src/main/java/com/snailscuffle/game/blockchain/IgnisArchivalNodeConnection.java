@@ -175,14 +175,16 @@ public class IgnisArchivalNodeConnection implements Closeable {
 	}
 	
 	public UnsignedTransaction createNewAccountTransaction(String publicKey, String username) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
+		String alias = "snailscuffle" + username;
+		
 		Map<String, String> parameters = new HashMap<String, String>();
 		parameters.put("requestType", "setAlias");
 		parameters.put("chain", PARAM_IGNIS_CHAIN);
 		parameters.put("feeNQT", PARAM_CALCULATE_FEE);
 		parameters.put("publicKey", publicKey);
-		parameters.put("aliasName", username);
+		parameters.put("aliasName", alias);
 		
-		String response = sendPOSTRequest(parameters, "Failed to create alias 'snailscuffle" + username + "'");
+		String response = sendPOSTRequest(parameters, "Failed to create alias '" + alias + "'");
 		
 		return unsignedTxFromPOSTResponse(response, "setAlias");
 	}

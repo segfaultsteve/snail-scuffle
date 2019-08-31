@@ -13,6 +13,8 @@ import com.snailscuffle.game.tx.UnsignedTransaction;
 
 public class BlockchainSubsystem implements Closeable {
 	
+	private static final int SYNC_LOOP_PERIOD_MILLIS = 10000;
+	
 	private final IgnisArchivalNodeConnection ignisNode;
 	private final Accounts accounts;
 	private final BlockchainSyncThread blockchainSyncThread;
@@ -22,9 +24,13 @@ public class BlockchainSubsystem implements Closeable {
 	}
 	
 	public BlockchainSubsystem(IgnisArchivalNodeConnection node, Accounts accounts, int recentBattlesDepth) {
+		this(node, accounts, recentBattlesDepth, SYNC_LOOP_PERIOD_MILLIS);
+	}
+	
+	BlockchainSubsystem(IgnisArchivalNodeConnection node, Accounts accounts, int recentBattlesDepth, int syncLoopPeriodMillis) {
 		ignisNode = node;
 		this.accounts = accounts;
-		blockchainSyncThread = new BlockchainSyncThread(ignisNode, accounts, recentBattlesDepth);
+		blockchainSyncThread = new BlockchainSyncThread(ignisNode, accounts, recentBattlesDepth, syncLoopPeriodMillis);
 		
 		blockchainSyncThread.start();
 	}

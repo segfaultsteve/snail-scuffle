@@ -36,7 +36,7 @@ public class TransactionsServlet extends HttpServlet {
 	}
 	
 	@Override
-	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	public void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		response.setContentType("application/json; charset=UTF-8");
 		
 		try {
@@ -67,7 +67,7 @@ public class TransactionsServlet extends HttpServlet {
 	}
 	
 	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		response.setContentType("application/json; charset=UTF-8");
 		
 		try {

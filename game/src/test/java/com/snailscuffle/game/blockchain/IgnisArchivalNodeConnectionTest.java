@@ -1,5 +1,6 @@
 package com.snailscuffle.game.blockchain;
 
+import static com.snailscuffle.game.testutil.BlockchainJson.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,6 +24,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.blockchain.data.AccountMetadata;
+import com.snailscuffle.game.blockchain.data.Alias;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
 
@@ -42,7 +44,7 @@ public class IgnisArchivalNodeConnectionTest {
 	@Test
 	public void isReady() throws BlockchainSubsystemException, InterruptedException {
 		String getBlockchainStatusUrl = BASE_URL + "/nxt?requestType=getBlockchainStatus";
-		String getBlockchainStatusResponse = getBlockchainStatusResponse(true);
+		String getBlockchainStatusResponse = getBlockchainStatusResponse(true, Constants.INITIAL_SYNC_BLOCK_ID, Constants.INITIAL_SYNC_HEIGHT);
 		
 		setGETResponse(getBlockchainStatusUrl, getBlockchainStatusResponse);
 		
@@ -54,7 +56,7 @@ public class IgnisArchivalNodeConnectionTest {
 	@Test
 	public void isNotReady() throws BlockchainSubsystemException, InterruptedException {
 		String getBlockchainStatusUrl = BASE_URL + "/nxt?requestType=getBlockchainStatus";
-		String getBlockchainStatusResponse = getBlockchainStatusResponse(false);
+		String getBlockchainStatusResponse = getBlockchainStatusResponse(false, Constants.INITIAL_SYNC_BLOCK_ID, Constants.INITIAL_SYNC_HEIGHT);
 		
 		setGETResponse(getBlockchainStatusUrl, getBlockchainStatusResponse);
 		
@@ -119,32 +121,10 @@ public class IgnisArchivalNodeConnectionTest {
 		AccountMetadata account = new AccountMetadata(1, "player1", "pubkey1");
 		String getAliasesUrl = BASE_URL + "/nxt?requestType=getAliases&chain=2&account=" + account.id;
 		String getAliasesResponse = "{"
-				+	"\"aliases\": ["
-				+		"{"
-				+			"\"aliasURI\": \"\", "
-				+			"\"aliasName\": \"irrelevantAlias\", "		// lacks "snailscuffle" prefix
-				+			"\"accountRS\": \"ARDOR-0000-0000-0000-00000\", "
-				+			"\"alias\": \"12345\", "
-				+			"\"account\": \"" + account.id + "\", "
-				+			"\"timestamp\": 0"
-				+		"},"
-				+		"{"
-				+			"\"aliasURI\": \"\", "
-				+			"\"aliasName\": \"snailscuffleplayer1\", "
-				+			"\"accountRS\": \"ARDOR-0000-0000-0000-00000\", "
-				+			"\"alias\": \"23456\", "
-				+			"\"account\": \"" + account.id + "\", "
-				+			"\"timestamp\": 0"
-				+		"},"
-				+		"{"
-				+			"\"aliasURI\": \"\", "
-				+			"\"aliasName\": \"snailscuffleplayer2\", "
-				+			"\"accountRS\": \"ARDOR-0000-0000-0000-00000\", "
-				+			"\"alias\": \"34567\", "
-				+			"\"account\": \"" + account.id + "\", "
-				+			"\"timestamp\": 0"
-				+		"}"
-				+	"],"
+				+	"\"aliases\": " + aliasesToJson(Arrays.asList(
+						new Alias("irrelevantAlias", account.id),				// lacks "snailscuffle" prefix
+						new Alias("snailscuffleplayer1", account.id),
+						new Alias("snailscuffleplayer2", account.id))) + ","
 				+	"\"requestProcessingTime\": 1"
 				+ "}";
 		
@@ -171,24 +151,9 @@ public class IgnisArchivalNodeConnectionTest {
 		
 		String getAliasesLikeUrl = BASE_URL + "/nxt?requestType=getAliasesLike&chain=2&aliasPrefix=snailscuffle";
 		String getAliasesLikeResponse = "{"
-				+	"\"aliases\": ["
-				+		"{"
-				+			"\"aliasURI\": \"\", "
-				+			"\"aliasName\": \"snailscuffle" + account1.username + "\", "
-				+			"\"accountRS\": \"ARDOR-0000-0000-0000-00000\", "
-				+			"\"alias\": \"12345\", "
-				+			"\"account\": \"" + account1.id + "\", "
-				+			"\"timestamp\": 0"
-				+		"},"
-				+		"{"
-				+			"\"aliasURI\": \"\", "
-				+			"\"aliasName\": \"snailscuffle" + account2.username + "\", "
-				+			"\"accountRS\": \"ARDOR-1111-1111-1111-11111\", "
-				+			"\"alias\": \"23456\", "
-				+			"\"account\": \"" + account2.id + "\", "
-				+			"\"timestamp\": 0"
-				+		"}"
-				+	"],"
+				+	"\"aliases\": " + aliasesToJson(Arrays.asList(
+						new Alias("snailscuffle" + account1.username, account1.id),
+						new Alias("snailscuffle" + account2.username, account2.id))) + ","
 				+	"\"requestProcessingTime\": 1"
 				+ "}";
 		
@@ -266,7 +231,7 @@ public class IgnisArchivalNodeConnectionTest {
 				.collect(Collectors.toList());
 		
 		String getBlockUrl = BASE_URL + "/nxt?requestType=getBlock&includeTransactions=true&height=" + INITIAL_HEIGHT;
-		String getBlockResponse = blockToJson(blocks.get(0), null);
+		String getBlockResponse = blockToJson(blocks.get(0), 0);
 		
 		String getBlockchainTransactionsUrl = BASE_URL + "/nxt?requestType=getBlockchainTransactions"
 				+ "&chain=2"
@@ -314,142 +279,6 @@ public class IgnisArchivalNodeConnectionTest {
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			assert(false);	// this is impossible (it's just a mock)
 		}
-	}
-	
-	private static String getBlockchainStatusResponse(boolean ready) {
-		return "{"
-				+	"\"apiProxy\": false, "
-				+	"\"application\": \"Ardor\", "
-				+	"\"blockchainState\": \"" + (ready ? "UP_TO_DATE" : "DOWNLOADING") + "\", "
-				+	"\"correctInvalidFees\": false, "
-				+	"\"cumulativeDifficulty\": \"80162036691095023\", "
-				+	"\"currentMinRollbackHeight\": 850200, "
-				+	"\"includeExpiredPrunable\": true, "
-				+	"\"isDownloading\": " + String.valueOf(!ready) + ", "
-				+	"\"isLightClient\": false, "
-				+	"\"isScanning\": false, "
-				+	"\"isTestnet\": false, "
-				+	"\"lastBlock\": \"4746167715005575669\", "
-				+	"\"lastBlockchainFeeder\": \"111.222.333.444\", "
-				+	"\"lastBlockchainFeederHeight\": 851937, "
-				+	"\"ledgerTrimKeep\": 30000, "
-				+	"\"maxAPIRecords\": 100, "
-				+	"\"maxPrunableLifetime\": 7776000, "
-				+	"\"maxRollback\": 800, "
-				+	"\"numberOfBlocks\": 851955, "
-				+	"\"requestProcessingTime\": 0, "
-				+	"\"services\": ["
-				+		"\"CORS\""
-				+	"], "
-				+	"\"time\": 50335296, "
-				+	"\"version\": \"2.2.5\""
-				+ "}";
-	}
-	
-	private static String blocksToJson(List<Block> blocks) {
-		StringBuilder json = new StringBuilder();
-		
-		json.append("[");
-		for (int i = 0; i < blocks.size(); i++) {
-			Block block = blocks.get(i);
-			Block previousBlock = (i > 0) ? blocks.get(i - 1) : null;
-			
-			json.append(blockToJson(block, previousBlock));
-			if (i < blocks.size() - 1) {
-				json.append(",");
-			}
-		}
-		json.append("]");
-		
-		return json.toString();
-	}
-	
-	private static String blockToJson(Block block, Block previousBlock) {
-		return "{"
-				+	"\"baseTarget\": \"123456\", "
-				+	"\"block\": \"" + Long.toUnsignedString(block.id) + "\", "
-				+	"\"blockSignature\": \"John Hancock\", "
-				+	"\"cumulativeDifficulty\": \"123456\", "
-				+	"\"generatorSignature\": \"Yours Truly\", "
-				+	"\"generator\": \"123456\", "
-				+	"\"generatorPublicKey\": \"my public key\", "
-				+	"\"generatorRS\": \"ARDOR-0000-0000-0000-00000\", "
-				+	"\"height\": " + block.height + ", "
-				+	"\"numberOfTransactions\": " + block.transactions.size() + ", "
-				+	"\"payloadHash\": \"123456\", "
-				+	"\"previousBlock\": \"" + (previousBlock == null ? "0" : previousBlock.id) + "\", "
-				+	"\"previousBlockHash\": \"123456\", "
-				+	"\"timestamp\": " + block.timestamp + ", "
-				+	"\"totalFeeFQT\": \"" + (block.transactions.isEmpty() ? "0" : "1000000") + "\", "
-				+	"\"transactions\": " + transactionsToJson(block.transactions) + ", "
-				+	"\"version\": 3"
-				+ "}";
-	}
-	
-	private static String transactionsToJson(List<Transaction> transactions) {
-		StringBuilder json = new StringBuilder();
-		
-		json.append("[");
-		for (int i = 0; i < transactions.size(); i++) {
-			json.append(transactionToJson(transactions.get(i)));
-			if (i < transactions.size() - 1) {
-				json.append(",");
-			}
-		}
-		json.append("]");
-		
-		return json.toString();
-	}
-	
-	private static String transactionToJson(Transaction tx) {
-		int type = 0;
-		String attachment = null;
-		
-		if (tx.message.length() > 0) {
-			type = 1;
-			attachment = "{"
-					+	"\"message\": \"" + tx.message + "\", "
-					+	"\"messageHash\": \"123456\", "
-					+	"\"messageIsText\": true, "
-					+	"\"version.PrunablePlainMessage\": 1"
-					+ "}";
-		} else if (tx.alias.length() > 0) {
-			type = 8;
-			attachment = "{"
-					+	"\"alias\": \"snailscuffle" + tx.alias + "\", "
-					+	"\"uri\": \"acct:ARDOR-0000-0000-0000-00000\", "
-					+	"\"version.AliasAssignment\": 1"
-					+ "}";
-		}
-		
-		return "{"
-				+	"\"amountNQT\": \"0\", "
-				+	(attachment == null ? "" : "\"attachment\": " + attachment + ", ")
-				+	"\"block\": \"" + tx.blockId + "\", "
-				+	"\"blockTimestamp\": 123456, "
-				+	"\"chain\": 2, "
-				+	"\"confirmations\": 1, "
-				+	"\"deadline\": 10, "
-				+	"\"ecBlockHeight\": 123456, "
-				+	"\"ecBlockId\": \"123456\", "
-				+	"\"feeNQT\": \"1000000\", "
-				+	"\"fullHash\": \"123456\", "
-				+	"\"height\": " + tx.height + ", "
-				+	"\"phased\": false, "
-				+	(type == 8 ? "" : "\"recipient\": \"" + tx.recipient + "\", ")
-				+	(type == 8 ? "" : "\"recipientRS\": \"ARDOR-0000-0000-0000-00000\", ")
-				+	"\"sender\": \"" + Long.toUnsignedString(tx.sender) + "\", "
-				+	"\"senderPublicKey\": \"123456\", "
-				+	"\"senderRS\": \"ARDOR-0000-0000-0000-00000\", "
-				+	"\"signature\": \"123456\", "
-				+	"\"signatureHash\": \"123456\", "
-				+	"\"subtype\": 0, "
-				+	"\"timestamp\": 123456, "
-				+	"\"transaction\": 123456, "
-				+	"\"transactionIndex\": " + tx.index + ", "
-				+	"\"type\": " + type + ", "
-				+	"\"version\": 1"
-				+ "}";
 	}
 	
 }

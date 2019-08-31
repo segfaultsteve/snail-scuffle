@@ -1,6 +1,6 @@
 package com.snailscuffle.game.accounts;
 
-import static com.snailscuffle.game.accounts.AccountsTestUtil.changesFromBattle;
+import static com.snailscuffle.game.testutil.AccountsTestUtil.changesFromBattle;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

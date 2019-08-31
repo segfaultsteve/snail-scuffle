@@ -1,6 +1,7 @@
 package com.snailscuffle.game.blockchain;
 
-import static com.snailscuffle.game.accounts.AccountsTestUtil.changesFromBattle;
+import static com.snailscuffle.game.testutil.AccountsTestUtil.changesFromBattle;
+import static com.snailscuffle.game.testutil.SyncUtil.waitForValue;
 import static java.lang.System.currentTimeMillis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,11 +36,6 @@ import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.blockchain.data.AccountMetadata;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
-
-@FunctionalInterface
-interface ThrowingSupplier<T> {
-	T get() throws Exception;
-}
 
 public class BlockchainSyncThreadTest {
 	
@@ -134,7 +130,7 @@ public class BlockchainSyncThreadTest {
 		));
 		
 		blockchainSyncThread.start();
-		Account player0 = waitForValue(() -> accountsDb.getById(PLAYER_0_ID));
+		Account player0 = waitForValue(TIMEOUT_MILLIS, () -> accountsDb.getById(PLAYER_0_ID));
 		Account player1 = accountsDb.getById(PLAYER_1_ID);
 		
 		assertEquals("player0", player0.username);
@@ -153,7 +149,7 @@ public class BlockchainSyncThreadTest {
 		));
 		
 		blockchainSyncThread.start();
-		Account player = waitForValue(() -> accountsDb.getByUsername("newname"));
+		Account player = waitForValue(TIMEOUT_MILLIS, () -> accountsDb.getByUsername("newname"));
 		
 		assertNotNull(player);
 	}
@@ -186,7 +182,7 @@ public class BlockchainSyncThreadTest {
 		
 		blockchainSyncThread.start();
 		
-		Account player0 = waitForValue(() -> {
+		Account player0 = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 1) ? p0 : null;
 		});
@@ -221,7 +217,7 @@ public class BlockchainSyncThreadTest {
 		
 		blockchainSyncThread.start();
 		
-		Account player0AfterRollback = waitForValue(() -> {
+		Account player0AfterRollback = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 0) ? p0 : null;
 		});
@@ -266,7 +262,7 @@ public class BlockchainSyncThreadTest {
 		
 		blockchainSyncThread.start();
 		
-		Account player0AfterRollback = waitForValue(() -> {
+		Account player0AfterRollback = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 1) ? p0 : null;
 		});
@@ -315,7 +311,7 @@ public class BlockchainSyncThreadTest {
 			}
 		}
 		
-		Account player0AfterSync = waitForValue(() -> {
+		Account player0AfterSync = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 1) ? p0 : null;
 		});
@@ -356,7 +352,7 @@ public class BlockchainSyncThreadTest {
 			recentBlocks.add(new Block(mismatchedBlockId + 1, height + 1, height + 1, new ArrayList<Transaction>()));
 		}
 		
-		Account player0AfterRollback = waitForValue(() -> {
+		Account player0AfterRollback = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 0) ? p0 : null;
 		});
@@ -400,7 +396,7 @@ public class BlockchainSyncThreadTest {
 			recentBlocks.add(new Block(mismatchedBlockId + 1, height + 1, height + 1, new ArrayList<Transaction>()));
 		}
 		
-		Account player0AfterRollback = waitForValue(() -> {
+		Account player0AfterRollback = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 1) ? p0 : null;
 		});
@@ -458,7 +454,7 @@ public class BlockchainSyncThreadTest {
 			));
 		}
 		
-		Account player0AfterReconnecting = waitForValue(() -> {
+		Account player0AfterReconnecting = waitForValue(TIMEOUT_MILLIS, () -> {
 			Account p0 = accountsDb.getById(PLAYER_0_ID);
 			return (p0.wins == 1) ? p0 : null;
 		});
@@ -533,20 +529,6 @@ public class BlockchainSyncThreadTest {
 		while (!blockchainSyncThread.isCaughtUp() && currentTimeMillis() - startTime < TIMEOUT_MILLIS) {
 			Thread.sleep(10);
 		}
-	}
-	
-	private static <T> T waitForValue(ThrowingSupplier<T> func) throws InterruptedException {
-		T value = null;
-		long startTime = currentTimeMillis();
-		while (value == null && currentTimeMillis() - startTime < TIMEOUT_MILLIS) {
-			Thread.sleep(10);
-			try {
-				value = func.get();
-			} catch (Exception e) {
-				value = null;
-			}
-		}
-		return value;
 	}
 	
 }

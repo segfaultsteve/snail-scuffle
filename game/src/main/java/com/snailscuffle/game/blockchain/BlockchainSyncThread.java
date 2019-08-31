@@ -40,7 +40,6 @@ class BlockchainSyncThread extends Thread {
 		}
 	}
 	
-	private static final int DEFAULT_SYNC_LOOP_PERIOD_MILLIS = 10000;
 	private static final int SYNC_LOOP_EXTRA_BLOCKS = 10;
 	private static final Logger logger = LoggerFactory.getLogger(BlockchainSyncThread.class);
 	
@@ -55,10 +54,6 @@ class BlockchainSyncThread extends Thread {
 	private final int syncLoopPeriodMillis;
 	
 	private boolean caughtUp;
-	
-	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts, int recentBattlesDepth) {
-		this(ignisNode, accounts, recentBattlesDepth, DEFAULT_SYNC_LOOP_PERIOD_MILLIS);
-	}
 	
 	BlockchainSyncThread(IgnisArchivalNodeConnection ignisNode, Accounts accounts, int recentBattlesDepth, int syncLoopPeriodMillis) {
 		CONNECT = new SyncAction(() -> connect(ignisNode));
@@ -93,7 +88,7 @@ class BlockchainSyncThread extends Thread {
 			if (ignisNode.isReady()) {
 				return VALIDATE_RECENT_BLOCKS;
 			} else {
-				Thread.sleep(DEFAULT_SYNC_LOOP_PERIOD_MILLIS);
+				Thread.sleep(syncLoopPeriodMillis);
 				return CONNECT;
 			}
 		} catch (BlockchainSubsystemException e) {
@@ -265,7 +260,7 @@ class BlockchainSyncThread extends Thread {
 	
 	private static List<Account> parseAccountsWithChangedAliases(List<Transaction> transactions, IgnisArchivalNodeConnection ignisNode) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		List<Long> accountsWithChangedAliases = transactions.stream()
-				.filter(tx -> tx.alias.startsWith("snailscuffle"))
+				.filter(tx -> tx.alias.length() > 0)
 				.flatMap(tx -> Stream.of(tx.sender, tx.recipient))
 				.filter(id -> id != 0)		// recipient is zero for txs with no recipient
 				.collect(Collectors.toList());

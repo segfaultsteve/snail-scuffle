@@ -1,5 +1,6 @@
-package com.snailscuffle.game.accounts;
+package com.snailscuffle.game.testutil;
 
+import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle;
 import com.snailscuffle.game.blockchain.StateChangeFromBattle.PlayerChange;
 import com.snailscuffle.game.ratings.RatingPair;
