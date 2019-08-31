@@ -22,6 +22,7 @@ import com.snailscuffle.game.tx.UnsignedTransaction;
 
 public class BlockchainSubsystemIntegrationTests {
 	
+	private static final String BASE_URL = "https://game.snailscuffle.com";
 	private static final int SYNC_LOOP_PERIOD_MILLIS = 100;
 	private static final int TIMEOUT_MILLIS = 1000;
 	
@@ -31,9 +32,10 @@ public class BlockchainSubsystemIntegrationTests {
 	
 	@Before
 	public void setUp() throws AccountsException {
-		blockchainStub = new BlockchainStub();
+		blockchainStub = new BlockchainStub(BASE_URL);
+		IgnisArchivalNodeConnection ignisNode = new IgnisArchivalNodeConnection(BASE_URL, blockchainStub.mockHttpClient);
 		Accounts accountsDb = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
-		BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(blockchainStub.ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH, SYNC_LOOP_PERIOD_MILLIS);
+		BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH, SYNC_LOOP_PERIOD_MILLIS);
 		
 		accountsServlet = new AccountsServlet(blockchainSubsystem);
 		transactionsServlet = new TransactionsServlet(blockchainSubsystem);

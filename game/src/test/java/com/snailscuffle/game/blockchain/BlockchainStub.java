@@ -42,17 +42,14 @@ class BlockchainStub {
 		}
 	}
 	
-	final IgnisArchivalNodeConnection ignisNode;
+	final HttpClient mockHttpClient;
 	
-	private static final String BASE_URL = "https://game.snailscuffle.com";
-	
-	private final HttpClient mockHttpClient;
 	private final Map<String, Long> publicKeyToAccountId = new HashMap<>();
 	private final List<Block> blockchain = new ArrayList<>();
 	private long currentBlockId = Constants.INITIAL_SYNC_BLOCK_ID;
 	private int currentHeight = Constants.INITIAL_SYNC_HEIGHT;
 	
-	BlockchainStub() {
+	BlockchainStub(String baseUrl) {
 		mockHttpClient = mock(HttpClient.class);
 		
 		try {
@@ -65,12 +62,11 @@ class BlockchainStub {
 			when(mockHttpClient.GET(contains("getAccountPublicKey"))).then(this::returnPublicKey);
 			when(mockHttpClient.GET(contains("getBlockchainTransactions"))).then(this::returnTransactions);
 			when(mockHttpClient.GET(contains("getTransaction"))).then(this::returnMostRecentTransaction);
-			when(mockHttpClient.POST(BASE_URL + "/nxt")).then(this::respondToPOST);
+			when(mockHttpClient.POST(baseUrl + "/nxt")).then(this::respondToPOST);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 		
-		ignisNode = new IgnisArchivalNodeConnection(BASE_URL, mockHttpClient);
 		blockchain.add(new Block(Constants.INITIAL_SYNC_BLOCK_ID, Constants.INITIAL_SYNC_HEIGHT, new ArrayList<>()));
 	}
 	
