@@ -1,21 +1,17 @@
 package com.snailscuffle.game.blockchain;
 
-import static com.snailscuffle.game.testutil.SyncUtil.*;
-
+import static com.snailscuffle.common.util.JsonUtil.deserialize;
+import static com.snailscuffle.game.testutil.BlockchainJson.serialize;
 import static com.snailscuffle.game.testutil.ServletUtil.sendHttpRequest;
+import static com.snailscuffle.game.testutil.SyncUtil.waitForValue;
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.Constants;
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.Accounts;
@@ -53,53 +49,18 @@ public class BlockchainSubsystemIntegrationTests {
 		transactionRequestBody.put("player", player);
 		transactionRequestBody.put("publicKey", publicKey);
 		
-		String unsignedTxJson = sendHttpRequest(this::transactionsPUT, "/new-account", "", serialize(transactionRequestBody));
-		UnsignedTransaction unsignedTx = JsonUtil.deserialize(UnsignedTransaction.class, unsignedTxJson);
-		sendHttpRequest(this::transactionsPOST, "/", "", serialize(unsignedTx.asJson));
+		String unsignedTxJson = sendHttpRequest(transactionsServlet::doPut, "/new-account", "", serialize(transactionRequestBody));
+		UnsignedTransaction unsignedTx = deserialize(UnsignedTransaction.class, unsignedTxJson);
+		
+		sendHttpRequest(transactionsServlet::doPost, "/", "", serialize(unsignedTx.asJson));
 		
 		Account account = waitForValue(TIMEOUT_MILLIS, () -> {
-			try {
-				String accountJson = sendHttpRequest(this::accountsGET, "/", "player=" + player);
-				return JsonUtil.deserialize(Account.class, accountJson);
-			} catch (IOException e) {
-				return null;
-			}
+			String accountJson = sendHttpRequest(accountsServlet::doGet, "/", "player=" + player);
+			return deserialize(Account.class, accountJson);
 		});
 		
 		assertEquals(player, account.username);
 		assertEquals(publicKey, account.publicKey);
-	}
-	
-	private void transactionsPUT(Request request, Response response) {
-		try {
-			transactionsServlet.doPut(request, response);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	private void transactionsPOST(Request request, Response response) {
-		try {
-			transactionsServlet.doPost(request, response);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	private void accountsGET(Request request, Response response) {
-		try {
-			accountsServlet.doGet(request, response);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	private static String serialize(Object data) {
-		try {
-			return new ObjectMapper().writer().writeValueAsString(data);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 	
 }

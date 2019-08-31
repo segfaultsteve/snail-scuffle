@@ -79,6 +79,14 @@ public class BlockchainJson {
 		return serialize(transactionData(transactions));
 	}
 	
+	public static String serialize(Object data) {
+		try {
+			return new ObjectMapper().writer().writeValueAsString(data);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private static List<Map<String, Object>> aliasData(List<Alias> aliases) {
 		return aliases.stream().map(a -> aliasData(a)).collect(Collectors.toList());
 	}
@@ -182,14 +190,6 @@ public class BlockchainJson {
 		data.put("version", 1);
 		
 		return data;
-	}
-	
-	private static String serialize(Object data) {
-		try {
-			return new ObjectMapper().writer().writeValueAsString(data);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 	
 }

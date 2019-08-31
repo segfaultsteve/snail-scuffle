@@ -5,10 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
-import java.util.function.BiConsumer;
 
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -82,17 +79,11 @@ public class TransactionsServletTest {
 	}
 	
 	private String sendPUTRequest(String path, HashMap<String, Object> body) throws Exception {
-		BiConsumer<Request, Response> doPutNothrow = (req, resp) -> {
-			try {
-				Accounts accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
-				BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
-				(new TransactionsServlet(blockchainSubsystem)).doPut(req, resp);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		};
+		Accounts accounts = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
+		BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(mockIgnisNode, accounts, Constants.RECENT_BATTLES_DEPTH);
+		TransactionsServlet txServlet = new TransactionsServlet(blockchainSubsystem);
 		
-		return ServletUtil.sendHttpRequest(doPutNothrow, path, "", JsonUtil.serialize(body));
+		return ServletUtil.sendHttpRequest((req, resp) -> txServlet.doPut(req, resp), path, "", JsonUtil.serialize(body));
 	}
 	
 }

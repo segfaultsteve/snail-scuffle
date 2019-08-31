@@ -5,10 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.function.BiConsumer;
 
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -109,15 +106,8 @@ public class AccountsServletTest {
 	}
 	
 	private String sendGETRequest(String queryString) {
-		BiConsumer<Request, Response> doGetNothrow = (req, resp) -> {
-			try {
-				(new AccountsServlet(blockchainSubsystem)).doGet(req, resp);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		};
-		
-		return ServletUtil.sendHttpRequest(doGetNothrow, "", queryString);
+		AccountsServlet accountsServlet = new AccountsServlet(blockchainSubsystem);
+		return ServletUtil.sendHttpRequest((req, resp) -> accountsServlet.doGet(req, resp), "", queryString);
 	}
 	
 	private static void assertAccountsAreEqual(Account expected, Account actual) {
