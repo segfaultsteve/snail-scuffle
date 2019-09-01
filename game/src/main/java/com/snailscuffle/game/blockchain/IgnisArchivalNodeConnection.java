@@ -153,7 +153,7 @@ public class IgnisArchivalNodeConnection implements Closeable {
 		return nqtToDouble(balance.asLong());
 	}
 	
-	private static double nqtToDouble(long nqt) {
+	public static double nqtToDouble(long nqt) {
 		return new BigDecimal(nqt).divide(new BigDecimal(NQT_PER_IGNIS)).doubleValue();
 	}
 	

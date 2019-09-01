@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jetty.client.HttpClient;
@@ -41,6 +43,8 @@ class BlockchainStub {
 			this.txsJson = txsJson;
 		}
 	}
+	
+	final static long IGNIS_BALANCE_NQT = 10_000_000_000l;
 	
 	final HttpClient mockHttpClient;
 	
@@ -76,7 +80,22 @@ class BlockchainStub {
 	
 	void addBlock(List<String> txsJson) {
 		synchronized (blockchain) {
-			blockchain.add(new Block(++currentBlockId, ++currentHeight, txsJson));
+			++currentHeight;
+			++currentBlockId;
+			
+			String escapedHeight = Matcher.quoteReplacement("\"height\": " + currentHeight);
+			String escapedTimestamp = Matcher.quoteReplacement("\"timestamp\": " + currentHeight);
+			String escapedBlockTimestamp = Matcher.quoteReplacement("\"blockTimestamp\": " + currentHeight);
+			String escapedBlockId = Matcher.quoteReplacement("\"block\": \"" + Long.toUnsignedString(currentBlockId) + "\"");
+			
+			List<String> correctedTxsJson = txsJson.stream()
+					.map(tx -> tx.replaceAll("\"height\":\\s*\\d*\\s*", escapedHeight))
+					.map(tx -> tx.replaceAll("\"timestamp\":\\s*\\d*\\s*", escapedTimestamp))
+					.map(tx -> tx.replaceAll("\"blockTimestamp\":\\s*\\d*\\s*", escapedBlockTimestamp))
+					.map(tx -> tx.replaceAll("\"block\":\\s*\"\\d*\"\\s*", escapedBlockId))
+					.collect(Collectors.toList());
+			
+			blockchain.add(new Block(currentBlockId, currentHeight, correctedTxsJson));
 		}
 	}
 	
@@ -88,7 +107,7 @@ class BlockchainStub {
 	}
 	
 	private ContentResponse returnBalance(InvocationOnMock args) {
-		return responseStub(BlockchainJson.getBalanceResponse(1000000));
+		return responseStub(BlockchainJson.getBalanceResponse(IGNIS_BALANCE_NQT));
 	}
 	
 	private ContentResponse returnBlocks(InvocationOnMock args) {
@@ -278,8 +297,6 @@ class BlockchainStub {
 			response = txJson;
 			break;
 		}
-		
-		
 		
 		return responseStub(response);
 	}

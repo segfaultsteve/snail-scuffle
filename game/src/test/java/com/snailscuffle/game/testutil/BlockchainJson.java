@@ -6,9 +6,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.snailscuffle.game.blockchain.data.Alias;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
@@ -45,11 +48,11 @@ public class BlockchainJson {
 		return serialize(data);
 	}
 	
-	public static String getBalanceResponse(int balanceNQT) {
+	public static String getBalanceResponse(long balanceNQT) {
 		Map<String, Object> data = new HashMap<>();
 		
-		data.put("unconfirmedBalanceNQT", String.valueOf(balanceNQT));
-		data.put("balanceNQT", String.valueOf(balanceNQT));
+		data.put("unconfirmedBalanceNQT", balanceNQT);
+		data.put("balanceNQT", balanceNQT);
 		data.put("requestProcessingTime", 1);
 		
 		return serialize(data);
@@ -72,7 +75,8 @@ public class BlockchainJson {
 		Block emptyBlock = new Block(blockId, height, height, new ArrayList<Transaction>());
 		String emptyBlockJson = BlockchainJson.blockToJson(emptyBlock, previousBlockId);
 		String txArray = "\"transactions\": [" + String.join(", ", transactions) + "]";
-		return emptyBlockJson.replaceAll("\"transactions\":\\s*\\[\\s*\\]", txArray);
+		String escapedTxArray = Matcher.quoteReplacement(txArray);
+		return emptyBlockJson.replaceAll("\"transactions\":\\s*\\[\\s*\\]", escapedTxArray);
 	}
 	
 	public static String transactionsToJson(List<Transaction> transactions) {
@@ -81,7 +85,11 @@ public class BlockchainJson {
 	
 	public static String serialize(Object data) {
 		try {
-			return new ObjectMapper().writer().writeValueAsString(data);
+			return new ObjectMapper()
+					.setSerializationInclusion(Include.NON_NULL)
+					.writer()
+					.with(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
+					.writeValueAsString(data);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

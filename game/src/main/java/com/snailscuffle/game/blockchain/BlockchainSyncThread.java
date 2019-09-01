@@ -3,6 +3,7 @@ package com.snailscuffle.game.blockchain;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -245,6 +246,8 @@ class BlockchainSyncThread extends Thread {
 				.filter(b -> b.height > currentSyncState.height)
 				.flatMap(b -> b.transactions.stream())
 				.collect(Collectors.toList());
+		Collections.reverse(txsToSync);
+		
 		List<Account> accountsWithNewAliases = parseAccountsWithChangedAliases(txsToSync, ignisNode);
 		List<OnChain<? extends BattlePlanMessage>> battleMessages = parseBattlePlanMessages(txsToSync);
 		
