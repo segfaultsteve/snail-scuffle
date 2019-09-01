@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,7 +32,7 @@ public class BlockchainSubsystemIntegrationTests {
 	
 	private static final String BASE_URL = "https://game.snailscuffle.com";
 	private static final int SYNC_LOOP_PERIOD_MILLIS = 100;
-	private static final int TIMEOUT_MILLIS = 1000;
+	private static final int TIMEOUT_MILLIS = 2000;
 	
 	private static final long PLAYER_0_ID = 1;
 	private static final long PLAYER_1_ID = 2;
@@ -43,6 +44,7 @@ public class BlockchainSubsystemIntegrationTests {
 	private static final double DELTA = 0.001;
 	
 	private BlockchainStub blockchainStub;
+	private BlockchainSubsystem blockchainSubsystem;
 	private AccountsServlet accountsServlet;
 	private TransactionsServlet transactionsServlet;
 	
@@ -51,13 +53,18 @@ public class BlockchainSubsystemIntegrationTests {
 		blockchainStub = new BlockchainStub(BASE_URL);
 		IgnisArchivalNodeConnection ignisNode = new IgnisArchivalNodeConnection(BASE_URL, blockchainStub.mockHttpClient);
 		Accounts accountsDb = new Accounts(":memory:", Constants.RECENT_BATTLES_DEPTH);
-		BlockchainSubsystem blockchainSubsystem = new BlockchainSubsystem(ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH, SYNC_LOOP_PERIOD_MILLIS);
+		blockchainSubsystem = new BlockchainSubsystem(ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH, SYNC_LOOP_PERIOD_MILLIS);
 		
 		blockchainStub.addPublicKey(PLAYER_0_ID, PLAYER_0_PUBLIC_KEY);
 		blockchainStub.addPublicKey(PLAYER_1_ID, PLAYER_1_PUBLIC_KEY);
 		
 		accountsServlet = new AccountsServlet(blockchainSubsystem);
 		transactionsServlet = new TransactionsServlet(blockchainSubsystem);
+	}
+	
+	@After
+	public void tearDown() {
+		blockchainSubsystem.close();
 	}
 	
 	@Test

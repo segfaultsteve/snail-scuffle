@@ -132,7 +132,8 @@ class BlockchainStub {
 	private ContentResponse returnBlock(InvocationOnMock args) {
 		synchronized (blockchain) {
 			String url = args.getArgument(0);
-			int height = Integer.parseInt(extractQueryParameter("height", url));
+			String heightString = extractQueryParameter("height", url);
+			int height = Math.max(Integer.parseInt(heightString), Constants.INITIAL_SYNC_HEIGHT);
 			
 			Block match = blockchain.stream()
 					.filter(b -> b.height == height)

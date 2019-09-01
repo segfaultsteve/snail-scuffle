@@ -17,6 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -43,7 +44,7 @@ public class BlockchainSyncThreadTest {
 	private static final long PLAYER_1_ID = 2;
 	private static final int ROUNDS_TO_FINISH_BATTLE = 3;
 	private static final int SYNC_LOOP_PERIOD_MILLIS = 100;
-	private static final int TIMEOUT_MILLIS = 1000;
+	private static final int TIMEOUT_MILLIS = 2000;
 	
 	@Mock private IgnisArchivalNodeConnection ignisNode;
 	private List<AccountMetadata> accountsOnBlockchain;
@@ -120,6 +121,11 @@ public class BlockchainSyncThreadTest {
 		losingBpHash = BlockchainUtil.sha256Hash(losingBp);
 		
 		blockchainSyncThread = new BlockchainSyncThread(ignisNode, accountsDb, Constants.RECENT_BATTLES_DEPTH, SYNC_LOOP_PERIOD_MILLIS);
+	}
+	
+	@After
+	public void tearDown() {
+		blockchainSyncThread.interrupt();
 	}
 	
 	@Test

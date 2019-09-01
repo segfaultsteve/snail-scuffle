@@ -212,9 +212,9 @@ class BlockchainSyncThread extends Thread {
 		}
 	}
 	
-	private SyncAction abort() {
-		logger.error("Sync thread interrupted");
-		return EXIT_WITH_ERROR;
+	private static SyncAction abort() {
+		logger.warn("Sync thread interrupted; exiting");
+		return null;
 	}
 	
 	private static SyncAction exitWithError() {
