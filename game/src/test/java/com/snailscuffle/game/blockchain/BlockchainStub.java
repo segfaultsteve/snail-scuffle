@@ -99,6 +99,14 @@ class BlockchainStub {
 		}
 	}
 	
+	void rollBackAllBlocks() {
+		synchronized (blockchain) {
+			blockchain.removeIf(b -> b.height > Constants.INITIAL_SYNC_HEIGHT);
+			currentHeight = Constants.INITIAL_SYNC_HEIGHT;
+			// do not reset block ID--the purpose of rolling back is to create a fork
+		}
+	}
+	
 	private ContentResponse returnBlockchainStatus(InvocationOnMock args) {
 		synchronized (blockchain) {
 			Block lastBlock = blockchain.get(blockchain.size() - 1);
@@ -205,7 +213,7 @@ class BlockchainStub {
 		synchronized (blockchain) {
 			String url = args.getArgument(0);
 			long account = Long.parseUnsignedLong(extractQueryParameter("account", url));
-			String senderOrRecipientRegex = ".*\"(?:sender|recipient)\":\\w\"" + Long.toUnsignedString(account) + "\".*";
+			String senderOrRecipientRegex = ".*\"(?:sender|recipient)\":\\w*\"" + Long.toUnsignedString(account) + "\".*";
 			
 			List<String> matches = blockchain.stream()
 					.flatMap(b -> b.txsJson.stream())

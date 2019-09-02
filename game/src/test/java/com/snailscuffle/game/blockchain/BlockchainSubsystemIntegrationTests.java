@@ -40,6 +40,8 @@ public class BlockchainSubsystemIntegrationTests {
 	private static final String PLAYER_1_USERNAME = "player1";
 	private static final String PLAYER_0_PUBLIC_KEY = "player0PublicKey";
 	private static final String PLAYER_1_PUBLIC_KEY = "player1PublicKey";
+	private static final int ROUNDS = 3;
+	private static final String BATTLE_ID = "test battle";
 	private static final double EXPECTED_BALANCE = IgnisArchivalNodeConnection.nqtToDouble(BlockchainStub.IGNIS_BALANCE_NQT);
 	private static final double DELTA = 0.001;
 	
@@ -80,22 +82,13 @@ public class BlockchainSubsystemIntegrationTests {
 	
 	@Test
 	public void playABattle() throws Exception {
-		final int ROUNDS = 3;
-		final String BATTLE_ID = "test battle";
-		
 		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
 		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
 		
 		waitForValue(TIMEOUT_MILLIS, getAccount(PLAYER_0_USERNAME));
 		waitForValue(TIMEOUT_MILLIS, getAccount(PLAYER_1_USERNAME));
 		
-		for (int i = 0; i < ROUNDS; i++) {
-			submitBpCommitTransaction(PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, BATTLE_ID, i, losingBp());
-			submitBpCommitTransaction(PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, BATTLE_ID, i, winningBp());
-			
-			submitBpRevealTransaction(PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, BATTLE_ID, i, losingBp());
-			submitBpRevealTransaction(PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, BATTLE_ID, i, winningBp());
-		}
+		runBattle(losingBp(), winningBp());
 		
 		Account player0 = waitForValue(TIMEOUT_MILLIS, () -> {
 			String player0Json = sendHttpRequest(accountsServlet::doGet, "/", "player=" + PLAYER_0_USERNAME);
@@ -119,26 +112,73 @@ public class BlockchainSubsystemIntegrationTests {
 		assertEquals(EXPECTED_BALANCE, player1.balance, DELTA);
 	}
 	
-	private void submitNewAccountTransaction(String username, String publicKey) throws IOException {
+	@Test
+	public void resolveAFork() throws Exception {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		runBattle(losingBp(), winningBp());
+		
+		Account player0BeforeRollback = waitForValue(TIMEOUT_MILLIS, () -> {
+			String player0Json = sendHttpRequest(accountsServlet::doGet, "/", "player=" + PLAYER_0_USERNAME);
+			Account p0 = deserialize(Account.class, player0Json);
+			return (p0.losses > 0) ? p0 : null;
+		});
+		Account player1BeforeRollback = getAccount(PLAYER_1_USERNAME).get();
+		
+		blockchainStub.rollBackAllBlocks();
+		
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		runBattle(winningBp(), losingBp());		// let player 0 win this time
+		
+		Account player0AfterRollback = waitForValue(TIMEOUT_MILLIS, () -> {
+			String player0Json = sendHttpRequest(accountsServlet::doGet, "/", "player=" + PLAYER_0_USERNAME);
+			Account p0 = deserialize(Account.class, player0Json);
+			return (p0.wins > 0) ? p0 : null;
+		});
+		Account player1AfterRollback = getAccount(PLAYER_1_USERNAME).get();
+		
+		assertEquals(1, player0BeforeRollback.losses);
+		assertEquals(1, player1BeforeRollback.wins);
+		
+		assertEquals(1, player0AfterRollback.wins);
+		assertEquals(1, player1AfterRollback.losses);
+	}
+	
+	private void submitNewAccountTransaction(String username, String publicKey) {
 		Map<String, Object> requestBody = new HashMap<>();
 		requestBody.put("player", username);
 		requestBody.put("publicKey", publicKey);
 		
 		String newAccountTxJson = sendHttpRequest(transactionsServlet::doPut, "/new-account", "", serialize(requestBody));
-		UnsignedTransaction newAccountTx = deserialize(UnsignedTransaction.class, newAccountTxJson);
 		
-		sendHttpRequest(transactionsServlet::doPost, "/", "", serialize(newAccountTx.asJson));
+		try {
+			UnsignedTransaction newAccountTx = deserialize(UnsignedTransaction.class, newAccountTxJson);
+			sendHttpRequest(transactionsServlet::doPost, "/", "", serialize(newAccountTx.asJson));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	private void submitBpCommitTransaction(String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) throws IOException {
+	private void runBattle(BattlePlan player0Bp, BattlePlan player1Bp) {
+		for (int i = 0; i < ROUNDS; i++) {
+			submitBpCommitTransaction(PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, BATTLE_ID, i, player0Bp);
+			submitBpCommitTransaction(PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, BATTLE_ID, i, player1Bp);
+			
+			submitBpRevealTransaction(PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, BATTLE_ID, i, player0Bp);
+			submitBpRevealTransaction(PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, BATTLE_ID, i, player1Bp);
+		}
+	}
+	
+	private void submitBpCommitTransaction(String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) {
 		submitBattlePlanTransaction("/battle-plan-commit", publicKey, recipient, battleId, round, battlePlan);
 	}
 	
-	private void submitBpRevealTransaction(String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) throws IOException {
+	private void submitBpRevealTransaction(String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) {
 		submitBattlePlanTransaction("/battle-plan-reveal", publicKey, recipient, battleId, round, battlePlan);
 	}
 	
-	private void submitBattlePlanTransaction(String path, String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) throws IOException {
+	private void submitBattlePlanTransaction(String path, String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) {
 		Map<String, Object> requestBody = new HashMap<>();
 		requestBody.put("publicKey", publicKey);
 		requestBody.put("recipient", Long.toUnsignedString(recipient));
@@ -147,9 +187,12 @@ public class BlockchainSubsystemIntegrationTests {
 		requestBody.put("battlePlan", battlePlan);
 		
 		String bpTxJson = sendHttpRequest(transactionsServlet::doPut, path, "", serialize(requestBody));
-		UnsignedTransaction bpTx = deserialize(UnsignedTransaction.class, bpTxJson);
-		
-		sendHttpRequest(transactionsServlet::doPost, "/", "", serialize(bpTx.asJson));
+		try {
+			UnsignedTransaction bpTx = deserialize(UnsignedTransaction.class, bpTxJson);
+			sendHttpRequest(transactionsServlet::doPost, "/", "", serialize(bpTx.asJson));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	private ThrowingSupplier<Account> getAccount(String player) {

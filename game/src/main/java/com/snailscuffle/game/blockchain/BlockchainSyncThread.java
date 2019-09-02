@@ -1,5 +1,8 @@
 package com.snailscuffle.game.blockchain;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -102,12 +104,16 @@ class BlockchainSyncThread extends Thread {
 	
 	private SyncAction validateRecentBlocks(IgnisArchivalNodeConnection ignisNode, Accounts accounts) {
 		try {
-			List<BlockSyncInfo> recentBlocks = accounts.getSyncInfoFromRecentStateChanges();
+			Block currentBlock = ignisNode.getCurrentBlock();
+			List<BlockSyncInfo> syncedBlocks = accounts.getSyncInfoFromRecentStateChanges().stream()
+					.filter(b -> b.height <= currentBlock.height)
+					.collect(toList());
 			BlockSyncInfo lastValid = new BlockSyncInfo(Constants.INITIAL_SYNC_HEIGHT, Constants.INITIAL_SYNC_BLOCK_ID);
-			for (BlockSyncInfo block : recentBlocks) {
-				Block observedBlock = ignisNode.getBlockAtHeight(block.height);
-				if (observedBlock.id == block.blockId) {
-					lastValid = block;
+			
+			for (BlockSyncInfo syncedBlock : syncedBlocks) {
+				Block observedBlock = ignisNode.getBlockAtHeight(syncedBlock.height);
+				if (observedBlock.id == syncedBlock.blockId) {
+					lastValid = syncedBlock;
 					break;
 				}
 			}
@@ -130,7 +136,7 @@ class BlockchainSyncThread extends Thread {
 			Block currentBlock = ignisNode.getCurrentBlock();
 			List<Account> playerAccounts = ignisNode.getAllPlayerAccounts().stream()
 					.map(a -> new Account(a.id, a.username, a.publicKey))
-					.collect(Collectors.toList());
+					.collect(toList());
 			
 			accounts.addIfNotPresent(playerAccounts);
 			accounts.updateUsernames(playerAccounts);
@@ -179,7 +185,7 @@ class BlockchainSyncThread extends Thread {
 				return CONTINUOUS_SYNC_LOOP;
 			}
 			
-			int blockCount = currentBlock.height - currentSyncState.height + SYNC_LOOP_EXTRA_BLOCKS;
+			int blockCount = Math.max(currentBlock.height - currentSyncState.height, 0) + SYNC_LOOP_EXTRA_BLOCKS;
 			List<Block> recentBlocks = ignisNode.getRecentBlocks(blockCount);
 			Block blockAtLastSyncedHeight = recentBlocks.stream().filter(b -> b.height == currentSyncState.height).findFirst().orElse(null);
 			boolean forkDetected = (blockAtLastSyncedHeight == null) || blockAtLastSyncedHeight.id != currentSyncState.blockId;
@@ -224,13 +230,14 @@ class BlockchainSyncThread extends Thread {
 	
 	private static BlockSyncInfo findBeginningOfFork(List<BlockSyncInfo> recentSyncInfo, IgnisArchivalNodeConnection ignisNode) throws IgnisNodeCommunicationException, BlockchainSubsystemException, InterruptedException {
 		Block currentBlock = ignisNode.getCurrentBlock();
-		int blockCount = currentBlock.height - recentSyncInfo.get(recentSyncInfo.size() - 1).height + SYNC_LOOP_EXTRA_BLOCKS;
+		BlockSyncInfo currentSyncState = recentSyncInfo.get(recentSyncInfo.size() - 1);
+		int blockCount = Math.max(currentBlock.height - currentSyncState.height, 0) + SYNC_LOOP_EXTRA_BLOCKS;
 		Map<Integer, Block> blocksByHeight = ignisNode.getRecentBlocks(blockCount).stream()
-				.collect(Collectors.toMap(b -> b.height, b -> b));
+				.collect(toMap(b -> b.height, b -> b));
 		
 		for (BlockSyncInfo syncedBlock : recentSyncInfo) {
 			Block observedBlock = blocksByHeight.get(syncedBlock.height);
-			if (observedBlock.id == syncedBlock.blockId) {
+			if (observedBlock != null && observedBlock.id == syncedBlock.blockId) {
 				return syncedBlock;
 			}
 		}
@@ -245,7 +252,7 @@ class BlockchainSyncThread extends Thread {
 		List<Transaction> txsToSync = recentBlocks.stream()
 				.filter(b -> b.height > currentSyncState.height)
 				.flatMap(b -> b.transactions.stream())
-				.collect(Collectors.toList());
+				.collect(toList());
 		Collections.reverse(txsToSync);
 		
 		List<Account> accountsWithNewAliases = parseAccountsWithChangedAliases(txsToSync, ignisNode);
@@ -266,7 +273,7 @@ class BlockchainSyncThread extends Thread {
 				.filter(tx -> tx.alias.length() > 0)
 				.flatMap(tx -> Stream.of(tx.sender, tx.recipient))
 				.filter(id -> id != 0)		// recipient is zero for txs with no recipient
-				.collect(Collectors.toList());
+				.collect(toList());
 		
 		List<Account> accounts = new ArrayList<>();
 		for (Long accountId : accountsWithChangedAliases) {
