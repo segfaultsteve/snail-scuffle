@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,7 +25,6 @@ import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.Accounts;
 import com.snailscuffle.game.accounts.AccountsException;
 import com.snailscuffle.game.accounts.AccountsServlet;
-import com.snailscuffle.game.testutil.ThrowingSupplier;
 import com.snailscuffle.game.tx.TransactionsServlet;
 import com.snailscuffle.game.tx.UnsignedTransaction;
 
@@ -70,10 +70,10 @@ public class BlockchainSubsystemIntegrationTests {
 	}
 	
 	@Test
-	public void createNewAccount() throws Exception {
+	public void createNewAccount() {
 		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
 		
-		Account account = waitForValue(TIMEOUT_MILLIS, getAccount(PLAYER_0_USERNAME));
+		Account account = waitForAccount(PLAYER_0_USERNAME);
 		
 		assertEquals(PLAYER_0_ID, account.numericId());
 		assertEquals(PLAYER_0_USERNAME, account.username);
@@ -81,68 +81,74 @@ public class BlockchainSubsystemIntegrationTests {
 	}
 	
 	@Test
-	public void playABattle() throws Exception {
+	public void playABattle() {
 		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
 		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
 		
-		waitForValue(TIMEOUT_MILLIS, getAccount(PLAYER_0_USERNAME));
-		waitForValue(TIMEOUT_MILLIS, getAccount(PLAYER_1_USERNAME));
+		runBattle(PLAYER_0_ID, PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, PLAYER_1_PUBLIC_KEY);
 		
-		runBattle(losingBp(), winningBp());
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.wins > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
 		
-		Account player0 = waitForValue(TIMEOUT_MILLIS, () -> {
-			String player0Json = sendHttpRequest(accountsServlet::doGet, "/", "player=" + PLAYER_0_USERNAME);
-			Account p0 = deserialize(Account.class, player0Json);
-			return (p0.losses > 0) ? p0 : null;
-		});
-		Account player1 = getAccount(PLAYER_1_USERNAME).get();
-		
-		assertEquals(0, player0.wins);
-		assertEquals(1, player0.losses);
-		assertEquals(-1, player0.streak);
-		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, player0.rating);
-		assertEquals(2, player0.rank);
+		assertEquals(1, player0.wins);
+		assertEquals(0, player0.losses);
+		assertEquals(1, player0.streak);
+		assertEquals(Constants.INITIAL_RATING + Constants.MAX_RATING_CHANGE / 2, player0.rating);
+		assertEquals(1, player0.rank);
 		assertEquals(EXPECTED_BALANCE, player0.balance, DELTA);
 		
-		assertEquals(1, player1.wins);
-		assertEquals(0, player1.losses);
-		assertEquals(1, player1.streak);
-		assertEquals(Constants.INITIAL_RATING + Constants.MAX_RATING_CHANGE / 2, player1.rating);
-		assertEquals(1, player1.rank);
+		assertEquals(0, player1.wins);
+		assertEquals(1, player1.losses);
+		assertEquals(-1, player1.streak);
+		assertEquals(Constants.INITIAL_RATING - Constants.MAX_RATING_CHANGE / 2, player1.rating);
+		assertEquals(2, player1.rank);
 		assertEquals(EXPECTED_BALANCE, player1.balance, DELTA);
 	}
 	
 	@Test
-	public void resolveAFork() throws Exception {
+	public void ignoreUnrecognizedAccount() {
+		final long PLAYER_2_ID = 3;
+		final String PLAYER_2_PUBLIC_KEY = "player2PublicKey";
+		blockchainStub.addPublicKey(PLAYER_2_ID, PLAYER_2_PUBLIC_KEY);
+		
 		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
 		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
-		runBattle(losingBp(), winningBp());
 		
-		Account player0BeforeRollback = waitForValue(TIMEOUT_MILLIS, () -> {
-			String player0Json = sendHttpRequest(accountsServlet::doGet, "/", "player=" + PLAYER_0_USERNAME);
-			Account p0 = deserialize(Account.class, player0Json);
-			return (p0.losses > 0) ? p0 : null;
-		});
-		Account player1BeforeRollback = getAccount(PLAYER_1_USERNAME).get();
+		runBattle("invalid battle", PLAYER_0_ID, PLAYER_0_PUBLIC_KEY, PLAYER_2_ID, PLAYER_2_PUBLIC_KEY);	// invalid because player 2 does not have an account
+		runBattle("valid battle", PLAYER_0_ID, PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, PLAYER_1_PUBLIC_KEY);		// run a valid battle to make sure the sync thread hasn't crashed
+		
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.wins > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
+		
+		assertEquals(1, player0.wins);
+		assertEquals(0, player0.losses);
+		assertEquals(0, player1.wins);
+		assertEquals(1, player1.losses);
+	}
+	
+	@Test
+	public void resolveAFork() {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		runBattle(PLAYER_0_ID, PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, PLAYER_1_PUBLIC_KEY);
+		
+		Account player0BeforeRollback = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.wins > 0);
+		Account player1BeforeRollback = waitForAccount(PLAYER_1_USERNAME);
 		
 		blockchainStub.rollBackAllBlocks();
 		
 		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
 		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
-		runBattle(winningBp(), losingBp());		// let player 0 win this time
+		runBattle(PLAYER_1_ID, PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, PLAYER_0_PUBLIC_KEY);	// let player 1 win this time
 		
-		Account player0AfterRollback = waitForValue(TIMEOUT_MILLIS, () -> {
-			String player0Json = sendHttpRequest(accountsServlet::doGet, "/", "player=" + PLAYER_0_USERNAME);
-			Account p0 = deserialize(Account.class, player0Json);
-			return (p0.wins > 0) ? p0 : null;
-		});
-		Account player1AfterRollback = getAccount(PLAYER_1_USERNAME).get();
+		Account player0AfterRollback = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.losses > 0);
+		Account player1AfterRollback = waitForAccount(PLAYER_1_USERNAME);
 		
-		assertEquals(1, player0BeforeRollback.losses);
-		assertEquals(1, player1BeforeRollback.wins);
+		assertEquals(1, player0BeforeRollback.wins);
+		assertEquals(1, player1BeforeRollback.losses);
 		
-		assertEquals(1, player0AfterRollback.wins);
-		assertEquals(1, player1AfterRollback.losses);
+		assertEquals(1, player0AfterRollback.losses);
+		assertEquals(1, player1AfterRollback.wins);
 	}
 	
 	private void submitNewAccountTransaction(String username, String publicKey) {
@@ -160,22 +166,18 @@ public class BlockchainSubsystemIntegrationTests {
 		}
 	}
 	
-	private void runBattle(BattlePlan player0Bp, BattlePlan player1Bp) {
+	private void runBattle(long winnerId, String winnerPublicKey, long loserId, String loserPublicKey) {
+		runBattle(BATTLE_ID, winnerId, winnerPublicKey, loserId, loserPublicKey);
+	}
+	
+	private void runBattle(String battleId, long winnerId, String winnerPublicKey, long loserId, String loserPublicKey) {
 		for (int i = 0; i < ROUNDS; i++) {
-			submitBpCommitTransaction(PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, BATTLE_ID, i, player0Bp);
-			submitBpCommitTransaction(PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, BATTLE_ID, i, player1Bp);
+			submitBattlePlanTransaction("/battle-plan-commit", winnerPublicKey, loserId, battleId, i, winningBp());
+			submitBattlePlanTransaction("/battle-plan-commit", loserPublicKey, winnerId, battleId, i, losingBp());
 			
-			submitBpRevealTransaction(PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, BATTLE_ID, i, player0Bp);
-			submitBpRevealTransaction(PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, BATTLE_ID, i, player1Bp);
+			submitBattlePlanTransaction("/battle-plan-reveal", winnerPublicKey, loserId, battleId, i, winningBp());
+			submitBattlePlanTransaction("/battle-plan-reveal", loserPublicKey, winnerId, battleId, i, losingBp());
 		}
-	}
-	
-	private void submitBpCommitTransaction(String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) {
-		submitBattlePlanTransaction("/battle-plan-commit", publicKey, recipient, battleId, round, battlePlan);
-	}
-	
-	private void submitBpRevealTransaction(String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) {
-		submitBattlePlanTransaction("/battle-plan-reveal", publicKey, recipient, battleId, round, battlePlan);
 	}
 	
 	private void submitBattlePlanTransaction(String path, String publicKey, long recipient, String battleId, int round, BattlePlan battlePlan) {
@@ -193,13 +195,6 @@ public class BlockchainSubsystemIntegrationTests {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-	}
-	
-	private ThrowingSupplier<Account> getAccount(String player) {
-		return () -> {
-			String accountJson = sendHttpRequest(accountsServlet::doGet, "/", "player=" + player);
-			return deserialize(Account.class, accountJson);
-		};
 	}
 	
 	private static BattlePlan winningBp() {
@@ -220,6 +215,18 @@ public class BlockchainSubsystemIntegrationTests {
 		// no accessory - this should guarantee a loss
 		bp.validate();
 		return bp;
+	}
+	
+	private Account waitForAccount(String username) {
+		return waitForAccountWith(username, a -> true);
+	}
+	
+	private Account waitForAccountWith(String username, Predicate<Account> selector) {
+		return waitForValue(TIMEOUT_MILLIS, () -> {
+			String accountJson = sendHttpRequest(accountsServlet::doGet, "/", "player=" + username);
+			Account account = deserialize(Account.class, accountJson);
+			return selector.test(account) ? account : null;
+		});
 	}
 	
 }

@@ -82,7 +82,9 @@ class BattlesInProgress {
 			BattleInProgressResult result = battle.run(currentHeight);
 			if (result.isFinished() && result.finishHeight > lastSyncHeight) {
 				StateChangeFromBattle change = updateAccounts(result, currentStateOfAccounts);
-				changes.add(change);
+				if (change != null) {
+					changes.add(change);
+				}
 			}
 			if ((result.isFinished() || result.wasAborted()) && currentHeight - result.finishHeight >= recentBattlesDepth) {
 				battlesToRemove.add(battle);
@@ -112,12 +114,18 @@ class BattlesInProgress {
 	
 	private static StateChangeFromBattle updateAccounts(BattleInProgressResult result, Map<Long, Account> accounts) {
 		Account winner = accounts.get(result.winner);
+		Account loser = accounts.get(result.loser);
+		if (winner == null || loser == null) {
+			String unrecognizedAccount = (winner == null) ? Long.toUnsignedString(result.winner) : Long.toUnsignedString(result.loser);
+			logger.warn("Account " + unrecognizedAccount + " is not recognized; ignoring battle result");
+			return null;
+		}
+		
 		int winnerPreviousRating = winner.rating;
 		int winnerPreviousStreak = winner.streak;
 		winner.wins++;
 		winner.streak = (winner.streak > 0) ? (winner.streak + 1) : 1;
 		
-		Account loser = accounts.get(result.loser);
 		int loserPreviousRating = loser.rating;
 		int loserPreviousStreak = loser.streak;
 		loser.losses++;

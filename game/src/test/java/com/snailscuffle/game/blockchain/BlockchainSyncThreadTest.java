@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -74,7 +75,9 @@ public class BlockchainSyncThreadTest {
 		when(ignisNode.getRecentBlocks(anyInt())).thenAnswer(invocation -> {
 			synchronized (recentBlocks) {
 				int count = Math.min(invocation.getArgument(0), recentBlocks.size());
-				return new ArrayList<>(recentBlocks.subList(recentBlocks.size() - count, recentBlocks.size()));
+				List<Block> blocks = new ArrayList<>(recentBlocks.subList(recentBlocks.size() - count, recentBlocks.size()));
+				Collections.reverse(blocks);
+				return blocks;
 			}
 		});
 		when(ignisNode.getBlockAtHeight(anyInt())).thenAnswer(invocation -> {
