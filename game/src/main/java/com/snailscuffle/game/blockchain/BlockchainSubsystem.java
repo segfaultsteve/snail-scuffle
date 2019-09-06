@@ -2,6 +2,7 @@ package com.snailscuffle.game.blockchain;
 
 import java.io.Closeable;
 import java.net.URL;
+import java.util.List;
 
 import com.snailscuffle.game.accounts.Account;
 import com.snailscuffle.game.accounts.AccountNotFoundException;
@@ -59,6 +60,10 @@ public class BlockchainSubsystem implements Closeable {
 		Account account = accounts.getByUsername(username);
 		account.balance = ignisNode.getBalance(account.id);
 		return account;
+	}
+	
+	public List<Account> getAccountsByRank(int count, int offset) throws AccountsException {
+		return accounts.getByRank(count, offset);
 	}
 	
 	public UnsignedTransaction createNewAccountTransaction(String publicKey, String username) throws AccountsException, BlockchainSubsystemException, InterruptedException {

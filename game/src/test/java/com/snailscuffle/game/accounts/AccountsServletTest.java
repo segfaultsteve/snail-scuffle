@@ -63,7 +63,7 @@ public class AccountsServletTest {
 	}
 	
 	@Test
-	public void determineCorrectRanking() throws Exception {
+	public void returnCorrectRanksForIndividualAccounts() throws Exception {
 		// insertion order shouldn't matter
 		accounts.addIfNotPresent(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2));
 		
@@ -74,6 +74,40 @@ public class AccountsServletTest {
 		assertEquals(1, rank1);
 		assertEquals(2, rank2);
 		assertEquals(3, rank3);
+	}
+	
+	@Test
+	public void getOverallRanking() throws Exception {
+		accounts.addIfNotPresent(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2));
+		
+		Account[] ranked = JsonUtil.deserialize(Account[].class, sendGETRequest(""));
+		
+		assertEquals(3, ranked.length);
+		assertEquals(ACCOUNT1.id, ranked[0].id);
+		assertEquals(ACCOUNT2.id, ranked[1].id);
+		assertEquals(ACCOUNT3.id, ranked[2].id);
+	}
+	
+	@Test
+	public void getOverallRankingWithExplicitCount() throws Exception {
+		accounts.addIfNotPresent(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2));
+		
+		Account[] ranked = JsonUtil.deserialize(Account[].class, sendGETRequest("count=2"));
+		
+		assertEquals(2, ranked.length);
+		assertEquals(ACCOUNT1.id, ranked[0].id);
+		assertEquals(ACCOUNT2.id, ranked[1].id);
+	}
+	
+	@Test
+	public void getOverallRankingWithOffset() throws Exception {
+		accounts.addIfNotPresent(Arrays.asList(ACCOUNT3, ACCOUNT1, ACCOUNT2));
+		
+		Account[] ranked = JsonUtil.deserialize(Account[].class, sendGETRequest("count=2&offset=1"));
+		
+		assertEquals(2, ranked.length);
+		assertEquals(ACCOUNT2.id, ranked[0].id);
+		assertEquals(ACCOUNT3.id, ranked[1].id);
 	}
 	
 	@Test

@@ -1,6 +1,7 @@
 package com.snailscuffle.game.accounts;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,10 +33,16 @@ public class AccountsServlet extends HttpServlet {
 		
 		try {
 			AccountQuery query = new AccountQuery(request);
-			Account account = query.byId() ?
-					blockchainSubsystem.getAccountById(query.id)
-					: blockchainSubsystem.getAccountByUsername(query.player);
-			JsonUtil.serialize(account, response.getWriter());
+			if (query.byId()) {
+				Account account = blockchainSubsystem.getAccountById(query.id);
+				JsonUtil.serialize(account, response.getWriter());
+			} else if (query.byPlayer()) {
+				Account account = blockchainSubsystem.getAccountByUsername(query.player);
+				JsonUtil.serialize(account, response.getWriter());
+			} else {
+				List<Account> accounts = blockchainSubsystem.getAccountsByRank(query.count, query.offset);
+				JsonUtil.serialize(accounts, response.getWriter());
+			}
 		} catch (InvalidQueryException e) {
 			logger.error("Invalid query to /accounts", e);
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

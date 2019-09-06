@@ -347,6 +347,22 @@ public class Accounts implements Closeable {
 		}
 	}
 	
+	public List<Account> getByRank(int count, int offset) throws AccountsException {
+		String getAccountsSql =
+				  "SELECT * FROM accounts "
+				+ "ORDER BY rating DESC "
+				+ "LIMIT " + count + " OFFSET " + offset;
+		
+		try (Statement statement = sqlite.createStatement()) {
+			ResultSet result = statement.executeQuery(getAccountsSql);
+			return extractAccounts(result);
+		} catch (SQLException e) {
+			String error = "Database error while attempting to retrieve account ranking";
+			logger.error(error, e);
+			throw new AccountsException(error, e);
+		}
+	}
+	
 	private List<Account> extractAccounts(ResultSet result) throws AccountsException, SQLException {
 		List<Account> accounts = new ArrayList<>();
 		
