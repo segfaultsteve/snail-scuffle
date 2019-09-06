@@ -1,10 +1,9 @@
 package com.snailscuffle.game.testutil;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.blockchain.BlockchainUtil;
 
 public class TransactionJson {
@@ -18,11 +17,7 @@ public class TransactionJson {
 		Map<String, Object> tx = commonTxProperties(height, blockId, index, sender, publicKey);
 		tx.put("attachment", attachment);
 		
-		try {
-			return new ObjectMapper().writer().writeValueAsString(tx);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		return JsonUtil.serialize(tx);
 	}
 	
 	public static String messageTransaction(int height, long blockId, int index, long sender, String publicKey, long recipient, String message) {
@@ -37,11 +32,7 @@ public class TransactionJson {
 		tx.put("attachment", attachment);
 		tx.put("recipient", Long.toUnsignedString(recipient));
 		
-		try {
-			return new ObjectMapper().writer().writeValueAsString(tx);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		return JsonUtil.serialize(tx);
 	}
 	
 	private static Map<String, Object> commonTxProperties(int height, long blockId, int index, long sender, String publicKey) {

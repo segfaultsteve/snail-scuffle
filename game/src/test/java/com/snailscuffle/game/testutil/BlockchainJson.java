@@ -1,6 +1,5 @@
 package com.snailscuffle.game.testutil;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,9 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.snailscuffle.common.util.JsonUtil;
 import com.snailscuffle.game.blockchain.data.Alias;
 import com.snailscuffle.game.blockchain.data.Block;
 import com.snailscuffle.game.blockchain.data.Transaction;
@@ -45,7 +42,7 @@ public class BlockchainJson {
 		data.put("time", 50335296);
 		data.put("version", "2.2.5");
 		
-		return serialize(data);
+		return JsonUtil.serialize(data);
 	}
 	
 	public static String getBalanceResponse(long balanceNQT) {
@@ -55,20 +52,20 @@ public class BlockchainJson {
 		data.put("balanceNQT", balanceNQT);
 		data.put("requestProcessingTime", 1);
 		
-		return serialize(data);
+		return JsonUtil.serialize(data);
 	}
 	
 	public static String aliasesToJson(List<Alias> aliases) {
-		return serialize(aliasData(aliases));
+		return JsonUtil.serialize(aliasData(aliases));
 	}
 	
 	public static String blocksToJson(List<Block> blocks) {
-		return serialize(blockData(blocks));
+		return JsonUtil.serialize(blockData(blocks));
 	}
 	
 	public static String blockToJson(Block block, long previousBlockId) {
 		Map<String, Object> data = blockData(block, Long.toUnsignedString(previousBlockId));
-		return serialize(data);
+		return JsonUtil.serialize(data);
 	}
 	
 	public static String transactionJsonToBlockJson(long blockId, long previousBlockId, int height, List<String> transactions) {
@@ -80,19 +77,7 @@ public class BlockchainJson {
 	}
 	
 	public static String transactionsToJson(List<Transaction> transactions) {
-		return serialize(transactionData(transactions));
-	}
-	
-	public static String serialize(Object data) {
-		try {
-			return new ObjectMapper()
-					.setSerializationInclusion(Include.NON_NULL)
-					.writer()
-					.with(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
-					.writeValueAsString(data);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		return JsonUtil.serialize(transactionData(transactions));
 	}
 	
 	private static List<Map<String, Object>> aliasData(List<Alias> aliases) {

@@ -1,7 +1,7 @@
 package com.snailscuffle.game.blockchain;
 
 import static com.snailscuffle.common.util.JsonUtil.deserialize;
-import static com.snailscuffle.game.testutil.BlockchainJson.serialize;
+import static com.snailscuffle.common.util.JsonUtil.serialize;
 import static com.snailscuffle.game.testutil.ServletUtil.sendHttpRequest;
 import static com.snailscuffle.game.testutil.SyncUtil.waitForValue;
 import static org.junit.Assert.assertEquals;

@@ -2,7 +2,6 @@ package com.snailscuffle.common.util;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -12,7 +11,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class JsonUtil {
 	
-	public static String serialize(Serializable data) {
+	public static String serialize(Object data) {
 		try {
 			return new ObjectMapper()
 					.setSerializationInclusion(Include.NON_NULL)
@@ -24,7 +23,7 @@ public class JsonUtil {
 		}
 	}
 	
-	public static void serialize(Serializable data, PrintWriter writer) {
+	public static void serialize(Object data, PrintWriter writer) {
 		writer.print(serialize(data));
 	}
 	
