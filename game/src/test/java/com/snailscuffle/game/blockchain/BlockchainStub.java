@@ -78,6 +78,10 @@ class BlockchainStub {
 		publicKeyToAccountId.put(publicKey, accountId);
 	}
 	
+	void addBlock() {
+		addBlock(new ArrayList<>());
+	}
+	
 	void addBlock(List<String> txsJson) {
 		synchronized (blockchain) {
 			++currentHeight;

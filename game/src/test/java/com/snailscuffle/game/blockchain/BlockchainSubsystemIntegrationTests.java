@@ -33,7 +33,6 @@ public class BlockchainSubsystemIntegrationTests {
 	private static final String BASE_URL = "https://game.snailscuffle.com";
 	private static final int SYNC_LOOP_PERIOD_MILLIS = 100;
 	private static final int TIMEOUT_MILLIS = 2000;
-	
 	private static final long PLAYER_0_ID = 1;
 	private static final long PLAYER_1_ID = 2;
 	private static final String PLAYER_0_USERNAME = "player0";
@@ -149,6 +148,132 @@ public class BlockchainSubsystemIntegrationTests {
 		
 		assertEquals(1, player0AfterRollback.losses);
 		assertEquals(1, player1AfterRollback.wins);
+	}
+	
+	@Test
+	public void ignoreBattleThatOpponentNeverAcknowledges() {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, winningBp());
+		
+		for (int i = 0; i < 10; i++) {
+			blockchainStub.addBlock();
+		}
+		
+		// Run a complete battle, too, so that we can assert that it has been synced.
+		runBattle(PLAYER_1_ID, PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, PLAYER_0_PUBLIC_KEY);
+		
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.losses > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
+		
+		assertEquals(0, player0.wins);
+		assertEquals(1, player0.losses);
+		
+		assertEquals(1, player1.wins);
+		assertEquals(0, player1.losses);
+	}
+	
+	@Test
+	public void ignoreUnfinishedBattle() {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, winningBp());
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, losingBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, winningBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, losingBp());
+		
+		for (int i = 0; i < 10; i++) {
+			blockchainStub.addBlock();
+		}
+		
+		// Run a complete battle, too, so that we can assert that it has been synced.
+		runBattle(PLAYER_1_ID, PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, PLAYER_0_PUBLIC_KEY);
+		
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.losses > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
+		
+		assertEquals(0, player0.wins);
+		assertEquals(1, player0.losses);
+		
+		assertEquals(1, player1.wins);
+		assertEquals(0, player1.losses);
+	}
+	
+	@Test
+	public void forfeitBattleByNotRevealingBattlePlan() {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, losingBp());
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, winningBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, losingBp());
+		
+		for (int i = 0; i < 10; i++) {
+			blockchainStub.addBlock();
+		}
+		
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.wins > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
+		
+		assertEquals(1, player0.wins);
+		assertEquals(0, player0.losses);
+		
+		assertEquals(0, player1.wins);
+		assertEquals(1, player1.losses);
+	}
+	
+	@Test
+	public void forfeitBattleByNotCommittingBattlePlan() {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		
+		// round 0
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, losingBp());
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, winningBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, losingBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, winningBp());
+		
+		// round 1
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 1, losingBp());
+		
+		for (int i = 0; i < 10; i++) {
+			blockchainStub.addBlock();
+		}
+		
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.wins > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
+		
+		assertEquals(1, player0.wins);
+		assertEquals(0, player0.losses);
+		
+		assertEquals(0, player1.wins);
+		assertEquals(1, player1.losses);
+	}
+	
+	@Test
+	public void forfeitBattleIfBattlePlanDoesNotMatchHash() {
+		submitNewAccountTransaction(PLAYER_0_USERNAME, PLAYER_0_PUBLIC_KEY);
+		submitNewAccountTransaction(PLAYER_1_USERNAME, PLAYER_1_PUBLIC_KEY);
+		
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, losingBp());
+		submitBattlePlanTransaction("/battle-plan-commit", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, winningBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_0_PUBLIC_KEY, PLAYER_1_ID, "ignored battle", 0, losingBp());
+		submitBattlePlanTransaction("/battle-plan-reveal", PLAYER_1_PUBLIC_KEY, PLAYER_0_ID, "ignored battle", 0, losingBp());		// doesn't match hash
+		
+		for (int i = 0; i < 10; i++) {
+			blockchainStub.addBlock();
+		}
+		
+		Account player0 = waitForAccountWith(PLAYER_0_USERNAME, p0 -> p0.wins > 0);
+		Account player1 = waitForAccount(PLAYER_1_USERNAME);
+		
+		assertEquals(1, player0.wins);
+		assertEquals(0, player0.losses);
+		
+		assertEquals(0, player1.wins);
+		assertEquals(1, player1.losses);
 	}
 	
 	private void submitNewAccountTransaction(String username, String publicKey) {
