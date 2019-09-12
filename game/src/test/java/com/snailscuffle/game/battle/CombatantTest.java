@@ -31,7 +31,7 @@ public class CombatantTest {
 	private static final double REAL_TOLERANCE = 0.001;		// tolerance for real-valued arithmetic
 	
 	private BattlePlan bp;
-	private Integer battleTime = new Integer(0);
+	private Integer battleTime = 0;
 	private BattleRecorder recorder;
 	private Combatant player0;
 	private Combatant player1;
